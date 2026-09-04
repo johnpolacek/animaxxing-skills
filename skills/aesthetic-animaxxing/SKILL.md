@@ -37,7 +37,7 @@ Three durations (0.14, 0.2, 0.28 seconds), three eases (`power2.out` in, `power2
 2. **Type roles.** Poster, Statement, Label, Annotation, BodyCopy, and the crop. [typography-and-layout.md](references/typography-and-layout.md).
 3. **Layout grammar.** Sticky hairline header, twelve-column grid, numbered chapters rail, ruled ledgers, chips and buttons, cards. Same reference.
 4. **Route grammar.** Mark page items with `data-page-transition` (standard rise, `letters`, `letters-sides`, `slide-horizontal`), hide them before first paint, and let the framework skill's controller run the intro and outro builders. [motion-vocabulary.md](references/motion-vocabulary.md) and [route-letters.md](references/recipes/route-letters.md).
-5. **Surface effects,** only where the page has a display surface for them. Hero: scatter-in headline, speak-in subhead, wave, blast-off on the call to action. Calls to action: `reactor` or `marquee`. Cards: `resolve`. An onward link: `slipstream`.
+5. **Surface effects,** only where the page has a display surface for them. Hero: scatter-in headline, speak-in subhead, wave, blast-off on the call to action. Calls to action: `reactor` or `marquee`. Cards: `resolve`. An onward link: `slipstream`. A command or a giant field: `ignite`.
 
 ## Recipe contract
 

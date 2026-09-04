@@ -191,6 +191,7 @@ Where each recipe belongs:
 | Secondary call to action | `marquee.enter(delay)` | runners | same |
 | Card | `resolve.enter(index * 0.09)` on idle | one runner, glints | `exit()` |
 | Onward link | `slipstream.enter()` on idle | drifting hairlines | `blast()` when pressed |
+| Command block or giant field | `ignite.enter(0.75 + index * 0.25)` on entering | embers off the rule | `blast()` on copy or submit, `exit()` on route exit |
 | Wordmark | `charsSpringIn` plus underline `scaleX 0 → 1` | still | never; the shell persists |
 | Everything else | route standard rise | still | route exit |
 
