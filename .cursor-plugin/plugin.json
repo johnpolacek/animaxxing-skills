@@ -1,19 +1,26 @@
 {
   "name": "animaxxing-skills",
   "version": "0.1.0",
-  "description": "GSAP page transition and component lifecycle skills for specific frameworks, starting with Next.js App Router",
+  "description": "Production-ready GSAP page transition and component lifecycle guidance for modern web frameworks.",
   "author": {
     "name": "John Polacek",
     "url": "https://github.com/johnpolacek"
   },
+  "homepage": "https://github.com/johnpolacek/animaxxing-skills#readme",
+  "repository": "https://github.com/johnpolacek/animaxxing-skills",
   "license": "MIT",
   "keywords": [
     "gsap",
-    "nextjs",
-    "page transitions",
-    "app router",
+    "page-transitions",
     "animation",
-    "view transitions"
+    "view-transitions",
+    "nextjs",
+    "astro",
+    "sveltekit",
+    "nuxt",
+    "react-router",
+    "tanstack-router"
   ],
+  "logo": "assets/logo.svg",
   "skills": ["skills"]
 }

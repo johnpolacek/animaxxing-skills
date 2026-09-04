@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="logo-title logo-desc">
+  <title id="logo-title">Animaxxing Skills</title>
+  <desc id="logo-desc">An angular letter A crossing three curved motion trails.</desc>
+  <defs>
+    <linearGradient id="background" x1="72" y1="40" x2="440" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#17112F"/>
+      <stop offset="1" stop-color="#090713"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="142" y1="130" x2="358" y2="382" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B9FF66"/>
+      <stop offset="0.52" stop-color="#62E6FF"/>
+      <stop offset="1" stop-color="#A98BFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#background)"/>
+  <path d="M68 176C144 112 222 91 312 104" fill="none" stroke="#B9FF66" stroke-width="22" stroke-linecap="round" opacity="0.34"/>
+  <path d="M52 242C143 173 238 145 356 159" fill="none" stroke="#62E6FF" stroke-width="22" stroke-linecap="round" opacity="0.42"/>
+  <path d="M64 309C168 237 282 214 423 241" fill="none" stroke="#A98BFF" stroke-width="22" stroke-linecap="round" opacity="0.48"/>
+  <path d="M147 382L246 134C250 124 262 124 266 134L365 382" fill="none" stroke="url(#mark)" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M190 295H322" fill="none" stroke="url(#mark)" stroke-width="42" stroke-linecap="round"/>
+</svg>

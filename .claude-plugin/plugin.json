@@ -1,9 +1,26 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "animaxxing-skills",
-  "description": "GSAP page transition and component lifecycle skills for specific frameworks, starting with Next.js App Router",
+  "displayName": "Animaxxing Skills",
+  "description": "Production-ready GSAP page transition and component lifecycle guidance for modern web frameworks.",
   "version": "0.1.0",
   "author": {
-    "name": "John Polacek"
+    "name": "John Polacek",
+    "url": "https://github.com/johnpolacek"
   },
+  "homepage": "https://github.com/johnpolacek/animaxxing-skills#readme",
+  "repository": "https://github.com/johnpolacek/animaxxing-skills",
+  "license": "MIT",
+  "keywords": [
+    "gsap",
+    "animation",
+    "page-transitions",
+    "nextjs",
+    "astro",
+    "sveltekit",
+    "nuxt",
+    "react-router",
+    "tanstack-router"
+  ],
   "skills": "./skills/"
 }

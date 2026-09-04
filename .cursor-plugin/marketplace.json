@@ -3,11 +3,26 @@
   "owner": {
     "name": "John Polacek"
   },
+  "metadata": {
+    "description": "Production-ready GSAP animation skills for modern web frameworks.",
+    "version": "0.1.0"
+  },
   "plugins": [
     {
       "name": "animaxxing-skills",
       "source": "./",
-      "description": "GSAP page transitions, enter and exit motion, and cleanup in Next.js App Router. Companion to the official GSAP skills."
+      "description": "GSAP page transitions, component lifecycles, and cleanup across Next.js, Astro, SvelteKit, Nuxt, React Router, TanStack Router, and vanilla sites.",
+      "version": "0.1.0",
+      "author": {
+        "name": "John Polacek"
+      },
+      "homepage": "https://github.com/johnpolacek/animaxxing-skills#readme",
+      "repository": "https://github.com/johnpolacek/animaxxing-skills",
+      "license": "MIT",
+      "keywords": ["gsap", "animation", "page-transitions", "web-frameworks"],
+      "logo": "assets/logo.svg",
+      "category": "Developer Tools",
+      "tags": ["animation", "frontend", "skills"]
     }
   ]
 }

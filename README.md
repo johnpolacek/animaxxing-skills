@@ -1,5 +1,7 @@
 # Animaxxing Skills
 
+<img src="assets/logo.svg" alt="Animaxxing Skills logo" width="120">
+
 AI agent skills for ambitious, production-ready page transitions with [GSAP](https://gsap.com) in specific frameworks. Each skill teaches an agent how a framework's routing, rendering, and cleanup change what GSAP code must do, so pages and components animate in and out without jank, flashes, or leaks.
 
 These skills sit above the [official GSAP skills](https://github.com/greensock/gsap-skills), which cover the GSAP API itself. Install both.
@@ -71,12 +73,16 @@ Mount and unmount belong to the framework. The five phases between them belong t
 ```text
 animaxxing-skills/
   README.md
+  CHANGELOG.md
   AGENTS.md              # Guidance for agents editing this repo (CLAUDE.md and GEMINI.md are copies)
   LICENSE
+  assets/
+    logo.svg             # Marketplace and repository mark
   .claude-plugin/        # Claude Code plugin config (plugin.json, marketplace.json)
   .cursor-plugin/        # Cursor plugin config (plugin.json, marketplace.json)
   .github/
     copilot-instructions.md
+    workflows/validate.yml
   skills/
     llms.txt             # Skill index for agents (names, summaries, trigger terms)
     gsap-vanilla/
@@ -148,6 +154,22 @@ The [Animaxxing](https://github.com/johnpolacek/animaxxing) repository holds a N
 ## Contributing
 
 Read [AGENTS.md](AGENTS.md) before adding or editing a skill. New skills must follow the shared lifecycle, gate advice on framework versions, and stay free of project-specific design.
+
+Run the same checks as CI before opening a pull request:
+
+```bash
+for skill in skills/*/; do uvx --from skills-ref==0.1.1 agentskills validate "$skill"; done
+npx --yes skills@1.5.23 add . --list
+```
+
+## Releasing
+
+This repository uses semantic versions for its Claude and Cursor plugin manifests. To publish a release:
+
+1. Add the user-visible changes to `CHANGELOG.md`.
+2. Set the same version in every version field in `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, and `.cursor-plugin/marketplace.json`.
+3. Run the validation workflow locally or wait for CI to pass on `main`.
+4. Tag the commit as `v<version>` and create the matching GitHub release.
 
 ## License
 
