@@ -2,9 +2,9 @@
 
 Use this file to discover which skill to load. Each skill lives in a directory of the same name under skills/ and contains SKILL.md.
 
-These skills cover page transitions and component lifecycles for GSAP inside specific frameworks. They assume the official GSAP skills (gsap-core, gsap-react, gsap-timeline, gsap-scrolltrigger, gsap-plugins, gsap-utils, gsap-performance, gsap-frameworks) from https://github.com/greensock/gsap-skills are also installed for the GSAP API itself.
+Two families. Framework skills (gsap-<framework>) cover page transitions and component lifecycles for GSAP inside specific frameworks. Aesthetic skills (aesthetic-<name>) sit beside them: each carries one complete look as design tokens, typography and layout grammar, a motion vocabulary, and portable effect recipes, and hands enter/exit builders to a framework skill's controller. Install one framework skill and, when a look is wanted, one aesthetic. Both assume the official GSAP skills (gsap-core, gsap-react, gsap-timeline, gsap-scrolltrigger, gsap-plugins, gsap-utils, gsap-performance, gsap-frameworks) from https://github.com/greensock/gsap-skills are also installed for the GSAP API itself.
 
-## Skills
+## Framework skills
 
 gsap-vanilla
   Plain HTML, CSS, and JavaScript sites with no component framework: initial state before first paint, page load intros, outro before a link is followed, cross-document View Transitions with pageswap and pagereveal, navigation type, the bfcache and pageshow, prerendering, animated show and hide, scroll-driven effects, fetch plus pushState routers, and Swup, Barba, or Taxi hooks.
@@ -33,3 +33,9 @@ gsap-tanstack-router
 gsap-nextjs
   Next.js App Router: page transitions, enter and exit motion, animated show and hide of conditional content, scroll-driven effects, choosing GSAP or React View Transitions per effect, route lifetime under cacheComponents, transition-aware links, back and forward, cleanup. Not for the Pages Router.
   Triggers: Next.js page transition, App Router animation, route transition, exit animation, outro before navigation, enter animation, useGSAP Next.js, onNavigate, useLinkStatus, ViewTransition, cacheComponents, Activity, layout jank, interrupted animation, cleanup on navigation.
+
+## Aesthetic skills
+
+aesthetic-animaxxing
+  The Animaxxing look: monochrome editorial design in Rethink Sans and JetBrains Mono, poster-scale type measured in container units, hairline rules, tight radii, light and dark schemes, and a GSAP motion vocabulary of split-text entrances, a page intro whose headline letters scatter in from off screen, paragraphs spoken in word by word, a letter wave, particle-assembled buttons and cards, a slipstream link, and a blast-off outro. Ships tokens (plain CSS and Tailwind v4), type roles and layout grammar, and vanilla TypeScript plus GSAP recipes. Pairs with a gsap-<framework> skill that owns the lifecycle. Not for the GSAP API, routing, or projects keeping their own brand.
+  Triggers: animaxx it, animaxxing, Animaxxing look, monochrome site, black and white website, editorial design, Swiss style, International Typographic Style, Rethink Sans, JetBrains Mono, poster type, hairline rules, split text entrance, letters scatter in, speak in paragraph, wave headline, particle button, particle canvas, blast off outro, design tokens, dark mode tokens, type-led motion.

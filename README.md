@@ -2,7 +2,7 @@
 
 <img src="assets/logo.svg" alt="Animaxxing Skills logo" width="120">
 
-AI agent skills for ambitious, production-ready page transitions with [GSAP](https://gsap.com) in specific frameworks. Each skill teaches an agent how a framework's routing, rendering, and cleanup change what GSAP code must do, so pages and components animate in and out without jank, flashes, or leaks.
+AI agent skills for ambitious, production-ready animation with [GSAP](https://gsap.com), in two families. **Framework skills** teach an agent how a framework's routing, rendering, and cleanup change what GSAP code must do, so pages and components animate in and out without jank, flashes, or leaks. **Aesthetic skills** each carry one complete look, from design tokens and typography to portable effect recipes, and hand their motion to a framework skill's lifecycle.
 
 These skills sit above the [official GSAP skills](https://github.com/greensock/gsap-skills), which cover the GSAP API itself. Install both.
 
@@ -49,6 +49,8 @@ Copy the folders under `skills/` into your agent's skill directory:
 
 ## Skills
 
+### Framework skills
+
 | Skill | Description |
 |-------|-------------|
 | **gsap-vanilla** | Plain HTML, CSS, and JavaScript sites: initial state before first paint, outro before a link is followed, cross-document View Transitions with `pageswap` and `pagereveal`, the bfcache, prerendering, fetch and swap routers, and Swup, Barba, or Taxi hooks |
@@ -58,6 +60,18 @@ Copy the folders under `skills/` into your agent's skill directory:
 | **gsap-react-router** | React Router v7 and v8 (framework, data, declarative modes): page transitions, enter and exit motion, show and hide of conditional content, scroll-driven effects, GSAP versus `viewTransition`, `useBlocker` as the only hold on navigation, transition-aware links, route reuse and `<Outlet>` keys, `useNavigation` pending UI, back and forward, `ScrollRestoration`, SSR and SPA mode first paint |
 | **gsap-tanstack-router** | TanStack Router for React and TanStack Start: page transitions, outro before navigation with `useBlocker`, pending components and `pendingMs`, route reuse and `remountDeps`, `router.subscribe` events, back and forward, `viewTransition`, scroll restoration, SSR first paint with `ScriptOnce` |
 | **gsap-nextjs** | Next.js App Router: page transitions, enter and exit motion, show and hide of conditional content, scroll-driven effects, GSAP versus React View Transitions, route lifetime under `cacheComponents`, transition-aware links, back and forward, cleanup |
+
+### Aesthetic skills
+
+| Skill | Description |
+|-------|-------------|
+| **aesthetic-animaxxing** | The Animaxxing look: monochrome editorial design in Rethink Sans and JetBrains Mono, poster-scale type, hairline rules, light and dark schemes, and a motion vocabulary of split-text entrances, a headline that scatters in from off screen, paragraphs spoken in word by word, a letter wave, particle-assembled buttons and cards, and a blast-off outro. Tokens in plain CSS and Tailwind v4, type and layout grammar, and vanilla TypeScript plus GSAP recipes |
+
+## Composing a framework skill with an aesthetic
+
+Install both. The framework skill comes first: it owns the lifecycle below, navigation timing, interruption, and cleanup. The aesthetic skill owns what each phase looks like. Its recipes are vanilla modules that return timelines or `enter`/`exit`/`blast`/`idle` instances, and the framework skill's controller decides when to call them.
+
+Ask the agent to "animaxx it" and it will apply the tokens, type roles, and layout grammar, mark the page for the route transition, and wire the surface effects where the page has a display surface for them.
 
 
 ## The lifecycle
@@ -141,19 +155,37 @@ animaxxing-skills/
         app-router-navigation.md
         motion-system.md
         verification.md
+    aesthetic-animaxxing/
+      SKILL.md
+      agents/openai.yaml
+      references/
+        tokens.md
+        typography-and-layout.md
+        motion-vocabulary.md
+        verification.md
+        recipes/
+          split-entrances.md
+          route-letters.md
+          speak-in.md
+          wave.md
+          blast-off.md
+          particle-field.md
+          particle-effects.md
 ```
 
 ## Verification
 
 [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test) holds, for each framework, a starter site, the task prompt an agent is given, a reference implementation built by following the skill, and Playwright specs that assert the lifecycle behavior the skill promises: no flash before the intro, a clean settled state, an outro that finishes before navigation, intro-only history, one navigation at a time, interruptible intros, reduced motion through every phase, and cleanup. Its eval script rebuilds a framework's app from the starter with Claude Code and runs the specs against the result.
 
+Aesthetic skills are verified against the demo that wears them: the [Animaxxing](https://github.com/johnpolacek/animaxxing) site is the reference for `aesthetic-animaxxing`, and the skill's own `references/verification.md` lists the checks. An aesthetic suite in the test repository is planned.
+
 ## Demo
 
-The [Animaxxing](https://github.com/johnpolacek/animaxxing) repository holds a Next.js showcase that consumes these skills as a real project and validates their guidance against navigation, interruption, accessibility, responsive layout, and cleanup requirements.
+The [Animaxxing](https://github.com/johnpolacek/animaxxing) repository holds a Next.js showcase that consumes these skills as a real project and validates their guidance against navigation, interruption, accessibility, responsive layout, and cleanup requirements. Its own look is what `aesthetic-animaxxing` carries, and its install page at `/animaxx` walks through installing the skills.
 
 ## Contributing
 
-Read [AGENTS.md](AGENTS.md) before adding or editing a skill. New skills must follow the shared lifecycle, gate advice on framework versions, and stay free of project-specific design.
+Read [AGENTS.md](AGENTS.md) before adding or editing a skill. New skills must follow the shared lifecycle and gate advice on framework versions. Framework skills stay free of project-specific design; aesthetic skills are a design, and stay free of any framework.
 
 Run the same checks as CI before opening a pull request:
 

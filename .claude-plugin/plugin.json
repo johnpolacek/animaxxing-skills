@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "animaxxing-skills",
   "displayName": "Animaxxing Skills",
-  "description": "Production-ready GSAP page transition and component lifecycle guidance for modern web frameworks.",
-  "version": "0.1.0",
+  "description": "Production-ready GSAP page transition and component lifecycle guidance for modern web frameworks, plus aesthetic skills that carry a complete look and its effect recipes.",
+  "version": "0.2.0",
   "author": {
     "name": "John Polacek",
     "url": "https://github.com/johnpolacek"
@@ -20,7 +20,11 @@
     "sveltekit",
     "nuxt",
     "react-router",
-    "tanstack-router"
+    "tanstack-router",
+    "design-system",
+    "monochrome",
+    "typography",
+    "aesthetic"
   ],
   "skills": "./skills/"
 }
