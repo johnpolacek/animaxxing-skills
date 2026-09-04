@@ -1,0 +1,7 @@
+interface:
+  display_name: "GSAP Astro"
+  short_description: "GSAP page and component lifecycles in Astro"
+  default_prompt: "Use $gsap-astro to add GSAP page transitions and component animation to this Astro site."
+
+policy:
+  allow_implicit_invocation: true

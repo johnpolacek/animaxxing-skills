@@ -1,0 +1,7 @@
+interface:
+  display_name: "GSAP React Router"
+  short_description: "GSAP page and component lifecycles in React Router"
+  default_prompt: "Use $gsap-react-router to add GSAP page transitions and component animation to this React Router app."
+
+policy:
+  allow_implicit_invocation: true

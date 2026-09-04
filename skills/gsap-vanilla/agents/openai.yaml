@@ -1,0 +1,7 @@
+interface:
+  display_name: "GSAP Vanilla"
+  short_description: "GSAP page and component lifecycles on plain HTML sites"
+  default_prompt: "Use $gsap-vanilla to add GSAP page transitions and component animation to this plain HTML, CSS, and JavaScript site."
+
+policy:
+  allow_implicit_invocation: true

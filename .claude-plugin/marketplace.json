@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "animaxxing-skills",
+  "description": "GSAP page transition and component lifecycle skills for specific frameworks, starting with Next.js App Router",
+  "owner": {
+    "name": "John Polacek"
+  },
+  "plugins": [
+    {
+      "name": "animaxxing-skills",
+      "description": "GSAP page transitions, enter and exit motion, and cleanup in Next.js App Router. Companion to the official GSAP skills.",
+      "author": {
+        "name": "John Polacek"
+      },
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

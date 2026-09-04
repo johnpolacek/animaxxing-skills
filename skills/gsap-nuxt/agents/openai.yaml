@@ -1,0 +1,7 @@
+interface:
+  display_name: "GSAP Nuxt"
+  short_description: "GSAP page and component lifecycles in Nuxt"
+  default_prompt: "Use $gsap-nuxt to add GSAP page transitions and component animation to this Nuxt app."
+
+policy:
+  allow_implicit_invocation: true

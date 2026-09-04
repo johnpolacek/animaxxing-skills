@@ -1,0 +1,35 @@
+# Animaxxing Skills — Index for AI Agents
+
+Use this file to discover which skill to load. Each skill lives in a directory of the same name under skills/ and contains SKILL.md.
+
+These skills cover page transitions and component lifecycles for GSAP inside specific frameworks. They assume the official GSAP skills (gsap-core, gsap-react, gsap-timeline, gsap-scrolltrigger, gsap-plugins, gsap-utils, gsap-performance, gsap-frameworks) from https://github.com/greensock/gsap-skills are also installed for the GSAP API itself.
+
+## Skills
+
+gsap-vanilla
+  Plain HTML, CSS, and JavaScript sites with no component framework: initial state before first paint, page load intros, outro before a link is followed, cross-document View Transitions with pageswap and pagereveal, navigation type, the bfcache and pageshow, prerendering, animated show and hide, scroll-driven effects, fetch plus pushState routers, and Swup, Barba, or Taxi hooks.
+  Triggers: static site animation, multi-page site, vanilla JS page transition, HTML page transition, exit animation before navigation, flash of content on load, FOUC, pageswap, pagereveal, @view-transition, bfcache, pageshow, prerender, Speculation Rules, Swup, Barba, Taxi, Vite vanilla, no framework.
+
+gsap-astro
+  Astro sites: page transitions under the ClientRouter, an outro that finishes before the swap through astro:before-preparation, cleanup in astro:before-swap, initial state on the incoming document, setup that rehooks on astro:page-load, module scripts that run once per visit, custom elements as component owners, islands and client:* directives, transition:persist, choosing transition:animate or GSAP per element, back and forward, prefetch, scroll and focus. Without ClientRouter, defers to gsap-vanilla.
+  Triggers: Astro page transition, Astro animation, ClientRouter, ViewTransitions component, astro:transitions, astro:page-load, astro:before-swap, astro:after-swap, astro:before-preparation, transition:persist, transition:name, transition:animate, data-astro-rerun, data-astro-reload, Astro islands, client:load, client:visible, client:only, navigate() Astro, animation runs twice after navigation, script not running after navigation.
+
+gsap-sveltekit
+  SvelteKit on Svelte 5: page transitions, enter and exit motion across client-side navigation, animated show and hide of conditional content, scroll-driven effects, choosing GSAP, Svelte transition directives, or View Transitions per effect, outro before navigation with onNavigate or beforeNavigate, page reuse versus {#key} remount, back and forward, runes and $effect cleanup. Not for plain Svelte without SvelteKit routing.
+  Triggers: SvelteKit page transition, Svelte 5 animation, beforeNavigate, afterNavigate, onNavigate, goto, +page.svelte, +layout.svelte, runes, $effect, transition:, in:, out:, {#key}, exit animation before navigation, intro not replaying, layout jank, interrupted animation, cleanup on navigation.
+
+gsap-nuxt
+  Nuxt 3 and 4 on Vue 3: page and layout transitions through the pageTransition and layoutTransition JavaScript hooks with css false and done, the page component unmounting when the leave starts, out-in versus overlapping modes, first load without appear, page keys and keepalive, Nuxt app hooks, scroll and focus timing, outro before navigation, back and forward detection, experimental.viewTransition, SSR and pre-paint initial state. Not for plain Vue without Nuxt.
+  Triggers: Nuxt page transition, Nuxt animation, Nuxt 3, Nuxt 4, NuxtPage, NuxtLink, pageTransition, layoutTransition, definePageMeta, Vue Transition hooks, onEnter, onLeave, done never called, keepalive, route transition, exit animation before navigation, layout jank, interrupted animation, cleanup on navigation.
+
+gsap-react-router
+  React Router v7 and v8 in framework mode (SSR on or off), data mode, or declarative mode: page transitions, enter and exit motion across client-side navigation, animated show and hide of conditional content, scroll-driven effects, choosing GSAP or Link viewTransition per effect, useBlocker as the only hold on navigation with proceed from the end callback, transition-aware Link wrappers, route reuse versus Outlet keys, useNavigation pending UI, loaders and streaming, back and forward, ScrollRestoration, SSR and SPA mode first paint. Not for Next.js, TanStack Router, or React without a router.
+  Triggers: React Router page transition, react-router v7, react-router v8, Remix, framework mode, data mode, HydratedRouter, RouterProvider, useBlocker, useNavigation, useViewTransitionState, Link viewTransition, NavLink, loaders, clientLoader, HydrateFallback, Outlet, route transition, exit animation before navigation, intro not replaying on param change, ScrollRestoration, layout jank, interrupted animation, cleanup on navigation.
+
+gsap-tanstack-router
+  TanStack Router for React, including TanStack Start: page transitions, enter and exit motion across client-side navigation, animated show and hide, scroll-driven effects, outro before navigation with useBlocker or an intercepted Link, pending components and pendingMs, route reuse versus remountDeps, router.subscribe events, back and forward, viewTransition, scrollRestoration, and SSR hydration with HeadContent, Scripts, and ScriptOnce. Not for Next.js, React Router, or plain React.
+  Triggers: TanStack Router, @tanstack/react-router, TanStack Start, createFileRoute, createRootRoute, useBlocker, shouldBlockFn, pendingComponent, useRouterState, useNavigate, Outlet, Link preload, activeProps, viewTransition, defaultViewTransition, remountDeps, scrollRestoration, onRendered, ScriptOnce, route transition, page transition, exit animation before navigation, intro not replaying, layout jank, interrupted animation, cleanup on navigation.
+
+gsap-nextjs
+  Next.js App Router: page transitions, enter and exit motion, animated show and hide of conditional content, scroll-driven effects, choosing GSAP or React View Transitions per effect, route lifetime under cacheComponents, transition-aware links, back and forward, cleanup. Not for the Pages Router.
+  Triggers: Next.js page transition, App Router animation, route transition, exit animation, outro before navigation, enter animation, useGSAP Next.js, onNavigate, useLinkStatus, ViewTransition, cacheComponents, Activity, layout jank, interrupted animation, cleanup on navigation.

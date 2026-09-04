@@ -1,0 +1,7 @@
+interface:
+  display_name: "GSAP SvelteKit"
+  short_description: "GSAP page and component lifecycles in SvelteKit"
+  default_prompt: "Use $gsap-sveltekit to add GSAP page transitions and component animation to this SvelteKit app."
+
+policy:
+  allow_implicit_invocation: true

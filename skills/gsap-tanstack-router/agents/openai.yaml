@@ -1,0 +1,7 @@
+interface:
+  display_name: "GSAP TanStack Router"
+  short_description: "GSAP page and component lifecycles in TanStack Router"
+  default_prompt: "Use $gsap-tanstack-router to add GSAP page transitions and component animation to this TanStack Router app."
+
+policy:
+  allow_implicit_invocation: true

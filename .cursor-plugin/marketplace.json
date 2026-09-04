@@ -1,0 +1,13 @@
+{
+  "name": "animaxxing-skills",
+  "owner": {
+    "name": "John Polacek"
+  },
+  "plugins": [
+    {
+      "name": "animaxxing-skills",
+      "source": "./",
+      "description": "GSAP page transitions, enter and exit motion, and cleanup in Next.js App Router. Companion to the official GSAP skills."
+    }
+  ]
+}
