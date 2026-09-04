@@ -88,6 +88,7 @@ Each recipe file carries a local `prefersReducedMotion()`; replace it with the p
 - Pre-paint hiding of marked items needs the framework skill's no-script path; the CSS rule alone is not enough.
 - Reduced motion snaps to the settled state and still fires every completion callback.
 - One ambient effect per surface, paused off screen, stopped on exit, destroyed on unmount.
+- A settled width change resets the page: remount and replay the entrance. Height alone never counts.
 - Pointer states have keyboard parity: `hover(true)` on focus, `hover(false)` on blur.
 
 ## Verification

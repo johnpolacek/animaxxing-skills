@@ -1,6 +1,6 @@
 {
   "name": "animaxxing-skills",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Production-ready GSAP page transition and component lifecycle guidance for modern web frameworks, plus aesthetic skills that carry a complete look and its effect recipes.",
   "author": {
     "name": "John Polacek",

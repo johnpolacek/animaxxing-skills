@@ -2,6 +2,12 @@
 
 All notable changes to Animaxxing Skills are documented here. Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] - 2026-09-04
+
+### Added
+
+- `aesthetic-animaxxing`: the resize policy. A settled width change remounts the page and replays its entrance; height-only changes are ignored; the wave stops the moment a headline reflows.
+
 ## [0.2.0] - 2026-09-04
 
 ### Added

@@ -223,3 +223,4 @@ The controller must also:
 - Kill the intro before starting the outro. `onInterrupt` reverts the splits.
 - Mark the container `data-transition-state="waiting"` immediately when a surface effect has already cleared the page (the hero's blast-off) so the swap happens without a second outro.
 - Ship the pre-paint CSS in [motion-vocabulary.md](../motion-vocabulary.md#pre-paint-hiding) with the framework skill's no-script path.
+- Replay on a settled resize: observe the container's inline size, ignore moves under 24px from the entered width, wait 300ms of quiet, then kill the intro, set `waiting`, remount the page subtree (a React `key`, a Svelte `{#key}`, a Vue `:key`, or a fresh render), and call `buildPageIntro` again. See [Resize](../motion-vocabulary.md#resize).

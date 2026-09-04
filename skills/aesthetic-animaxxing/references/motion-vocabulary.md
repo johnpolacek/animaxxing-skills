@@ -169,6 +169,18 @@ Add every `data-*` hook a surface effect uses to the list. `autoAlpha: 1` clears
 
 This rule alone breaks the page without JavaScript. The framework skill gives the no-script path (a `<noscript>` override, a class set by the first script, or a server flag); use it. Do not ship the rule without one.
 
+## Resize
+
+A resize resets the page. Once the width has moved and settled, the page enters again from scratch at the new size, the same way it does after a navigation. Nothing tries to adapt a half-played effect to a new layout.
+
+- **Width only.** Mobile browsers change the height on every scroll, when the address bar collapses, and when the keyboard opens. Watch the page container's inline size, never the window height.
+- **A threshold.** Measure from the width the page last entered at, and ignore moves under about 24px. A scrollbar appearing or disappearing is smaller than that; a real drag crosses it quickly.
+- **Debounce the end.** About 300ms of quiet after the last width change. Show the settled state during the drag, never a blank: the fluid type reflows on its own.
+- **Stop what breaks mid-drag.** The wave pins each letter to a pixel width, so it is wrong the moment the headline reflows. Stop it and revert its split on the first width change; if no replay follows, start it again after a beat longer than the page's settle. Particle fields re-measure through their own observers and need nothing.
+- **Replay by remounting.** Kill the running entrance, seal the container (`waiting`), and remount the page subtree, then run the entrance again. Effects that only tidy up on unmount, which is most of them, get a clean start for free; nothing accumulates splits, triggers, or timers.
+- **The shell stays.** Persistent chrome outside the route boundary entered once and is not replayed.
+- **Reduced motion:** re-settle without replaying.
+
 ## Ambient motion
 
 Loops that run while a surface idles: the letter wave on a headline, embers off a button, a runner on a card outline. Rules:
