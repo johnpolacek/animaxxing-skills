@@ -2,6 +2,18 @@
 
 All notable changes to Animaxxing Skills are documented here. Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.2.2] - 2026-09-08
+
+### Fixed
+
+- Character-animation guidance now keeps scoped kerning settings consistent across SplitText setup and revert to prevent horizontal snaps.
+- Split entrance recipes accept an optional scoped character-mask class for confirmed glyph clipping, preserving animation timing, accessibility, and cleanup.
+
+### Changed
+
+- Typography diagnosis distinguishes kerning shifts from clipped glyph ink, late fonts, ligatures, wrapping, and other geometry changes.
+- Verification compares glyph appearance and character positions across cleanup, checks both reveal directions, and covers desktop, mobile, reduced motion, and interruptions.
+
 ## [0.2.1] - 2026-09-04
 
 ### Added
