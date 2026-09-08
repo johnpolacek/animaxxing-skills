@@ -64,8 +64,36 @@ Change one cause at a time; do not apply every workaround:
 | Font face or metrics change after splitting | Have the framework controller wait for the required fonts (`document.fonts.ready`), or use supported `autoSplit`/`onSplit` handling. Check the installed GSAP version and docs; returning the animation from `onSplit` lets the plugin manage re-splits. |
 | Joined glyphs such as `fi`/`ffi` differ between states | Inspect ligatures separately. If confirmed, test persistent `font-variant-ligatures: none` on the affected target, or preserve shaping with words/lines. Do not disable ligatures globally or assume the rendering hint fixes every font/browser. |
 | Line membership or heading height changes | Inspect available width, white space, tracking, and word grouping. GSAP warns against `text-wrap: balance` on split targets: omit the type roles' `text-balance` there and keep normal wrapping consistent across states. Use `smartWrap` for chars-only splits or words/lines grouping; re-split lines when width changes through the controller. |
-| Clipped ascenders/descenders or different vertical bounds with masks | Inspect mask overflow, padding, line-height, and wrapper geometry. Adjust the affected mask only when clipping is demonstrated; height reservation does not fix horizontal kerning. |
+| Text appears heavier after revert, or letter edges/descenders are clipped while masked | Compare computed font properties and font readiness first, then inspect glyph ink against each mask. Stable boxes and unchanged weight do not rule out clipping. Use the targeted mask fix below when demonstrated. |
 | Weight effects jump when pinned character widths are removed | Compare pinned widths with the settled font's advances. Width pinning can stabilize the weight animation yet still change spacing on revert; verify that boundary separately. |
+
+### Apparent weight change from clipped glyph ink
+
+This is distinct from kerning: `mask: "chars"` with tight negative `letter-spacing` and `line-height` can clip letter edges and descenders. Removing masks exposes the complete glyph, making it look heavier without changing font weight or character positions. The kerning CSS above does not give masks extra room.
+
+Before diagnosing a weight change, compare computed `font-family`, `font-weight`, `font-size`, `font-style`, `font-variation-settings`, and `font-feature-settings` on the split characters and restored text. Record tracking and line-height too. Confirm the intended font face is loaded (font readiness plus the browser's rendered-font inspection), not just that its CSS family is declared. If these are stable, compare captured glyphs and inspect mask overflow before blaming GPU compositing or trying `force3D`, layer promotion, or font-smoothing changes.
+
+For confirmed mask clipping, add a class only to the affected split's masks immediately after creation, before building the reveal:
+
+```ts
+// split is the affected headline's existing character-masked SplitText instance.
+for (const mask of split.masks) mask.classList.add("title-char-mask");
+// With CSS Modules, pass the scoped token instead: styles.titleCharMask.
+```
+
+```css
+.title-char-mask {
+  /* Verified for the AI Film Camp headline; tune to the actual glyph ink. */
+  padding: 0.15em;
+  margin: -0.15em;
+}
+```
+
+Padding expands the clipping area; matching negative margins compensate for the added space to preserve the layout footprint. `0.15em` is a verified value for that typography, not a universal constant or a new design token. Use only enough room for the actual font, size, tracking, and line-height, and measure spacing, wrapping, and height again. Keep clipping enabled so the reveal still works. Do not apply this to all split wrappers, unmasked characters, or headings globally.
+
+Apply the class to each new affected split (inside `onSplit` if the controller uses auto re-splitting). In [split entrances](recipes/split-entrances.md), the optional `charMaskClass` passes this class to character masks only. Preserve durations, easing, stagger, `aria`, completion callbacks, and revert/unmount cleanup: the styled mask nodes disappear with revert. Unlike the permanent kerning CSS, this class belongs to temporary mask nodes.
+
+Expanded masks may expose characters at the hidden endpoint. Check both forward and backward reveals, including opposite travel directions; do not assume `yPercent: 115` or `-115` still hides all ink. If a frame shows leakage, adjust only the hidden travel distance enough to clear the expanded mask, retaining animation timing, then repeat the checks.
 
 See [cleanup verification](verification.md#splittext-cleanup-stability) for measurements and the observed regression.
 

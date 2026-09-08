@@ -4,7 +4,7 @@ The framework skill's controller calls these during intro and outro; this module
 
 Dependencies: `gsap`, `gsap/SplitText` (free since 3.13). `scrambleIn`/`Out` also need `gsap/ScrambleTextPlugin`.
 
-Setup: follow [stable typography for character animation](../typography-and-layout.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+Setup: follow [stable typography for character animation](../typography-and-layout.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. For confirmed clipped ink, use the optional `charMaskClass` with the [targeted mask CSS](../typography-and-layout.md#apparent-weight-change-from-clipped-glyph-ink); verify both hidden endpoints after expanding masks. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
 
 ```ts
 import gsap from "gsap";
@@ -26,7 +26,12 @@ const EASE = { entrance: "power2.out", exit: "power2.in", shift: "power2.inOut" 
 const STAGGER = { tight: 0.03, loose: 0.05 } as const;
 const WEIGHT = { rest: 400, display: 800 } as const;
 
-export type MotionOptions = { delay?: number; onComplete?: () => void };
+export type MotionOptions = {
+  delay?: number;
+  onComplete?: () => void;
+  /** One CSS class token for confirmed character-mask clipping; no default padding. */
+  charMaskClass?: string;
+};
 export type SplitRunner = (target: HTMLElement | null, options?: MotionOptions) => gsap.core.Timeline;
 
 function build(options: MotionOptions): gsap.core.Timeline {
@@ -53,6 +58,9 @@ function withSplit(
   if (prefersReducedMotion()) return tl.set(element, settled);
 
   const split = SplitText.create(element, { aria: "auto", ...config });
+  if (config.mask === "chars" && options.charMaskClass) {
+    for (const mask of split.masks) mask.classList.add(options.charMaskClass);
+  }
   tl.set(element, { autoAlpha: 1 });
   choreograph(split, tl);
   tl.eventCallback("onComplete", () => {
@@ -322,11 +330,14 @@ export const scrambleOut: SplitRunner = (element, options = {}) => {
 // heading has the persistent character-headline class from the typography reference.
 // Keep that CSS when withSplit calls split.revert(); smartWrap/mask do not fix kerning.
 const intro = gsap.timeline();
-intro.add(charsRiseIn(heading), 0);
+// Omit charMaskClass unless clipping is confirmed; CSS lives in the typography reference.
+// A CSS Modules caller can pass styles.titleCharMask as the class token.
+const headlineOptions = { charMaskClass: "title-char-mask" };
+intro.add(charsRiseIn(heading, headlineOptions), 0);
 intro.add(linesMaskIn(lede), 0.2);
 // The outro is the paired exit, in reverse order:
 const outro = gsap.timeline();
-outro.add(linesMaskOut(lede), 0).add(charsFallOut(heading), 0.05);
+outro.add(linesMaskOut(lede), 0).add(charsFallOut(heading, headlineOptions), 0.05);
 ```
 
 Give a split heading its own pre-paint hiding rule rather than marking it as a page item too, or the page's stagger and the split's rise will fight over one element.

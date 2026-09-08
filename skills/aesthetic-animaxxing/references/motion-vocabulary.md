@@ -77,7 +77,7 @@ Display type only: a masthead, a landing statement, a section title, a card head
 
 | Family | Split | Move | Role |
 |---|---|---|---|
-| `charsRiseIn` | chars, masked | `yPercent: 115 → 0`, 0.5s, `power3.out`, stagger 0.03 | The house entrance. |
+| `charsRiseIn` | chars, masked | `yPercent: 115 → 0`, 0.5s, `power3.out`, stagger 0.03 | The house entrance. Check [mask ink clearance](typography-and-layout.md#apparent-weight-change-from-clipped-glyph-ink) for tight type. |
 | `charsSpringIn` | chars, unmasked | `yPercent: 115`, `autoAlpha`, 1.1s, `elastic.out(1, 0.5)` | The wordmark. Unmasked because the overshoot would clip. |
 | `charsCascadeIn` / `Out` | chars | `y: -18`, random `rotation ±14`, `back.out(1.8)`, stagger 0.02 from random | A dealer flicking cards. |
 | `charsFlipIn` / `Out` | chars | `rotationX: -90` about the top edge | Each letter tips over. |

@@ -136,6 +136,7 @@ Use SplitText when the effect needs per-character, word, or line targets.
 
 - Split only what animates.
 - For character targets, set persistent, scoped `font-kerning: none; text-rendering: optimizeSpeed` before splitting and retain it after `split.revert()`, including reduced motion. Character wrappers disrupt kerning; restoring it can snap text horizontally without changing height. Keep revert cleanup; prefer words/lines without chars if natural kerning is essential. See [GSAP’s documented limitation](https://gsap.com/docs/v3/Plugins/SplitText/#tips--limitations). Diagnose late fonts, ligatures, wrapping, and mask geometry separately rather than stacking workarounds.
+- If text looks heavier after revert, compare computed font properties and font readiness first. Character masks can clip glyph ink with tight tracking/leading even when weight and boxes stay unchanged. Inspect captured letter edges, dots, punctuation, and descenders before `force3D` or compositing workarounds. For confirmed clipping, scope mask padding with compensating negative margins to the affected split; tune it to that typography and check full hiding in both reveal directions. Preserve timing and cleanup.
 - Keep reading accessible with the plugin's ARIA support. If text contains links or controls, keep an unsplit accessible version instead of hiding them.
 - Use word-aware wrapping for character animation. Use auto re-split for line animation that must survive width or font changes.
 - Wait for fonts or use the re-split lifecycle when line measurement matters. Reserve settled height before splitting if wrappers could shift layout.
@@ -144,7 +145,7 @@ Use SplitText when the effect needs per-character, word, or line targets.
 - A split heading takes its timing from the page phase, not its own clock. Give it its own pre-paint rule rather than marking it as a page target, or the page's stagger and the split's rise fight over one element.
 - Revert splits on interruption and unmount. Do not leave wrapper spans in stale content.
 
-Revert split markup only when the owning phase no longer needs it. Compare character positions, heading height, and line wrapping immediately before and after cleanup in desktop, mobile, reduced-motion, and interrupted flows; distinguish negligible subpixel rounding from visible movement.
+Revert split markup only when the owning phase no longer needs it. Compare character positions, heading height, and line wrapping immediately before and after cleanup in desktop, mobile, reduced-motion, and interrupted flows; distinguish negligible subpixel rounding from visible movement. Compare captured frames across revert too: stable bounding boxes do not prove stable glyph appearance.
 
 ## Interaction
 

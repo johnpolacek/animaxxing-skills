@@ -83,7 +83,7 @@ Each recipe file carries a local `prefersReducedMotion()`; replace it with the p
 - Uppercase mono for metadata; never for body copy. Annotation type stays above 11px and is never cropped.
 - Poster type may be cropped at a deliberate boundary. Reading type is never cropped.
 - Motion signals change. Reading text never assembles itself; display text may.
-- Before character splitting, read [stable typography](references/typography-and-layout.md#stable-typography-for-character-animation). Keep the affected target’s typography consistent before, during, and after splitting; verify character positions across revert as well as height and wrapping.
+- Before character splitting, read [stable typography](references/typography-and-layout.md#stable-typography-for-character-animation). Keep the affected target’s typography consistent before, during, and after splitting; verify captured glyph appearance and character positions across revert as well as height and wrapping. For apparent weight changes, check computed fonts and readiness, then inspect masks for clipped ink before compositing workarounds.
 - Timeline defaults `overwrite: "auto"`. Every split uses `aria: "auto"` and reverts when its phase ends.
 - Set `will-change` only while animating, then clear it with the other temporary styles at settled.
 - Pre-paint hiding of marked items needs the framework skill's no-script path; the CSS rule alone is not enough.
