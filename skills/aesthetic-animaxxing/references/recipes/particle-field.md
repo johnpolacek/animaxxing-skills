@@ -17,7 +17,17 @@ The canvas sits in a wrapper with the target, offset by the effect's bleed, colo
 </div>
 ```
 
-Add the wrapper's `data-*` hook to the pre-paint hiding list; the effect's `enter` reveals the target.
+Plain CSS equivalent for the positioning classes above (under-layer example):
+
+```css
+[data-particle-button] { position: relative; isolation: isolate; }
+[data-particle-button] canvas {
+  pointer-events: none; position: absolute; z-index: 10; color: var(--foreground);
+}
+[data-particle-button] button { position: relative; z-index: 20; }
+```
+
+The framework controller handles any pre-paint hiding and wrapper reveal.
 
 ## field.ts
 
@@ -379,7 +389,7 @@ export function attachParticleEffect(
       entrance?.kill();
       entrance = null;
       instance.exit();
-      gsap.to(target, { autoAlpha: 0, duration: 0.2, overwrite: "auto" });
+      gsap.to(target, { autoAlpha: 0, duration: prefersReducedMotion() ? 0 : 0.2, overwrite: "auto" });
     },
     blast() {
       ready = false;
@@ -409,18 +419,8 @@ export function attachParticleEffect(
 }
 ```
 
-In React, wrap the same body in `useGSAP` with the component's scope and return `controls.destroy` as the cleanup; `contextSafe` the `enter`, `blast`, and `idle` calls so their tweens join the context. In Svelte or Vue, call it in the mount hook and destroy in the unmount hook. The framework skill says which.
+## Controller contract
 
-## Wiring
+`attachParticleEffect(wrapper, canvas, target, effect)` returns `enter`, `exit`, `blast`, `idle`, and `destroy` controls. These controls return void; they are surface effects, not navigation-completion promises. The framework controller owns their GSAP context and calls `destroy` to release observers, listeners, timelines, and the ticker.
 
-```ts
-const controls = attachParticleEffect(wrapper, canvas, button, reactor);
-watchPageTransition(wrapper, {
-  onEntering: () => { controls.enter(1.25); gsap.set(wrapper, { autoAlpha: 1 }); },
-  onExiting: () => controls.exit(),
-});
-button.addEventListener("click", () => controls.blast());
-// unmount: controls.destroy()
-```
-
-The wrapper starts hidden by the pre-paint rule; `enter` hides the target itself at time zero, so the wrapper can be released at once and only the canvas shows until the target assembles.
+The target is prepared by `enter`; reveal a hidden wrapper separately so its canvas can show while the target assembles. Use the framework skill for first-paint readiness and lifecycle subscriptions.

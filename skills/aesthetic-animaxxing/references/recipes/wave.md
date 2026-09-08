@@ -137,16 +137,6 @@ export function startWave(heading: HTMLElement, { period = 4 }: WaveOptions = {}
 }
 ```
 
-## Wiring
+## Controller contract
 
-```ts
-let stopWave = () => {};
-watchPageTransition(heading, {
-  onIdle: () => { stopWave = startWave(heading, { period: 1.5 }); },   // splits reverted by then
-  onExiting: () => { stopWave(); },                                     // hand the letters back before the outro splits them
-});
-// On a blast-off, stop with keepSplit: stopWave(true), since blastOff splits the same heading itself.
-// On unmount: stopWave().
-```
-
-If the heading can scroll off screen, stop and restart it from an `IntersectionObserver` so the ticker rests.
+`startWave(heading, { period: 1.5 })` returns a stop function. The owner invokes it only after other heading splits are released, and stops it before another effect takes the heading. Use the normal stop path to revert the split; `keepSplit` requires an explicit owner for the retained markup. The controller supplies visibility and resize signals.

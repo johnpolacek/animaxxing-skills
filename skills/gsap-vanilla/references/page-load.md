@@ -35,7 +35,7 @@ Never hide content unconditionally in CSS. A user without JavaScript, a crawler,
 - The controller writes every target's start values with `gsap.set` or `fromTo` before it changes the phase, so the release never shows the settled state.
 - Use `visibility`, not `display`, so layout is measured with the elements in place.
 
-If the script fails after the mark is set, the page stays hidden. Keep the marking script tiny and inline so it cannot fail separately from the CSS, and have the controller change the phase as its first act, before anything that can throw.
+The marking script needs a bounded failsafe that removes the mark if the controller never claims the document (for example, a failed bundle). A late controller takes the settled path rather than rehiding already visible content. Release the initial phase only after target preparation succeeds; on setup failure, restore readable content.
 
 ## Waiting for the DOM, fonts, and media
 

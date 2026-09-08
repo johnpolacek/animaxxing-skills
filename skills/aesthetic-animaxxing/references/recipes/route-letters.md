@@ -1,6 +1,6 @@
 # Recipe: route intro and outro
 
-The framework skill's controller calls `buildPageIntro` during intro and `buildPageOutro` during outro; this module never decides when, never touches the router, and never listens for clicks. It reads `data-page-transition` on the page's items, writes `data-transition-state` on the container so surface effects can follow along, and returns a timeline.
+The framework skill's controller calls `buildPageIntro` during intro and `buildPageOutro` during outro; this module never decides when, never touches the router, and never listens for clicks. It reads `data-page-transition` on the page's items and returns a timeline. The controller owns phase state.
 
 Dependencies: `gsap`, `gsap/SplitText`.
 
@@ -70,14 +70,12 @@ export function buildPageIntro(container: HTMLElement, onComplete?: () => void):
   const finish = () => {
     allLetters.forEach(revertLetters);
     if (allLetters.length > 0) gsap.set(allLetters, { autoAlpha: 1, clearProps: "transform,willChange" });
-    container.dataset.transitionState = "idle";
     onComplete?.();
   };
   timeline.eventCallback("onComplete", finish);
   timeline.eventCallback("onInterrupt", () => allLetters.forEach(revertLetters));
 
   if (prefersReducedMotion()) {
-    container.dataset.transitionState = "entering";
     if (slide.length > 0) gsap.set(slide, { transition: "none" });
     timeline.set(items, { autoAlpha: 1, clearProps: "transform,willChange" });
     if (slide.length > 0) timeline.set(slide, { clearProps: "transition" });
@@ -106,7 +104,6 @@ export function buildPageIntro(container: HTMLElement, onComplete?: () => void):
     gsap.set(split.chars, { autoAlpha: 0, x: (index: number) => sideOffset(index), y: 0 });
     return split;
   });
-  container.dataset.transitionState = "entering";
 
   timeline.addLabel("enter", 0).set(items, { willChange: "transform, opacity" }, "enter");
   for (const split of splits) {
@@ -154,14 +151,10 @@ export function buildPageOutro(container: HTMLElement, onComplete: () => void): 
     onComplete: () => {
       allLetters.forEach(revertLetters);
       if (allLetters.length > 0) gsap.set(allLetters, { autoAlpha: 0 });
-      // Survives the route swap and overrides any inline styles a context
-      // cleanup restores. The CSS rule for "waiting" keeps the page sealed.
-      container.dataset.transitionState = "waiting";
       onComplete();
     },
   });
   timeline.eventCallback("onInterrupt", () => allLetters.forEach(revertLetters));
-  container.dataset.transitionState = "exiting";
   if (slide.length > 0) gsap.set(slide, { transition: "none" });
 
   if (prefersReducedMotion()) return timeline.set(items, { autoAlpha: 0 });
@@ -203,26 +196,8 @@ export function buildPageOutro(container: HTMLElement, onComplete: () => void): 
 }
 ```
 
-## Wiring
+## Controller contract
 
-The framework skill's route boundary owns the container and the phases. Typical shape, in whatever lifecycle the framework skill prescribes:
+Call `buildPageIntro(container, onComplete)` with prepared targets and `buildPageOutro(container, onComplete)` for the requested exit. Both return timelines; killing them reverts their character splits but does not call successful completion. The controller must settle any wait on interruption separately.
 
-```ts
-// On mount of a route (initial state is the CSS pre-paint rule):
-const intro = buildPageIntro(container, () => focusIfNeeded());
-
-// When an internal link is followed and the outro must finish first:
-intro.kill();
-buildPageOutro(container, () => router.go(href));
-
-// Back and forward: intro only, never an outro.
-// On unmount: kill whichever timeline is live. The splits revert on interrupt.
-```
-
-The controller must also:
-
-- Set the page container `tabIndex={-1}` and move focus to it after the intro only when a navigation left focus on `<body>`.
-- Kill the intro before starting the outro. `onInterrupt` reverts the splits.
-- Mark the container `data-transition-state="waiting"` immediately when a surface effect has already cleared the page (the hero's blast-off) so the swap happens without a second outro.
-- Ship the pre-paint CSS in [motion-vocabulary.md](../motion-vocabulary.md#pre-paint-hiding) with the framework skill's no-script path.
-- Replay on a settled resize: observe the container's inline size, ignore moves under 24px from the entered width, wait 300ms of quiet, then kill the intro, set `waiting`, remount the page subtree (a React `key`, a Svelte `{#key}`, a Vue `:key`, or a fresh render), and call `buildPageIntro` again. See [Resize](../motion-vocabulary.md#resize).
+The controller owns the barrier: prepare targets before revealing the intro, and keep the outgoing end state covered through cleanup if its router needs that. It also owns focus, phase signals to surface effects, and any [resize response](../motion-vocabulary.md#resize). Do not attach another entrance to an element already marked as a page item.

@@ -14,6 +14,14 @@ import { SplitText } from "gsap/SplitText";
 
 gsap.registerPlugin(SplitText);
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return true;
+  const choice = document.documentElement.dataset.motion;
+  if (choice === "reduced") return true;
+  if (choice === "full") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 const rnd = gsap.utils.random;
 /** Fast is the point. */
 const LETTER_TIME: [number, number] = [0.4, 0.6];
@@ -41,6 +49,10 @@ function centre(el: Element): { x: number; y: number } {
 }
 
 export function blastOff({ root, heading, words, pressed, others }: BlastOffOptions): BlastOff {
+  if (prefersReducedMotion()) {
+    const timeline = gsap.timeline().set([heading, ...words, pressed, ...others], { autoAlpha: 0 });
+    return { timeline, revert: () => { timeline.revert(); } };
+  }
   const origin = centre(pressed);
   const split = SplitText.create(heading, { type: "chars,words" });
   const chars = split.chars as HTMLElement[];
@@ -100,25 +112,6 @@ export function blastOff({ root, heading, words, pressed, others }: BlastOffOpti
 }
 ```
 
-## Wiring
+## Controller contract
 
-```ts
-/** Seconds after the press before navigation starts; the page is visibly cleared by then. */
-const HANDOFF = 0.6;
-
-function press(pressedButton: HTMLElement, href: string) {
-  if (busy) return;
-  busy = true;
-  stopWave(true);                       // keep the wave's split; blastOff splits the same heading
-  pressedEffect.blast();                // the button's particle burst
-  otherEffect.exit();
-  const outro = blastOff({ root, heading, words: spoken.words, pressed: pressedButton, others });
-  gsap.delayedCall(HANDOFF, () => {
-    container.dataset.transitionState = "waiting";   // the page is already clear: skip the route outro
-    navigate(href);                                   // whatever the framework skill prescribes
-  });
-  // If the navigation is cancelled: outro.timeline.reverse(); then outro.revert() on complete, and restart the wave.
-}
-```
-
-Prefetch every destination the buttons can reach so the handoff lands on a ready route.
+`blastOff({ root, heading, words, pressed, others })` returns `{ timeline, revert }`. Stop competing headline/particle effects before calling it. Keep any speak-in word handles valid while the blast uses them. The framework controller consumes timeline completion and invokes `revert` when the visual no longer needs its split; navigation and cancellation policy belong to that controller.

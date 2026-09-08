@@ -1,6 +1,6 @@
 ---
 name: gsap-react-router
-description: "Build or review GSAP animation in React Router v7 and v8 projects in framework mode (SSR on or off), data mode, or declarative mode: page transitions, enter and exit motion across client-side navigation, animated show and hide of conditional content, and scroll-driven effects. Use whenever a React Router or Remix-style project needs any of these, even if GSAP is not named, and whenever an intro fails to replay on a param change, an outro is cut off by navigation, layout jank, interrupted animations, or cleanup matter. Covers useBlocker as the only hold on navigation, useNavigation and pending UI, loaders, Outlet and route reuse, Link viewTransition and useViewTransitionState, back and forward, ScrollRestoration, and choosing GSAP or View Transitions per effect. Not for Next.js (gsap-nextjs), TanStack Router (gsap-tanstack-router), React without a router (gsap-react), or isolated GSAP API questions."
+description: "Build or review React Router v7/v8 animation in framework, data, or declarative mode: GSAP page transitions, component enter/exit, scroll effects, useBlocker, route reuse, and cleanup. Use even when GSAP is unnamed, including choosing viewTransition. Not for Next.js, TanStack Router, React without routing, or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: GSAP page and component lifecycles in React Router
@@ -8,47 +8,23 @@ metadata:
 
 # GSAP React Router
 
-Every animated page or component runs through the same lifecycle:
-
 **mount → initial state → intro → settled → outro → end state → unmount**
 
-Mount and unmount belong to React. The five phases between them belong to your animation code and happen while the node exists. This skill covers getting those phases right when React Router decides when routes load, commit, reuse, and unmount: navigation timing, holding a navigation, route reuse, interruptions, and cleanup. The user's request and the existing design decide how things look.
+Mount and unmount belong to React; animation owns the five phases between them. React Router has no leave hook: hold navigation with a blocker or intercept it before it starts. Parameter changes can reuse the route element.
 
-React Router has no leave hook. A link click starts loading at once, and the outgoing route unmounts when the incoming one commits. `useBlocker` is the only way to hold a navigation, and a route matched again with new params keeps its element mounted. See [Route lifetime](references/route-lifetime.md).
+Keep the requested look and existing project conventions. Add GSAP/plugins only as needed; do not replace the chosen animation library unless asked.
 
 ## Start with the project
 
-1. Read repository instructions and the current code.
-2. Confirm React Router 7 or later and its mode. Framework mode has `react-router.config.ts`, `routes.ts`, `root.tsx`, and `HydratedRouter` in `entry.client.tsx`. Data mode has `createBrowserRouter` and `RouterProvider`. Declarative mode has `BrowserRouter` and no loaders, no `useNavigation`, and no blocker. A Remix 2 app uses the same hooks from `@remix-run/react`; say so and map the names.
-3. Read the installed version from `node_modules/react-router/package.json`. The package ships its `docs/`, `CHANGELOG.md`, and `.d.ts` files in `dist/`; prefer them over memory. Version gates: `useBlocker` (6.19), `viewTransition` and `useViewTransitionState` (6.27), `Link mask` and `useTransitions` (7.15), middleware (7.9 behind `future.v8_middleware`, always on in 8). Version 8 is ESM-only, needs React 19.2, and drops `react-router-dom`: `RouterProvider` and `HydratedRouter` come from `react-router/dom`.
-4. In framework mode check `ssr` and `prerender` in `react-router.config.ts`. Server-rendered and prerendered pages paint HTML before hydration. `ssr: false` ships an `index.html` holding only the root route and its `HydrateFallback`, so route content renders after hydration and needs no pre-paint rule. Data and declarative mode without server rendering are the same.
-5. Look at `root.tsx` or the root element, layouts with `<Outlet>`, navigation components, `<ScrollRestoration>`, global CSS, accessibility conventions, tests, and any animation library already in use.
-6. Keep the project's package manager, language, file layout, styling, and component conventions.
+Read repository instructions, existing animation, layouts, navigation, CSS, accessibility conventions, and checks. Then:
 
-Add GSAP, `@gsap/react`, or a plugin only when the requested motion needs it. Do not replace an animation library the project already chose unless asked.
+1. Confirm React Router 7 or later and its mode. Framework mode has `react-router.config.ts`, `routes.ts`, `root.tsx`, and `HydratedRouter` in `entry.client.tsx`. Data mode has `createBrowserRouter` and `RouterProvider`. Declarative mode has `BrowserRouter` and no loaders, no `useNavigation`, and no blocker. A Remix 2 app uses the same hooks from `@remix-run/react`; say so and map the names.
+2. Read the installed version from `node_modules/react-router/package.json`. The package ships its `docs/`, `CHANGELOG.md`, and `.d.ts` files in `dist/`; prefer them over memory. Version gates: `useBlocker` (6.19), `viewTransition` and `useViewTransitionState` (6.27), `Link mask` and `useTransitions` (7.15), middleware (7.9 behind `future.v8_middleware`, always on in 8). Version 8 is ESM-only, needs React 19.2, and drops `react-router-dom`: `RouterProvider` and `HydratedRouter` come from `react-router/dom`.
+3. In framework mode check `ssr` and `prerender` in `react-router.config.ts`. Server-rendered and prerendered pages paint HTML before hydration. `ssr: false` ships an `index.html` holding only the root route and its `HydrateFallback`, so route content renders after hydration and needs no pre-paint rule. Data and declarative mode without server rendering are the same.
 
-## Pick GSAP or View Transitions per effect
+## Choose the engine
 
-React Router wraps a navigation in `document.startViewTransition` when the Link, Form, or `navigate` call sets `viewTransition`. Use that for:
-
-- A shared element that morphs between two routes, named through `useViewTransitionState` or the NavLink `isTransitioning` render prop.
-- A whole-page crossfade or slide keyed by a class on the root while the transition runs.
-- A swap that should not be a hard cut, including back and forward, which replay a recorded transition.
-
-These need no lifecycle code and fall back to a plain update where the API is missing.
-
-Use GSAP when the effect needs:
-
-- An outro that finishes on the live outgoing page before the router loads and commits the next route.
-- Interruption, reversal, or scrubbing mid-transition. A view transition is a fixed pair of snapshots.
-- Sequenced timing across many targets, split text, or scroll-linked progress.
-- A completion callback that gates navigation, focus, or unmount.
-
-Mixing is fine: the browser morphs one image while GSAP animates the rest. Never give one element to both in the same transition. See [Combining with View Transitions](references/react-router-navigation.md#combining-with-view-transitions).
-
-## Follow the requested motion
-
-The user's request decides effects, direction, timing, easing, and intensity. Map it onto the five phases without changing the look. For anything unspecified, keep the project's existing convention or pick a quiet default.
+In data/framework mode, use Link, Form, or `navigate` with `viewTransition` for snapshot morphs or page crossfades. Use GSAP for live-DOM outros that gate navigation, interruptible sequences, split text, or scroll-linked motion. One engine per element; see [combining engines](references/react-router-navigation.md#combining-with-view-transitions).
 
 ## Read only what you need
 
@@ -57,26 +33,12 @@ The user's request decides effects, direction, timing, easing, and intensity. Ma
 - The five phases, GSAP setup, React lifecycle, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
 - Before calling work done: [Verification](references/verification.md).
 
-The official GSAP skills (`gsap-core`, `gsap-react`, `gsap-timeline`, `gsap-scrolltrigger`, `gsap-plugins`, `gsap-utils`, `gsap-performance`) cover the GSAP API, and `gsap-react` covers `useGSAP`, `scope`, `contextSafe`, and cleanup on unmount. This skill covers how GSAP fits React Router.
-
-## Pieces to add, only as needed
-
-- One client-only module that registers GSAP and plugins. In framework mode name it `*.client.ts` so the server bundle never evaluates it, and import it for its side effect only, from the root route. Components import `gsap` and `useGSAP` from the packages: a `.client` module's exports are `undefined` during server rendering, and a route component that calls `useGSAP` through it throws on the server.
-- A route transition boundary in the root route, or in the layout that wraps the changing region, with one stable route container around `<Outlet>`.
-- `useBlocker` in that boundary as the hold, when the outro must finish before navigation. One blocker per router.
-- A transition-aware Link that wraps `<Link>`, plus a navigate helper, when there is no blocker (declarative mode) or the project prefers it.
-- A key on the outlet, or a `pathname` dependency, so a reused route runs its lifecycle again.
-- Refs or data attributes marking the elements a page animates.
-- A controller per page or component that owns its five phases.
-- Intro and outro timeline builders.
-- A presence controller when conditional content must stay mounted through its outro.
-
-Persistent header, nav, and footer live in the root route outside the container. A component owns its own lifecycle; the boundary owns page lifecycles.
+Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alongside this repository. Load `gsap-core` for API details and `gsap-react` for component setup only as needed.
 
 ## Rules
 
-- GSAP runs only in the browser. Framework mode evaluates route modules on the server, so keep GSAP calls inside `useGSAP` or effects and registration in a `.client` module. Scope selectors. Clean up every tween, trigger, split, and listener.
-- Lay out the final page with normal CSS first. One stable wrapper owns the geometry through every phase.
+- GSAP runs only in the browser. Framework mode evaluates route modules on the server, so keep GSAP calls inside `useGSAP` or effects and registration in a `.client` side-effect module. Import `gsap` and `useGSAP` from their packages: `.client` exports are undefined during SSR. Scope selectors. Clean up every tween, trigger, split, and listener.
+- Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
 - Mount, then set initial values, then paint. Server HTML paints before hydration: hide intro targets only under a root attribute set by an inline script in the root `Layout`, only during the initial phase, with a no-JavaScript path.
 - Animate to one settled state and clear temporary styles there.
 - Keep outgoing routes mounted and visible through outro and end state. The router unmounts the old route when the new one commits, so hold the commit: `useBlocker` and `proceed()` from the end callback, or prevent the Link default and `navigate` after the outro.
@@ -86,8 +48,6 @@ Persistent header, nav, and footer live in the root route outside the container.
 - A fetcher is not a navigation. Do not treat `fetcher.state` as a page transition.
 - One engine per element. A named view transition and a GSAP tween on the same node fight.
 - Keep native link behavior: modified clicks, `target`, `reloadDocument`, external URLs, `prefetch`, `NavLink` state, focus, scroll, and no-JavaScript readability.
-- Prepare incoming targets before revealing the swap. Never flash settled or stale content.
 - Reduced motion reaches the same settled state and still fires every completion callback, including the one that calls `proceed()`.
-- Prefer transforms and `autoAlpha`. Set `will-change` only while animating, then clear it.
-- Use timelines for sequences. Decide up front what happens on rapid clicks and interrupted animations.
+- Define interruption and rapid-click behavior; completion must release navigation waits exactly once.
 - Verify in a real browser when practical. Use a production build for route, config, dependency, or release changes.

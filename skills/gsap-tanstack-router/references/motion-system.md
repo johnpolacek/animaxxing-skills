@@ -32,7 +32,7 @@ Use `useGSAP` in components:
 
 Never run GSAP or plugin code during server rendering. Under TanStack Start every route file can render on the server; keep GSAP inside effects.
 
-Never call another component's `contextSafe` function from inside a `useGSAP` callback. GSAP nests contexts: a context whose function runs while another context's callback is executing becomes a child of that outer context, and the outer context's next revert kills it. In practice this means a page's setup must not synchronously trigger a shared overlay's builders. Hand off through a microtask, an effect, or an event instead.
+Do not call another component's `contextSafe` synchronously inside `useGSAP`: its context becomes a child and dies on the outer revert. Hand shared-controller work off through a microtask, effect, or event.
 
 Write setup so it is correct when it runs more than once on the same node. React development checks do this, and a route component reused across a param change hands you a node that already holds settled values. Async work started by the first run can still be in flight when the second run starts, so anything a setup triggers outside its own context, such as a shared cover, must be safe to request twice. So: explicit initial writes (`set` or `fromTo`) rather than `from` tweens that trust a fresh node, and cleanup that leaves the node readable. Use a ref guard only for work that should happen once per visit rather than once per setup.
 
@@ -44,9 +44,6 @@ Build the final layout with normal CSS first. The initial state changes appearan
 - Give images and media dimensions or an aspect ratio.
 - Reserve async and streamed regions with a wrapper when their size is known.
 - Prefer transforms, `autoAlpha`, masks, or clipping, which keep the layout box.
-- Set every target's initial values before starting the intro.
-- Use `set()` then `to()`, or `fromTo()`, when the start must be exact.
-- Wait for fonts before measuring line-based text, or use the plugin's re-split support.
 
 If the effect changes width, height, or position:
 
@@ -61,16 +58,11 @@ Content must stay readable without JavaScript. The pre-paint rule in [SSR and hy
 
 Write reusable intro and outro builders only when behavior repeats. Each returns a timeline so the controller can compose, kill, reverse, or await it.
 
-- Centralize timeline defaults such as `overwrite`.
-- Use labels and position parameters for sequencing, not accumulated delays.
-- Start the intro only after all initial writes.
 - Make settled the source of truth. It must not depend on a paused timeline.
 - Clear temporary transform, visibility, transition, and `will-change` styles once settled.
 - Run intro completion and settled callbacks once, including under reduced motion.
 - On rapid state changes, replace, kill, or reverse the active timeline. Do not stack conflicting tweens.
 - Update assistive text and state immediately. Animate the visual, not the meaning.
-
-Keep builders next to their owner until the same behavior recurs. Do not build a named animation library in place of lifecycle ownership.
 
 ## Outro and end state
 
@@ -98,8 +90,6 @@ When content in a shared region changes size, decide who owns the region's geome
 
 Do not use presence for content that can simply appear, or for routes the root controller already manages.
 
-Two details that only show up in a browser:
-
 - Focus a panel when its intro completes, not when it mounts. An element at `visibility: hidden` refuses focus silently, and `autoAlpha: 0` is exactly that. Reduced motion jumps to completion synchronously, so the focus still lands.
 - When the outro ends and React is asked to unmount the children, clear only `will-change` from the wrapper. The unmount is queued, not immediate; clearing the collapsed height or visibility in the same tick flashes the content at full size for a frame.
 
@@ -117,15 +107,9 @@ An app-level override is not a media query, so `matchMedia` cannot see it. Read 
 
 ## Scroll
 
-Use ScrollTrigger when scroll drives timing or progress. Use plain timelines for things that just happen after mount.
+Use `gsap-scrolltrigger` for the API; these rules cover route lifetime and measurement.
 
-- Use a one-shot trigger for reveals. Use `scrub` only when progress should track scroll.
-- Batch nearby reveals that should arrive together.
 - Create triggers in document order. Refresh after fonts, images, streamed data, or dynamic content change layout.
-- Put ScrollTrigger on a top-level tween or timeline, never on child tweens.
-- Animate a child of a pinned element, not the pinned element.
-- Use linear easing for fake horizontal scroll.
-- Remove markers before finishing.
 - Create triggers inside the owning context. Do not kill all triggers globally when one page leaves. A layout route's triggers survive child navigations; a page's leave with it.
 - A route reused with new params keeps its triggers against changed content. Refresh them after the new data renders.
 - The router restores scroll in `onRendered`, after the page's layout effects. Triggers created in `useGSAP` measured before that; refresh from `onRendered`, and once more when the page settles if anything above a trigger changed height during the intro.
@@ -138,9 +122,8 @@ Under reduced motion, go straight from initial to settled without unnecessary tr
 
 Use SplitText when the effect needs per-character, word, or line targets.
 
-- Split only what animates.
-- For character targets, set persistent, scoped `font-kerning: none; text-rendering: optimizeSpeed` before splitting and retain it after `split.revert()`, including reduced motion. Character wrappers disrupt kerning; restoring it can snap text horizontally without changing height. Keep revert cleanup; prefer words/lines without chars if natural kerning is essential. See [GSAP’s documented limitation](https://gsap.com/docs/v3/Plugins/SplitText/#tips--limitations). Diagnose late fonts, ligatures, wrapping, and mask geometry separately rather than stacking workarounds.
-- If text looks heavier after revert, compare computed font properties and font readiness first. Character masks can clip glyph ink with tight tracking/leading even when weight and boxes stay unchanged. Inspect captured letter edges, dots, punctuation, and descenders before `force3D` or compositing workarounds. For confirmed clipping, scope mask padding with compensating negative margins to the affected split; tune it to that typography and check full hiding in both reveal directions. Preserve timing and cleanup.
+- For character splits, keep scoped `font-kerning: none; text-rendering: optimizeSpeed` before, during, and after revert, including reduced motion. Wrappers disrupt kerning and can cause horizontal snapping; use words/lines if natural kerning is essential. See [SplitText limitations](https://gsap.com/docs/v3/Plugins/SplitText/#tips--limitations).
+- Apparent weight changes can be clipped ink: check computed fonts/readiness, then mask edges, punctuation, and descenders. For confirmed clipping, add scoped mask padding with compensating negative margins; verify spacing and both hidden endpoints before trying compositing workarounds.
 - Keep reading accessible with the plugin's ARIA support. If text contains links or controls, keep an unsplit accessible version instead of hiding them.
 - Use word-aware wrapping for character animation. Use auto re-split for line animation that must survive width or font changes.
 - Wait for fonts or use the re-split lifecycle when line measurement matters. Reserve settled height before splitting if wrappers could shift layout.
@@ -149,15 +132,13 @@ Use SplitText when the effect needs per-character, word, or line targets.
 - Loader data changing in a reused route re-renders the heading's text node in place, which breaks a split that replaced it with spans. Revert before the data-dependent render and re-split after it, or key the split on the data.
 - Revert splits on interruption and unmount. Do not leave wrapper spans in stale content.
 
-Revert split markup only when the owning phase no longer needs it, and never in a way that changes character positions, line wrapping, or height mid-transition. Compare these immediately before and after cleanup in desktop, mobile, reduced-motion, and interrupted flows; distinguish negligible subpixel rounding from visible movement. Compare captured frames across revert too: stable bounding boxes do not prove stable glyph appearance.
+Revert when the owning phase no longer needs the split. Compare glyph appearance, character positions, wrapping, and height immediately before/after cleanup at desktop/mobile widths, with reduced motion and interruption. Stable boxes alone do not prove stable ink; distinguish subpixel rounding from visible movement.
 
 ## Interaction
 
 Pointer motion needs keyboard parity. Pair hover with focus on interactive elements. Do not animate a non-interactive element like a control.
 
-Use `quickTo` for high-frequency pointer values. Keep gestures and drags within bounds, offer a non-gesture path to the same action, and clean up plugin instances.
-
-Use Flip for layout changes after capturing the old state. Use Observer only when normal controls cannot express the gesture.
+Keep gestures bounded, provide a non-gesture path, and dispose of interaction plugins with their owner. See `gsap-plugins` for Draggable, Observer, and Flip APIs.
 
 ## Layout stability and performance
 
@@ -165,10 +146,6 @@ Use Flip for layout changes after capturing the old state. Use Observer only whe
 - Use `clip-path`, filters, and variable-font axes deliberately; they can cost paint or shift layout.
 - Batch reads before writes.
 - The stable wrapper's box should not jump between mount, initial, settled, outro, end, and unmount. Intentional transforms move pixels; layout boxes do not.
-- Size media, preload critical fonts, and refresh layout-dependent plugins only after sizes settle.
 - Set `will-change` just before animating and clear it after. Do not promote everything.
 - Do not animate hundreds of nodes at once. Reduce targets, batch, or virtualize.
-- Test narrow and low-power devices.
 - Do not add a CSS transition on a property GSAP controls.
-
-Done means: settled DOM is readable and CSS-controlled, the node stays mounted through end state, and unmount moves nothing unexpectedly.

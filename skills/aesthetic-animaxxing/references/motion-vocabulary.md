@@ -69,7 +69,7 @@ const SETTLED = { x: 0, y: 0, scale: 1, rotationX: 0, filter: "blur(0px)" };
 | `focusIn` / `focusOut` | `{ autoAlpha: 0, filter: "blur(8px)" }` | `{ filter: "blur(0px)", 0.28, power2.out }` | `{ filter: "blur(6px)", 0.2, power2.in }` | Costly to paint; one element at a time. |
 | `weightIn` / `weightOut` | `{ autoAlpha: 0, fontWeight: 400, y: 4 }` | `{ fontWeight: 800, y: 0, 0.28, power2.inOut }` | `{ fontWeight: 400, 0.2, power2.inOut }` | Type that gains its weight as it arrives. Settled: `{ fontWeight: 800, y: 0 }`. |
 
-The wipes pass `autoAlpha: 1` in both from and to, so the element is visible and only the clip moves.
+Table entries abbreviate `duration` and `ease`; they are not copyable object literals. Every entrance merges `autoAlpha: 1` into its destination and every exit merges `autoAlpha: 0`. Wipes keep `autoAlpha: 1` at both ends and animate only the clip. Pass the matching settled vars to `pair`.
 
 ## Split families
 
@@ -87,13 +87,13 @@ Display type only: a masthead, a landing statement, a section title, a card head
 | `linesMaskIn` / `Out` | lines, masked | `yPercent: 110 → 0`, 0.28s, `power3.out`, stagger 0.05 | Whole lines wiped up behind masks. |
 | `scrambleIn` / `Out` | none | ScrambleText over `01{}/<>()=;` | Text resolving out of noise. Display only; needs ScrambleTextPlugin. |
 
-Every family splits with `aria: "auto"` and reverts when its timeline completes, so the DOM a reader lands on is the DOM the author wrote. Under reduced motion nothing is split; the text is simply already there. Code is in [split-entrances.md](recipes/split-entrances.md).
+Split entrances use `aria: "auto"` and revert when their timeline completes. Under reduced motion nothing is split; the text is simply already there. Code is in [split-entrances.md](recipes/split-entrances.md).
 
 Weight moves pin each character to its width at the heaviest weight it will reach, `display: inline-block; text-align: center`, so the axis can move without letters shoving each other along the line.
 
 ## Route grammar
 
-Pages opt their major elements into the route transition with a `data-page-transition` attribute. On a route change the old elements leave in reverse document order, then the tree swaps, then the incoming elements enter in document order. A page with no marked elements is treated as one whole-page item.
+Pages opt their major elements into the route transition with a `data-page-transition` attribute. The outro orders items in reverse document order; the intro uses document order. The framework controller determines the swap timing. A page with no marked elements is treated as one whole-page item.
 
 | Value | Entrance | Exit |
 |---|---|---|
@@ -115,71 +115,19 @@ The page container reports its phase on `data-transition-state`:
 | `exiting` | outro | The outro is running. Every effect winds down. |
 | `waiting` | end state | The outro finished. The page is sealed until the framework swaps it. |
 
-A component watches the attribute with a `MutationObserver` rather than guessing at timings:
-
-```ts
-export function watchPageTransition(
-  el: HTMLElement,
-  handlers: { onEntering?: () => void; onIdle: () => void; onExiting?: () => void },
-): () => void {
-  let idle = false;
-  let entering = false;
-  const observer = new MutationObserver((records) => {
-    for (const record of records) {
-      const target = record.target as HTMLElement;
-      if (!target.contains(el)) continue;
-      const state = target.dataset.transitionState;
-      if (state === "entering" && !entering) { entering = true; handlers.onEntering?.(); }
-      else if (state === "idle" && !idle) { idle = true; handlers.onIdle(); }
-      else if (state === "exiting" && idle) { idle = false; entering = false; handlers.onExiting?.(); }
-    }
-  });
-  observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ["data-transition-state"] });
-  const current = el.closest<HTMLElement>("[data-transition-state]")?.dataset.transitionState;
-  if (current === "entering") { entering = true; handlers.onEntering?.(); }
-  else if (current === "idle") { idle = true; handlers.onIdle(); }
-  return () => observer.disconnect();
-}
-```
-
-The framework skill's controller writes the attribute; it is the same state the framework skill tells you to store somewhere explicit.
+These are optional labels for the framework controller's existing phase state. It invokes surface controls directly; recipes do not observe the document or own phase transitions.
 
 ### Pre-paint hiding
 
-Marked items must not paint in their settled state before the intro sets them. Hide every hook in CSS and let GSAP reveal them:
+The framework controller applies its pre-paint/no-script mechanism to the recipe's targets: `data-page-transition`, `data-speak-intro`, `data-hero-actions`, `data-particle-card`, and any shell/logo/footer intro hooks used. Keep them hidden only until their initial values are ready; `autoAlpha: 1` reveals them. A hidden particle wrapper also needs an explicit reveal because revealing its child cannot reveal the wrapper.
 
-```css
-[data-page-transition],
-[data-speak-intro],
-[data-hero-actions],
-[data-particle-card],
-[data-shell-intro],
-[data-logo-intro],
-[data-footer-intro] {
-  visibility: hidden;
-}
-
-/* Keep the page sealed while the framework swaps trees. */
-[data-transition-state="waiting"] {
-  visibility: hidden !important;
-}
-```
-
-Add every `data-*` hook a surface effect uses to the list. `autoAlpha: 1` clears `visibility` as well as opacity, which is why every entrance uses it.
-
-This rule alone breaks the page without JavaScript. The framework skill gives the no-script path (a `<noscript>` override, a class set by the first script, or a server flag); use it. Do not ship the rule without one.
+If the controller uses `waiting` for its swap barrier, it owns that rule and its release. Do not add unconditional hiding CSS or a separate readiness mechanism here.
 
 ## Resize
 
-A resize resets the page. Once the width has moved and settled, the page enters again from scratch at the new size, the same way it does after a navigation. Nothing tries to adapt a half-played effect to a new layout.
+Width changes can invalidate split positions and the wave's pinned character widths; height-only changes from mobile browser chrome do not. Keep text readable during a resize. Particle fields remeasure through their own observers.
 
-- **Width only.** Mobile browsers change the height on every scroll, when the address bar collapses, and when the keyboard opens. Watch the page container's inline size, never the window height.
-- **A threshold.** Measure from the width the page last entered at, and ignore moves under about 24px. A scrollbar appearing or disappearing is smaller than that; a real drag crosses it quickly.
-- **Debounce the end.** About 300ms of quiet after the last width change. Show the settled state during the drag, never a blank: the fluid type reflows on its own.
-- **Stop what breaks mid-drag.** The wave pins each letter to a pixel width, so it is wrong the moment the headline reflows. Stop it and revert its split on the first width change; if no replay follows, start it again after a beat longer than the page's settle. Particle fields re-measure through their own observers and need nothing.
-- **Replay by remounting.** Kill the running entrance, seal the container (`waiting`), and remount the page subtree, then run the entrance again. Effects that only tidy up on unmount, which is most of them, get a clean start for free; nothing accumulates splits, triggers, or timers.
-- **The shell stays.** Persistent chrome outside the route boundary entered once and is not replayed.
-- **Reduced motion:** re-settle without replaying.
+The framework controller decides whether to rebuild an affected effect or replay an entrance. Supply fresh measurements when called; no recipe remounts the page or resets page state. Reduced motion stays settled.
 
 ## Ambient motion
 
@@ -207,4 +155,4 @@ Where each recipe belongs:
 | Wordmark | `charsSpringIn` plus underline `scaleX 0 → 1` | still | never; the shell persists |
 | Everything else | route standard rise | still | route exit |
 
-Timing on the hero, for reference: letters land from 0.75s; the subhead starts speaking at 1.05s; the buttons enter at speak start plus 0.2s and 0.35s; the wave starts on `idle`. Pressing a call to action runs `blastOff`, waits 0.6s, and hands off to navigation with the page already cleared.
+Timing on the hero, for reference: letters land from 0.75s; the subhead starts speaking at 1.05s; the buttons enter at speak start plus 0.2s and 0.35s; the wave starts on `idle`. The blast-off visual disperses the hero; its completion handle belongs to the framework controller. Do not substitute a fixed navigation timer for completion.

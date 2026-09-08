@@ -709,15 +709,8 @@ export const ignite: ParticleEffectDefinition<ParticleEffectInstance> = {
 
 On copy or submit, `blast()`, kick the block with a short `x`/`y` jitter, and call `idle()` about a second later.
 
-## Wiring
+## Controller contract
 
-```ts
-const primary = attachParticleEffect(primaryWrap, primaryCanvas, primaryButton, reactor);
-const secondary = attachParticleEffect(secondaryWrap, secondaryCanvas, secondaryButton, marquee);
-watchPageTransition(hero, {
-  onEntering: () => { secondary.enter(1.25); primary.enter(1.4); gsap.set([primaryWrap, secondaryWrap], { autoAlpha: 1 }); },
-  onExiting: () => { primary.exit(); secondary.exit(); },
-});
-```
+Pass the selected definition to `attachParticleEffect(wrapper, canvas, target, effect)` from [particle-field.md](particle-field.md). The owner calls the returned controls for the relevant phase and reveals a hidden wrapper once its target is prepared.
 
-A new treatment is the same shape: `layer`, `bleed`, and `create(field, target)` returning `enter`, `exit`, `blast`, `idle`, `hover`, `destroy`. Keep every treatment monochrome (the field draws in the canvas's `color`) and every ambient cheap enough to run at rest.
+A new treatment supplies `layer`, `bleed`, and `create(field, target)` returning `enter`, `exit`, `blast`, `idle`, `hover`, and `destroy`. Keep it monochrome and inexpensive at rest.

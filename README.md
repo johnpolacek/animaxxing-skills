@@ -57,7 +57,7 @@ Copy the folders under `skills/` into your agent's skill directory:
 | **gsap-astro** | Astro: page transitions under `<ClientRouter />`, outro before the swap through `astro:before-preparation`, cleanup in `astro:before-swap`, initial state on the incoming document, rehooking on `astro:page-load`, `transition:persist` and islands, `transition:animate` versus GSAP, back and forward, prefetch |
 | **gsap-sveltekit** | SvelteKit on Svelte 5: page transitions, enter and exit motion across client-side navigation, show and hide of conditional content, scroll-driven effects, GSAP versus Svelte `transition:` directives versus View Transitions, `beforeNavigate` and `onNavigate` outros, page reuse and `{#key}`, back and forward, runes cleanup |
 | **gsap-nuxt** | Nuxt 3 and 4: page and layout transitions through the `pageTransition` JavaScript hooks and `done`, what dies when the leave starts, `out-in` versus overlap, page keys and `keepalive`, Nuxt app hooks, scroll and focus, outro before navigation, back and forward, `experimental.viewTransition`, SSR first paint |
-| **gsap-react-router** | React Router v7 and v8 (framework, data, declarative modes): page transitions, enter and exit motion, show and hide of conditional content, scroll-driven effects, GSAP versus `viewTransition`, `useBlocker` as the only hold on navigation, transition-aware links, route reuse and `<Outlet>` keys, `useNavigation` pending UI, back and forward, `ScrollRestoration`, SSR and SPA mode first paint |
+| **gsap-react-router** | React Router v7 and v8 (framework, data, declarative modes): page transitions, enter and exit motion, show and hide of conditional content, scroll-driven effects, GSAP versus `viewTransition`, `useBlocker` or intercepted links for navigation holds, transition-aware links, route reuse and `<Outlet>` keys, `useNavigation` pending UI, back and forward, `ScrollRestoration`, SSR and SPA mode first paint |
 | **gsap-tanstack-router** | TanStack Router for React and TanStack Start: page transitions, outro before navigation with `useBlocker`, pending components and `pendingMs`, route reuse and `remountDeps`, `router.subscribe` events, back and forward, `viewTransition`, scroll restoration, SSR first paint with `ScriptOnce` |
 | **gsap-nextjs** | Next.js App Router: page transitions, enter and exit motion, show and hide of conditional content, scroll-driven effects, GSAP versus React View Transitions, route lifetime under `cacheComponents`, transition-aware links, back and forward, cleanup |
 
@@ -69,14 +69,14 @@ Copy the folders under `skills/` into your agent's skill directory:
 
 ## Composing a framework skill with an aesthetic
 
-Install both. The framework skill comes first: it owns the lifecycle below, navigation timing, interruption, and cleanup. The aesthetic skill owns what each phase looks like. Its recipes are vanilla modules that return timelines or `enter`/`exit`/`blast`/`idle` instances, and the framework skill's controller decides when to call them.
+Install both and load only references needed for the current task. Each skill remains independently installable. The framework skill comes first: it owns the lifecycle below, navigation timing, interruption, and cleanup. The aesthetic skill owns what each phase looks like. Its recipes are vanilla modules that return timelines or `enter`/`exit`/`blast`/`idle` instances, and the framework skill's controller decides when to call them.
 
 Ask the agent to "animaxx it" and it will apply the tokens, type roles, and layout grammar, mark the page for the route transition, and wire the surface effects where the page has a display surface for them.
 
 
 ## The lifecycle
 
-Every skill uses the same model. An animated page or component runs through:
+Every framework skill uses the same model; aesthetic recipes map onto it. An animated page or component runs through:
 
 **mount → initial state → intro → settled → outro → end state → unmount**
 
