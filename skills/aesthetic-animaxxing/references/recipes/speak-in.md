@@ -6,6 +6,8 @@ The framework skill's controller calls `speakIn` during intro, after the headlin
 
 Dependencies: `gsap`, `gsap/SplitText`. Rethink Sans variable for the `broken` finish.
 
+Setup: follow [stable typography for character animation](../typography-and-layout.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. Apply it only to persistent emphasis elements receiving inner character splits, not the entire paragraph. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+
 ```ts
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";

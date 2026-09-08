@@ -35,6 +35,20 @@ In a real browser, at settled:
 - Reduced motion (`prefers-reduced-motion: reduce`, or `data-motion="reduced"` on `<html>`): every route item is visible immediately, no splits, no particles, no wave, and every completion callback still fires.
 - Off screen: scroll a treated element out of view and confirm its field stops ticking.
 
+## SplitText cleanup stability
+
+Use the [shared typography diagnosis](typography-and-layout.md#stable-typography-for-character-animation). In a browser, test the actual font, weight, tracking, text, and container width:
+
+1. Record the unsplit baseline with the required fonts loaded and persistent target CSS applied. Record computed `font-kerning`, `text-rendering`, and any ligature setting.
+2. Instrument the existing completion boundary: sample immediately before `split.revert()` after entrance transforms have reached their final values, immediately after it in the same callback, and on the next animation frame. Do not remove cleanup to obtain a passing result.
+3. Compare corresponding non-space character positions, heading height, and which characters belong to each line. Use DOM `Range` rectangles over the text nodes for matching character offsets in both split and restored markup; re-query text nodes after revert because old nodes are detached. Compare positions relative to the heading as well as its viewport position. Wrapper rectangles alone can include mask padding; heading width alone can stay fixed while glyphs move inside it.
+4. Repeat at desktop and narrow mobile widths, including near a line-break threshold. Under reduced motion, confirm the same settled typography and readable text with no unnecessary splits. Interrupt/restart the intro and navigate away where applicable; ensure the controller clears stale splits and preserves accessibility. For intentional outro movement or weight/tilt finishes, distinguish the designed end-state change from the spacing change caused by restoring markup; inspect the restored settled state on cancellation.
+5. Confirm a screen reader gets the complete heading while split and after restoration (`aria: "auto"` for plain headings); preserve accessible links/semantics for nested interactive content. Verify wrappers are removed at the controller's intended cleanup boundary.
+
+Record maximum horizontal/vertical deltas, height, line membership, viewport, browser, and font readiness alongside visual observation. A repeatable multi-pixel snap fails even with unchanged height. Roughly 0.1 CSS px of rounding with stable wrapping and no visible movement can be negligible; it is not a universal tolerance for every zoom, device, or font. Do not round measurements to whole pixels or demand exact zero.
+
+Regression evidence: AI Film Camp commit `ca79bb8` kept the `charsRiseIn`-style `type: "chars"`, `mask: "chars"`, `smartWrap: true` animation and completion-time revert in `apps/web/components/learn/lesson-stepper.tsx`, adding scoped typography CSS in `lesson-stepper.module.css`. The reported browser measurements for “Small idea. Big feeling.” went from about 2.7px horizontal movement with no height change to about 0.1px after the CSS fix. Treat these as case evidence, not measurements of every recipe or font.
+
 ## Layout
 
 - Nothing is centered or justified. Alignment edges line up down the page.

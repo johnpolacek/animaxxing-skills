@@ -6,6 +6,8 @@ The framework skill's controller calls `startWave` at settled (on `idle`) and th
 
 Dependencies: `gsap`, `gsap/SplitText`. Rethink Sans variable for the weight moves.
 
+Setup: follow [stable typography for character animation](../typography-and-layout.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+
 ```ts
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";

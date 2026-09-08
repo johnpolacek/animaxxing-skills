@@ -139,6 +139,7 @@ Under reduced motion, go straight from initial to settled without unnecessary tr
 Use SplitText when the effect needs per-character, word, or line targets.
 
 - Split only what animates.
+- For character targets, set persistent, scoped `font-kerning: none; text-rendering: optimizeSpeed` before splitting and retain it after `split.revert()`, including reduced motion. Character wrappers disrupt kerning; restoring it can snap text horizontally without changing height. Keep revert cleanup; prefer words/lines without chars if natural kerning is essential. See [GSAP’s documented limitation](https://gsap.com/docs/v3/Plugins/SplitText/#tips--limitations). Diagnose late fonts, ligatures, wrapping, and mask geometry separately rather than stacking workarounds.
 - Keep reading accessible with the plugin's ARIA support. If text contains links or controls, keep an unsplit accessible version instead of hiding them.
 - Use word-aware wrapping for character animation. Use auto re-split for line animation that must survive width or font changes.
 - Wait for fonts or use the re-split lifecycle when line measurement matters. Reserve settled height before splitting if wrappers could shift layout.
@@ -147,7 +148,7 @@ Use SplitText when the effect needs per-character, word, or line targets.
 - Loader data changing in a reused route re-renders the heading's text node in place, which breaks a split that replaced it with spans. Revert before the data-dependent render and re-split after it, or key the split on the data.
 - Revert splits on interruption and unmount. Do not leave wrapper spans in stale content.
 
-Revert split markup only when the owning phase no longer needs it, and never in a way that changes line wrapping or height mid-transition.
+Revert split markup only when the owning phase no longer needs it, and never in a way that changes character positions, line wrapping, or height mid-transition. Compare these immediately before and after cleanup in desktop, mobile, reduced-motion, and interrupted flows; distinguish negligible subpixel rounding from visible movement.
 
 ## Interaction
 

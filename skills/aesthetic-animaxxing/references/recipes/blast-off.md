@@ -6,6 +6,8 @@ The framework skill's controller calls `blastOff` as the outro that precedes nav
 
 Dependencies: `gsap`, `gsap/SplitText`.
 
+Setup: follow [stable typography for character animation](../typography-and-layout.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+
 ```ts
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";

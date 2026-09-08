@@ -4,6 +4,8 @@ The framework skill's controller calls these during intro and outro; this module
 
 Dependencies: `gsap`, `gsap/SplitText` (free since 3.13). `scrambleIn`/`Out` also need `gsap/ScrambleTextPlugin`.
 
+Setup: follow [stable typography for character animation](../typography-and-layout.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+
 ```ts
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
@@ -75,7 +77,7 @@ function pinWidths(chars: Element[], atWeight: number): void {
   }
 }
 
-/** Characters rise into place behind their own masks. The house entrance. */
+/** Characters rise behind masks. Requires persistent target CSS from the stable typography reference. */
 export const charsRiseIn: SplitRunner = (element, options = {}) =>
   withSplit(element, options, { type: "chars", mask: "chars", smartWrap: true }, (split, tl) => {
     tl.from(split.chars, { yPercent: 115, duration: 0.5, ease: "power3.out", stagger: STAGGER.tight });
@@ -316,7 +318,9 @@ export const scrambleOut: SplitRunner = (element, options = {}) => {
 ## Wiring
 
 ```ts
-// In the framework skill's page controller:
+// In the framework skill's page controller, after required fonts are ready:
+// heading has the persistent character-headline class from the typography reference.
+// Keep that CSS when withSplit calls split.revert(); smartWrap/mask do not fix kerning.
 const intro = gsap.timeline();
 intro.add(charsRiseIn(heading), 0);
 intro.add(linesMaskIn(lede), 0.2);

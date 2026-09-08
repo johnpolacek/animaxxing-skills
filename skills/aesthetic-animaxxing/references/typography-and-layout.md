@@ -25,12 +25,49 @@ Support tone: `text-muted` on canvas and surface; `text-inverse-foreground/75` o
 Card headings, story titles, and any heading below poster scale share one setting:
 
 ```
-DISPLAY = "font-sans font-extrabold leading-[0.84] tracking-[-0.045em] [font-kerning:none]"
+DISPLAY = "font-sans font-extrabold leading-[0.84] tracking-[-0.045em]"
 ```
 
-Plain CSS: `font-weight: 800; line-height: 0.84; letter-spacing: -0.045em; font-kerning: none`. Kerning is off so split-text characters measure the same as the unsplit line.
+Plain CSS: `font-weight: 800; line-height: 0.84; letter-spacing: -0.045em`. For character-animated targets, add the persistent typography setting below.
 
 Card headings: `font-sans text-4xl font-extrabold uppercase tracking-[-0.03em] sm:text-5xl`.
+
+## Stable typography for character animation
+
+Read this before using any recipe that splits characters, especially `charsRiseIn`. [GSAP's Tips & Limitations](https://gsap.com/docs/v3/Plugins/SplitText/#tips--limitations) documents that character wrappers interrupt browser kerning. Splitting can change spacing; `split.revert()` restores natural kerning and can produce a horizontal snap even when heading height stays unchanged. `smartWrap` groups words to prevent mid-word breaks; character masks clip the reveal. Neither preserves kerning.
+
+Make stable typography part of the target's base CSS, present before first paint and retained during splitting, after cleanup, and under reduced motion:
+
+```html
+<h2 class="character-headline">Small idea. Big feeling.</h2>
+```
+
+```css
+/* Only headlines that use character animation, not all headings or body text. */
+.character-headline {
+  font-kerning: none;
+  text-rendering: optimizeSpeed;
+}
+```
+
+Tailwind equivalent: `[font-kerning:none] [text-rendering:optimizeSpeed]` on the same target. Use the project's own selector or CSS module name. This setting is permanent typography, not a tween or an animation-state class; do not toggle it in a builder, completion callback, or reduced-motion query. For `speakIn`, scope it to the persistent emphasis elements that receive inner character splits.
+
+Keep `split.revert()` and the framework controller's interruption/unmount cleanup. Keeping wrappers indefinitely is not the default spacing fix. If natural kerning is essential, choose whole-word or whole-line animation without character splitting (for example `wordsSlideIn` or `linesMaskIn`), then verify the result.
+
+### Diagnose the measured change
+
+Change one cause at a time; do not apply every workaround:
+
+| Evidence | Targeted response |
+|---|---|
+| Horizontal character-position changes across split/revert, with fonts ready and the same line breaks | Check computed kerning settings in both states; use the persistent CSS above. A stable heading box alone does not rule this out. |
+| Font face or metrics change after splitting | Have the framework controller wait for the required fonts (`document.fonts.ready`), or use supported `autoSplit`/`onSplit` handling. Check the installed GSAP version and docs; returning the animation from `onSplit` lets the plugin manage re-splits. |
+| Joined glyphs such as `fi`/`ffi` differ between states | Inspect ligatures separately. If confirmed, test persistent `font-variant-ligatures: none` on the affected target, or preserve shaping with words/lines. Do not disable ligatures globally or assume the rendering hint fixes every font/browser. |
+| Line membership or heading height changes | Inspect available width, white space, tracking, and word grouping. GSAP warns against `text-wrap: balance` on split targets: omit the type roles' `text-balance` there and keep normal wrapping consistent across states. Use `smartWrap` for chars-only splits or words/lines grouping; re-split lines when width changes through the controller. |
+| Clipped ascenders/descenders or different vertical bounds with masks | Inspect mask overflow, padding, line-height, and wrapper geometry. Adjust the affected mask only when clipping is demonstrated; height reservation does not fix horizontal kerning. |
+| Weight effects jump when pinned character widths are removed | Compare pinned widths with the settled font's advances. Width pinning can stabilize the weight animation yet still change spacing on revert; verify that boundary separately. |
+
+See [cleanup verification](verification.md#splittext-cleanup-stability) for measurements and the observed regression.
 
 ## Mono vocabulary
 
