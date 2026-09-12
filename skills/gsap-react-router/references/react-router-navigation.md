@@ -111,8 +111,8 @@ Server-rendered and prerendered HTML paints before hydration. Do not hide it unc
 - Put an inline script first in `body` in the root route's `Layout` export, which wraps the app, `HydrateFallback`, and `ErrorBoundary` alike, that marks `html` as JavaScript-active. Add `suppressHydrationWarning` to `html`, since the server HTML does not carry the attribute.
 - Add a CSS rule that hides intro targets only under that mark and only while the root is in its initial phase.
 - Skip the mark under `prefers-reduced-motion` so the page paints settled.
-- Give the same script a failsafe: if no controller has claimed the document within about a second, remove the mark, so a bundle that never arrives leaves a readable page. A controller that does arrive claims the document first. A page whose mark is already gone when its controller runs, from the failsafe or the reduced-motion skip, takes the instant path rather than hiding content that is already on screen.
-- Have the boundary change the phase as its first act after hydration, before anything that can throw.
+- Keep the early failsafe active until preparation succeeds and the intro can run, not merely until a controller registers. Register rollback before setup, preserve the original deadline, and take the settled path after recovery. Follow [Initialization and recovery](initialization.md).
+- Register rollback before setup. Advance the phase only after start values and completion handlers are ready, in the same turn that starts the intro.
 - Keep content readable without JavaScript. Omitting `<Scripts>` is React Router's no-JavaScript mode, and the page must still read there.
 - Keep the swap cover separate from the first-paint rule.
 

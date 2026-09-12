@@ -1,5 +1,7 @@
 # Recipe: particle field
 
+Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+
 A canvas that bleeds out past a target element, with a list of particles stepped by the GSAP ticker. Behaviour lives in emitters (called each frame while attached) and in per-particle update hooks; GSAP tweens on the plain particle objects work too, since the ticker runs the core update before the field's own step. The field only ticks while it has something to draw and is on screen, so an idle button costs nothing.
 
 `attachParticleEffect` wires a field to a target for the life of a component and returns the controls the framework skill's controller calls. The controller decides when; this module never does.

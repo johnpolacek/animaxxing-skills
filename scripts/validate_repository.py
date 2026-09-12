@@ -7,6 +7,8 @@ import json
 import re
 from pathlib import Path
 
+from sync_initialization import sync
+
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS = ROOT / "skills"
@@ -26,6 +28,7 @@ def load_json(path: Path) -> dict:
 
 
 def main() -> None:
+    sync(check=True)
     documents = {path: load_json(path) for path in MANIFESTS}
 
     claude_version = documents[ROOT / ".claude-plugin" / "plugin.json"]["version"]

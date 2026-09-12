@@ -121,6 +121,8 @@ These are optional labels for the framework controller's existing phase state. I
 
 The framework controller applies its pre-paint/no-script mechanism to the recipe's targets: `data-page-transition`, `data-speak-intro`, `data-hero-actions`, `data-particle-card`, and any shell/logo/footer intro hooks used. Keep them hidden only until their initial values are ready; `autoAlpha: 1` reveals them. A hidden particle wrapper also needs an explicit reveal because revealing its child cannot reveal the wrapper.
 
+Register recipe rollback before hiding or splitting. Restore partial DOM/style changes through [effect restoration](effect-restoration.md); removing a CSS marker alone is insufficient. The matching installed framework skill’s `references/initialization.md` owns deadlines and late-work guards.
+
 If the controller uses `waiting` for its swap barrier, it owns that rule and its release. Do not add unconditional hiding CSS or a separate readiness mechanism here.
 
 ## Resize

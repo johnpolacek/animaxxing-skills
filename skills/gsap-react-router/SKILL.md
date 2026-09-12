@@ -1,6 +1,6 @@
 ---
 name: gsap-react-router
-description: "Build or review React Router v7/v8 animation in framework, data, or declarative mode: GSAP page transitions, component enter/exit, scroll effects, useBlocker, route reuse, and cleanup. Use even when GSAP is unnamed, including choosing viewTransition. Not for Next.js, TanStack Router, React without routing, or isolated GSAP API questions."
+description: "Build or review React Router v7/v8 animation in framework, data, or declarative mode: GSAP page transitions, component enter/exit, scroll effects, useBlocker, route reuse, and cleanup. Use even when GSAP is unnamed, including choosing viewTransition. Also covers hidden-content recovery and first-load performance. Not for Next.js, TanStack Router, React without routing, or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: GSAP page and component lifecycles in React Router
@@ -28,6 +28,7 @@ In data/framework mode, use Link, Form, or `navigate` with `viewTransition` for 
 
 ## Read only what you need
 
+- Invisible entrances, failed initialization, indexing, and first-load performance: [Initialization and recovery](references/initialization.md), plus the [framework integration](references/motion-system.md#initialization-and-recovery).
 - The blocker outro, transition-aware links, the lock, pending state, back and forward, the swap gap, scroll, focus, View Transitions: [React Router navigation](references/react-router-navigation.md).
 - Modes and their hooks, route reuse versus remount, layouts and `<Outlet>`, SSR and SPA mode first paint, streaming, fetchers, modal routes: [Route lifetime](references/route-lifetime.md).
 - The five phases, GSAP setup, React lifecycle, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
@@ -37,6 +38,7 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 
 ## Rules
 
+- Preserve invisible intros on successful setup; recover the current incoming owner on failure. Follow the initialization contract before adding hiding rules.
 - GSAP runs only in the browser. Framework mode evaluates route modules on the server, so keep GSAP calls inside `useGSAP` or effects and registration in a `.client` side-effect module. Import `gsap` and `useGSAP` from their packages: `.client` exports are undefined during SSR. Scope selectors. Clean up every tween, trigger, split, and listener.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
 - Mount, then set initial values, then paint. Server HTML paints before hydration: hide intro targets only under a root attribute set by an inline script in the root `Layout`, only during the initial phase, with a no-JavaScript path.

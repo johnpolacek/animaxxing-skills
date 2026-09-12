@@ -49,6 +49,15 @@ If the effect changes width, height, or position:
 
 Content must stay readable without JavaScript. The pre-paint hiding rule in [Page load and unload](page-load.md#initial-state-before-first-paint) is the only sanctioned way to hide before the intro.
 
+## Initialization and recovery
+
+Apply the [initialization contract](initialization.md) whenever content starts hidden. It includes recovery ordering, indexing/performance limits, and failure checks.
+
+- Put the early marker and independent timer in `head`. Register owner rollback before module setup, initial writes, or split creation. A module that never evaluates cannot run cleanup, so the early script must release its gate unaided.
+- Check `document.readyState` before awaiting `DOMContentLoaded`. Preserve the original deadline through required preparation. For prerendering, arm the visible initialization budget on activation before revealing/starting; retain an activation recovery handler even if the bundle never arrives.
+- Fetch/swap navigation gets a fresh incoming owner before insertion/hiding. Invalidate outgoing entrance recovery before the outro; cancel preparation, frames, and listeners before replacing DOM. Persisted chrome has its own record. An aborted fetch restores the outgoing page only if it remains current.
+- On `pagehide`, invalidate pending work and leave the active page readable for bfcache. On `pageshow.persisted`, restore without replay and prevent old promises/timers from hiding it. Returning from a suspended tab rechecks elapsed deadlines.
+
 ## Intro and settled
 
 Write reusable intro and outro builders only when behavior repeats. Each returns a timeline so the controller can compose, kill, reverse, or await it.
@@ -117,7 +126,7 @@ Use SplitText when the effect needs per-character, word, or line targets.
 - Apparent weight changes can be clipped ink: check computed fonts/readiness, then mask edges, punctuation, and descenders. For confirmed clipping, add scoped mask padding with compensating negative margins; verify spacing and both hidden endpoints before trying compositing workarounds.
 - Keep reading accessible with the plugin's ARIA support. If text contains links or controls, keep an unsplit accessible version instead of hiding them.
 - Use word-aware wrapping for character animation. Use auto re-split for line animation that must survive width or font changes.
-- Wait for fonts or use the re-split lifecycle when line measurement matters. Reserve settled height before splitting if wrappers could shift layout.
+- When line measurement needs fonts, bound the wait or auto-split preparation by the [initialization deadline](initialization.md#bound-initialization-not-choreography). Reserve settled height before splitting if wrappers could shift layout.
 - With `autoSplit`, build the animation inside `onSplit` and return it. The plugin records the playhead before a re-split, restores it on the new lines, and waits for fonts itself.
 - A split heading takes its timing from the page phase, not its own clock. Give it its own pre-paint rule rather than marking it as a page target, or the page's stagger and the split's rise fight over one element.
 - Revert splits on interruption and unmount. Do not leave wrapper spans in stale content.

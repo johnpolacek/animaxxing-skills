@@ -1,6 +1,6 @@
 ---
 name: gsap-tanstack-router
-description: "Build or review TanStack Router for React and TanStack Start animation: GSAP page transitions, component enter/exit, scroll effects, useBlocker, pending UI, route reuse, and cleanup. Use even when GSAP is unnamed, including choosing viewTransition. Not for Solid, other routers, React without routing, or isolated GSAP API questions."
+description: "Build or review TanStack Router for React and TanStack Start animation: GSAP page transitions, component enter/exit, scroll effects, useBlocker, pending UI, route reuse, and cleanup. Use even when GSAP is unnamed, including choosing viewTransition. Also covers hidden-content recovery and first-load performance. Not for Solid, other routers, React without routing, or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: GSAP page and component lifecycles in TanStack Router
@@ -30,6 +30,7 @@ Use `defaultViewTransition` or Link/`navigate` `viewTransition` for snapshot mor
 
 ## Read only what you need
 
+- Invisible entrances, failed initialization, indexing, and first-load performance: [Initialization and recovery](references/initialization.md), plus the [framework integration](references/motion-system.md#initialization-and-recovery).
 - Router APIs and the order of one navigation, outro before navigation with `useBlocker` or an intercepted Link, the lock, back and forward, pending UI, the swap gap, scroll, focus, View Transitions: [TanStack navigation](references/tanstack-navigation.md).
 - Route reuse versus `remountDeps`, layouts and `Outlet`, the React lifecycle for GSAP, conditional content, TanStack Start SSR and hydration, deferred data: [Route lifetime](references/route-lifetime.md).
 - The five phases, GSAP setup, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
@@ -39,9 +40,10 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 
 ## Rules
 
+- Preserve invisible intros on successful setup; recover the current incoming owner on failure. Follow the initialization contract before adding hiding rules.
 - GSAP runs only on the client. `useGSAP` never runs on the server; keep GSAP calls out of module scope in files Start renders on the server. Scope selectors. Clean up every tween, trigger, split, and listener.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
-- Mount, then set initial values, then paint. Users never see the settled state before the intro. Under Start, server HTML paints before hydration, so hide intro targets only under a root attribute set by a `ScriptOnce` inline script, only during the initial phase, with a no-JavaScript path.
+- Mount, then set initial values, then paint. Successful initialization never flashes settled content before the intro. Under Start, server HTML paints before hydration, so hide intro targets only under a root attribute set by a `ScriptOnce` inline script, only during the initial phase, with a no-JavaScript path.
 - Animate to one settled state and clear temporary styles there.
 - Keep outgoing pages mounted and visible through outro and end state. The router swaps only after every blocker allows the navigation and the loaders finish; resolve the blocker from the end callback.
 - No router event fires before the URL changes. `onBeforeNavigate` runs after the history commit; only a blocker runs before it.

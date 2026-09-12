@@ -54,6 +54,15 @@ If the effect changes width, height, or position:
 
 Content must stay readable without JavaScript. The pre-paint rule in [SSR and hydration](route-lifetime.md#ssr-and-hydration-with-tanstack-start) is the only sanctioned way to hide server-rendered content before the intro; client-only apps need none.
 
+## Initialization and recovery
+
+Apply the [initialization contract](initialization.md) whenever content starts hidden. It includes recovery ordering, indexing/performance limits, and failure checks.
+
+- With TanStack Start, use the installed `ScriptOnce` document integration described in [SSR and hydration](route-lifetime.md#ssr-and-hydration-with-tanstack-start). Include the independent deadline in that early script. Do not mutate split DOM before hydration.
+- Router-only client rendering and Start routes using `ssr: false` or `ssr: 'data-only'` cannot expose missing route HTML without JavaScript. Verify their rendered shell/`pendingComponent`, preserve native links there, and start component recovery when real targets mount.
+- Keep visit records in the persistent root controller. Register rollback before `useGSAP` initial writes; report ready only after required preparation and timeline handlers exist. Neither page registration nor `onRendered` alone proves readiness. Guard late loader, subscription, font, and media callbacks.
+- Invalidate before the blocker runs an outro and before cleanup/remount. Reused matches, `remountDeps`, and React effect replay must respect the current visit's terminal recovery. Resolve only its blocker/cover wait; persisted layouts and shell have separate owners.
+
 ## Intro and settled
 
 Write reusable intro and outro builders only when behavior repeats. Each returns a timeline so the controller can compose, kill, reverse, or await it.
@@ -126,7 +135,7 @@ Use SplitText when the effect needs per-character, word, or line targets.
 - Apparent weight changes can be clipped ink: check computed fonts/readiness, then mask edges, punctuation, and descenders. For confirmed clipping, add scoped mask padding with compensating negative margins; verify spacing and both hidden endpoints before trying compositing workarounds.
 - Keep reading accessible with the plugin's ARIA support. If text contains links or controls, keep an unsplit accessible version instead of hiding them.
 - Use word-aware wrapping for character animation. Use auto re-split for line animation that must survive width or font changes.
-- Wait for fonts or use the re-split lifecycle when line measurement matters. Reserve settled height before splitting if wrappers could shift layout.
+- When line measurement needs fonts, bound the wait or auto-split preparation by the [initialization deadline](initialization.md#bound-initialization-not-choreography). Reserve settled height before splitting if wrappers could shift layout.
 - Keep a handle to the split's animation so re-split and cleanup can dispose of it. With `autoSplit`, build the animation inside `onSplit` and return it: the plugin records its playhead before a re-split and restores it on the new lines, and `revert()` undoes the tween's values. With line splitting and `autoSplit`, the plugin waits for fonts itself; no separate font wait is needed.
 - A split heading inside a page takes its timing from the page phase, not its own clock. Hold at initial while the page is initial, rise when the page enters, drop when it leaves. Give it its own pre-paint rule rather than marking it as a page target, or the page's stagger and the split's rise fight over one element.
 - Loader data changing in a reused route re-renders the heading's text node in place, which breaks a split that replaced it with spans. Revert before the data-dependent render and re-split after it, or key the split on the data.

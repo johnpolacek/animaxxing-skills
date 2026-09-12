@@ -1,5 +1,7 @@
 # Recipe: split entrances
 
+Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+
 The framework skill's controller calls these during intro and outro; this module never decides when. Each builder returns a timeline the controller can compose, kill, or await. Display type only.
 
 Dependencies: `gsap`, `gsap/SplitText` (free since 3.13). `scrambleIn`/`Out` also need `gsap/ScrambleTextPlugin`. `charsWeightWave` needs a variable face covering its configured `WEIGHT` endpoints (400–800 in the example); adjust those and the midpoint choice to the loaded axis, or select a transform-only recipe. No font family is prescribed.

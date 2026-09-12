@@ -1,5 +1,7 @@
 # Recipe: the wave
 
+Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+
 Splits a heading into letters and, every few seconds, ripples a small move across them left to right, one letter at a time, the way a crowd does the wave. Each pass uses a different move, and every letter ends exactly where it started, so the text never drifts. An optional ambient effect for display text.
 
 The framework skill's controller calls `startWave` at settled (on `idle`) and the returned stop function on outro and unmount; this module never decides when.

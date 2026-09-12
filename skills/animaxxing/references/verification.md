@@ -19,6 +19,14 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 - Reduced motion (`prefers-reduced-motion: reduce`, or `data-motion="reduced"` on `<html>`): entrances reach the readable settled state immediately, exits reach their documented end state, no splits, no particles, no wave, and every completion callback still fires.
 - Off screen: scroll a treated element out of view and confirm its field stops ticking.
 
+## Effect failure and restoration
+
+- Throw before writes, after initial styles, and after a split or particle resource is created. Confirm partial setup rolls back even without a returned handle.
+- Stop owned timelines, delayed calls, tickers, observers, and listeners before restoration. Invoke teardown twice; it remains safe and cannot recreate motion.
+- Compare original nodes, text, links, ARIA, and application-owned inline styles after rollback. Check hidden ancestors and masks, not just opacity.
+- Resolve deferred font/media work after the framework recovers; no new split, hidden frame, or decorative completion may run.
+- Use the matching installed framework skill's `references/initialization.md` failure matrix for disabled JavaScript, blocked bundles, deadlines, navigation, and completion ownership. These checks also apply with another brand's fonts and CSS.
+
 ## SplitText cleanup stability
 
 Use [stable typography diagnosis](text-stability.md#stable-typography-for-character-animation) with the actual font, tracking, text, and container width:

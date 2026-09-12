@@ -1,5 +1,7 @@
 # Recipe: route intro and outro
 
+Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+
 The framework skill's controller calls `buildPageIntro` during intro and `buildPageOutro` during outro; this module never decides when, never touches the router, and never listens for clicks. It reads `data-page-transition` on the page's items and returns a timeline. The controller owns phase state.
 
 Dependencies: `gsap`, `gsap/SplitText`.

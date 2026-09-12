@@ -10,7 +10,7 @@ metadata:
 
 Portable vanilla TypeScript and GSAP recipes drawn from Animaxxing. Keep the project's fonts, colors, layout, and component styling. No style skill, design tokens, or particular font family is required.
 
-Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for plain sites). It owns **mount → initial state → intro → settled → outro → end state → unmount**, navigation, interruption, and cleanup timing. This skill supplies effect builders its controller calls. Install the matching framework skill if unavailable; do not invent framework lifecycle guidance here.
+Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for plain sites). It owns **mount → initial state → intro → settled → outro → end state → unmount**, initialization, navigation, recovery, interruption, and cleanup timing. This skill supplies effect builders its controller calls. Install the matching framework skill if unavailable; do not invent framework lifecycle guidance here.
 
 ## Setup and adaptation
 
@@ -33,6 +33,7 @@ Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for p
 | Ambient headline ripple | [Wave](references/recipes/wave.md) |
 | Dispersal on a call to action | [Blast-off](references/recipes/blast-off.md) |
 | Particle buttons, cards, links, or command fields | [Particle effects](references/recipes/particle-effects.md) plus [field/attach helpers](references/recipes/particle-field.md) |
+| Roll back partial setup and restore modified content | [Effect restoration](references/effect-restoration.md) |
 | Verify effects and reuse on another brand | [Verification](references/verification.md), then the framework's relevant checks |
 
 ## Recipe contract
@@ -48,6 +49,7 @@ Copy only the selected recipe and its named local helpers. Return shapes differ:
 | end state | Notify completion; controller decides the next action |
 | unmount | Controller calls the recipe's stop, `destroy`, or `revert` handle |
 
+- Apply the [effect restoration contract](references/effect-restoration.md) when copying a recipe, including failure before a handle returns.
 - Builders do not navigate, mount, remount, or subscribe to page lifecycle changes. The framework controller calls them and owns phase state.
 - Retain required split markup only while an effect needs it (speak-in finishes and an active wave are exceptions to immediate revert). Revert on the controller's cleanup boundary; preserve accessible text and nested controls.
 - Use `overwrite: "auto"`; clear temporary styles and `will-change` when their phase ends.

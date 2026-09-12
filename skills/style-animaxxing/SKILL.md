@@ -42,3 +42,7 @@ For a full restyle, work in this order; for a focused change, load only the rele
 ## Composition boundary
 
 Select and configure effects; do not copy their implementations into this skill. Load recipe files from the installed `animaxxing` skill by name, without assuming skill folders are siblings on disk. The framework controller calls the selected builders and owns their phase state and cleanup handles. This skill never installs routing hooks, owns a navigation wait, or decides mount, unmount, or replay timing.
+
+## Readable design
+
+Static styles keep meaningful content readable. Invisible entrances use the matching installed framework skill’s `references/initialization.md`; effect rollback belongs to `animaxxing`’s `references/effect-restoration.md`. Do not add unconditional hiding, readiness timers, or route recovery to this style. Preserve the selected choreography when initialization succeeds.

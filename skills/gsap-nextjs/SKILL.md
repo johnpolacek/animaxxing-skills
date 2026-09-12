@@ -1,6 +1,6 @@
 ---
 name: gsap-nextjs
-description: "Build or review Next.js App Router animation: GSAP page transitions, component enter/exit, scroll effects, interrupted motion, and cleanup. Use even when GSAP is unnamed, including choosing React View Transitions. Not for Pages Router, other routers, or isolated GSAP API questions."
+description: "Build or review Next.js App Router animation: GSAP page transitions, component enter/exit, scroll effects, interrupted motion, and cleanup. Use even when GSAP is unnamed, including choosing React View Transitions. Also covers hidden-content recovery and first-load performance. Not for Pages Router, other routers, or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: GSAP page and component lifecycles in Next.js
@@ -28,6 +28,7 @@ Use React `<ViewTransition>` for shared-element morphs, page crossfades, and Sus
 
 ## Read only what you need
 
+- Invisible entrances, failed initialization, indexing, and first-load performance: [Initialization and recovery](references/initialization.md), plus the [framework integration](references/motion-system.md#initialization-and-recovery).
 - Page intros and outros, transition-aware links, back and forward, focus, route swaps: [App Router navigation](references/app-router-navigation.md).
 - The five phases, GSAP setup, React lifecycle, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
 - Before calling work done: [Verification](references/verification.md).
@@ -36,9 +37,10 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 
 ## Rules
 
+- Preserve invisible intros on successful setup; recover the current incoming owner on failure. Follow the initialization contract before adding hiding rules.
 - GSAP runs only on the client. Scope selectors. Clean up every tween, trigger, split, and listener.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
-- Mount, then set initial values, then paint. Users never see the settled state before the intro.
+- Mount, then set initial values, then paint. Successful initialization never flashes settled content before the intro.
 - Animate to one settled state and clear temporary styles there.
 - Keep outgoing pages and components mounted and visible through outro and end state. Unmount, or let the router hide, only after the end callback.
 - Under `cacheComponents`, a page lifecycle runs again on re-show against DOM that already holds settled values. Never assume a fresh node.

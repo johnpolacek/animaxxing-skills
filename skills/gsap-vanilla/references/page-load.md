@@ -35,12 +35,12 @@ Never hide content unconditionally in CSS. A user without JavaScript, a crawler,
 - The controller writes every target's start values with `gsap.set` or `fromTo` before it changes the phase, so the release never shows the settled state.
 - Use `visibility`, not `display`, so layout is measured with the elements in place.
 
-The marking script needs a bounded failsafe that removes the mark if the controller never claims the document (for example, a failed bundle). A late controller takes the settled path rather than rehiding already visible content. Release the initial phase only after target preparation succeeds; on setup failure, restore readable content.
+The marking script arms an independent initialization deadline before hiding. Keep it active through preparation, not just controller registration. Roll back partial styles and split DOM on failure, then restore the current owner. Late work cannot hide a recovered visit. See [Initialization and recovery](initialization.md) for the full contract and checks.
 
 ## Waiting for the DOM, fonts, and media
 
 - Build the controller on `DOMContentLoaded`, or immediately if the document is already interactive.
-- Wait for `document.fonts.ready` before splitting or measuring text, or let SplitText's auto-split handle fonts.
+- Bound any required `document.fonts.ready` or SplitText auto-split preparation by the initialization deadline; use unsplit text on failure.
 - Give images and media `width` and `height` or an aspect ratio so the intro does not wait for them. If a layout depends on an image without dimensions, wait for that image, not the whole `load` event.
 - Refresh ScrollTrigger on `load` and after fonts, since both change document height.
 
@@ -57,7 +57,7 @@ The marking script needs a bounded failsafe that removes the mark if the control
 
 With Speculation Rules the browser may load and run the next page before the user clicks. `document.prerendering` is true while that happens, and `prerenderingchange` fires once on activation.
 
-Set initial state during prerendering. Start the intro, timers, and anything the user must see only after activation. A timeline started while prerendering finishes invisibly, and the user gets a settled page with no intro.
+Set initial state during prerendering. Start the intro and visible initialization deadline only after activation. Register that deadline’s activation handler in the early script so bundle failure still recovers. A timeline started while prerendering finishes invisibly, and the user gets a settled page with no intro.
 
 `pagereveal` also fires on activation, so a listener there sees prerendered pages and bfcache restores as well as fresh loads.
 

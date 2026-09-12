@@ -49,7 +49,16 @@ If the effect changes width, height, or position:
 - For layout-to-layout changes, use Flip: capture the old state, apply the new layout, animate.
 - When old and new content share one region, reserve the parent and overlap the children so only the parent affects layout.
 
-Content must stay readable without JavaScript. The only sanctioned ways to hide before the intro are the inline head mark from `gsap-vanilla` on a full load and the same mark written onto the incoming document in [Initial state on the incoming page](client-router-navigation.md#initial-state-on-the-incoming-page) after a swap.
+Content must stay readable without JavaScript. The only sanctioned ways to hide before the intro are the early document mark in [Initialization and recovery](initialization.md) on a full load and the same mark written onto the incoming document in [Initial state on the incoming page](client-router-navigation.md#initial-state-on-the-incoming-page) after a swap.
+
+## Initialization and recovery
+
+Apply the [initialization contract](initialization.md) whenever content starts hidden. It includes recovery ordering, indexing/performance limits, and failure checks.
+
+- On full loads, put the early marker and independent deadline in the document head. Bundled module execution and `astro:page-load` may be later than first paint. Static/SSR HTML stays readable without island hydration; `client:only` needs useful fallback content.
+- Under `ClientRouter`, invalidate the outgoing entrance before its outro. In `astro:before-swap`, dispose outgoing work and arm a new incoming owner before marking `event.newDocument`. Bind the deadline to that navigation and resolve its live root after the swap; do not run cleanup against a detached incoming document by mistake.
+- In `astro:after-swap`, prepare start values without releasing the gate early. Catch preparation and `astro:page-load` setup failures. A duplicate page-load/custom-element callback checks the visit token. Do not wait for unrelated island hydration, fonts, or images to reveal primary static content.
+- `transition:persist` shell/island owners retain their own records. A stale page timer cannot clear their styles or reanimate them. Abort and failed-swap handling either preserves the current readable page or follows the router's full-document fallback.
 
 ## Intro and settled
 
@@ -119,7 +128,7 @@ Use SplitText when the effect needs per-character, word, or line targets.
 - Apparent weight changes can be clipped ink: check computed fonts/readiness, then mask edges, punctuation, and descenders. For confirmed clipping, add scoped mask padding with compensating negative margins; verify spacing and both hidden endpoints before trying compositing workarounds.
 - Keep reading accessible with the plugin's ARIA support. If text contains links or controls, keep an unsplit accessible version instead of hiding them.
 - Use word-aware wrapping for character animation. Use auto re-split for line animation that must survive width or font changes.
-- Wait for fonts or use the re-split lifecycle when line measurement matters. Reserve settled height before splitting if wrappers could shift layout.
+- When line measurement needs fonts, bound the wait or auto-split preparation by the [initialization deadline](initialization.md#bound-initialization-not-choreography). Reserve settled height before splitting if wrappers could shift layout.
 - With `autoSplit`, build the animation inside `onSplit` and return it. The plugin records the playhead before a re-split, restores it on the new lines, and waits for fonts itself.
 - A split heading takes its timing from the page phase, not its own clock. Give it its own pre-paint rule rather than marking it as a page target, or the page's stagger and the split's rise fight over one element.
 - Revert splits in `astro:before-swap` and on interruption. Wrapper spans left in the old body are harmless once it is gone, but a split inside a persisted element travels to the next page.

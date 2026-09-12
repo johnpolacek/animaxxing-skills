@@ -1,5 +1,7 @@
 # Recipe: blast off
 
+Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+
 The hero's outro when a call to action is pressed: the whole composition is thrown apart from the pressed button outward, fast. Headline letters fly away from it and tumble, the subhead's words drop off the page, the pressed button flares out while the others collapse, and the page rocks. The timeline is reversible, so the same motion played backward pulls everything back.
 
 The framework skill's controller calls `blastOff` as the outro that precedes navigation and hands off once the page is cleared; this module never decides when and never navigates. Pair it with the particle `blast()` of the pressed button.

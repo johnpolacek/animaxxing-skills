@@ -1,6 +1,6 @@
 ---
 name: gsap-astro
-description: "Build or review Astro animation: GSAP page transitions, ClientRouter swap hooks, persisted islands, repeated setup, and cleanup. Use for missing or duplicated motion after navigation and choosing transition:animate versus GSAP. Without ClientRouter, use gsap-vanilla. Not for standalone island frameworks or isolated GSAP API questions."
+description: "Build or review Astro animation: GSAP page transitions, ClientRouter swap hooks, persisted islands, repeated setup, and cleanup. Use for missing or duplicated motion after navigation and choosing transition:animate versus GSAP. Without ClientRouter, use gsap-vanilla. Also covers hidden-content recovery and first-load performance. Not for standalone island frameworks or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: GSAP page and component lifecycles in Astro
@@ -29,6 +29,7 @@ Use `transition:name` / `transition:animate` for snapshot morphs, fades, or slid
 
 ## Read only what you need
 
+- Invisible entrances, failed initialization, indexing, and first-load performance: [Initialization and recovery](references/initialization.md), plus the [framework integration](references/motion-system.md#initialization-and-recovery).
 - The router's event sequence, outro before the swap, cleanup, initial state on the incoming page, direction, back and forward, scroll, focus, prefetch, fallback browsers: [ClientRouter navigation](references/client-router-navigation.md).
 - Which scripts run again, listeners that outlive pages, custom elements, islands and `client:*` directives, `transition:persist`: [Scripts and islands](references/scripts-and-islands.md).
 - The five phases, GSAP setup, contexts, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
@@ -38,11 +39,12 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 
 ## Rules
 
+- Preserve invisible intros on successful setup; recover the current incoming owner on failure. Follow the initialization contract before adding hiding rules.
 - GSAP runs after the DOM it targets exists. Scope selectors with `gsap.context` to the page or component root. Clean up every tween, trigger, split, and listener before the swap that removes its owner.
 - A module script runs once per visit, not once per page. Setup runs from `astro:page-load` and is correct when it runs again on a new body or twice on the same one.
 - Listeners on `document` and `window` outlive the page. Register router listeners once, in one place, and have each handler find the current page before acting.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
-- Set initial values before paint, then reveal. On first load that is the inline head script; after a swap it is `astro:before-swap` and `astro:after-swap`. Users never see the settled state before the intro, and never a blank page without JavaScript.
+- Set initial values before paint, then reveal. On first load that is the inline head script; after a swap it is `astro:before-swap` and `astro:after-swap`. Successful initialization never flashes settled content before the intro, and never a blank page without JavaScript.
 - Animate to one settled state and clear temporary styles there.
 - The outro plays on live DOM inside `event.loader` in `astro:before-preparation`, and the router waits for it. Never animate in `astro:before-swap`: the user is looking at a snapshot.
 - Back and forward get an intro-only path. A traverse fires every event, so skip the outro on `navigationType === "traverse"` on purpose.

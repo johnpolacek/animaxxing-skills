@@ -107,7 +107,7 @@ Do not hide server-rendered content unconditionally. If initial state must hide 
 
 - Scope the hiding rule to a root attribute that means JavaScript motion is active, and to the page's initial phase, so it releases the moment the lifecycle takes over.
 - Set that attribute from an inline script placed first in `body`. It runs before content paints. Add `suppressHydrationWarning` to `html`, since the server HTML does not carry the attribute.
-- Give the same script a failsafe: if no controller has claimed the document within about a second, remove the attribute, so a bundle that never arrives leaves a readable page. A controller that does arrive claims the document first. A page whose attribute is already gone when its controller runs, from the failsafe or from a reduced-motion skip, takes the instant path rather than hiding content that is already on screen.
+- Keep the early failsafe active through required preparation and timeline construction. Register rollback before setup; registration alone does not cancel recovery. Late controllers take the settled path. Follow [Initialization and recovery](initialization.md).
 - Keep content readable without JavaScript.
 - Keep the swap cover separate from the first-paint rule.
 
@@ -117,7 +117,7 @@ Do not rely only on inline styles, since a GSAP context reverts them during a sw
 
 Under `cacheComponents` a route is a static shell plus streamed holes. The lifecycle splits the same way:
 
-- **The shell is the page.** Keep the hero, headings, and navigation in the prerendered shell so the page reports ready on mount and a shared element has its target at once. An uncached `await` inside `<Suspense>` is enough to make a region stream; do not reach for `connection()`, which blocks prefetching.
+- **The shell is the page.** Keep the hero, headings, and navigation in the prerendered shell so the page can prepare and report ready without waiting for streamed regions, and a shared element has its target at once. An uncached `await` inside `<Suspense>` is enough to make a region stream; do not reach for `connection()`, which blocks prefetching.
 - **A streamed region is a component.** Give it its own controller: explicit initial state on mount, a short intro, settled, cleanup. It never reports page ready. Reserve its block size in the fallback so arrival moves nothing, row for row if the content is a list.
 - **The page outro owns everything present at leave time.** Query outro targets when the outro is built, not at setup, so content that streamed in after setup leaves with the page. Intros stay separate: the page intro reveals what mounted with it, the region intro reveals what arrived later.
 - **`loading.tsx` is a skeleton, not a page.** It only appears when the whole shell is missing. Give it the same geometry and let the boundary's ready timeout release the cover; the real page then enters through the unrequested path.

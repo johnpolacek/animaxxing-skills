@@ -1,6 +1,6 @@
 ---
 name: gsap-sveltekit
-description: "Build or review SvelteKit animation on Svelte 5: GSAP page transitions, component enter/exit, scroll effects, route reuse, and cleanup. Use for interrupted navigation or choosing GSAP, Svelte transitions, or View Transitions, even when GSAP is unnamed. Not for plain Svelte or isolated GSAP API questions."
+description: "Build or review SvelteKit animation on Svelte 5: GSAP page transitions, component enter/exit, scroll effects, route reuse, and cleanup. Use for interrupted navigation or choosing GSAP, Svelte transitions, or View Transitions, even when GSAP is unnamed. Also covers hidden-content recovery and first-load performance. Not for plain Svelte or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: GSAP page and component lifecycles in SvelteKit
@@ -28,6 +28,7 @@ Use Svelte `transition:` / `in:` / `out:` for simple block motion and `{#key}` s
 
 ## Read only what you need
 
+- Invisible entrances, failed initialization, indexing, and first-load performance: [Initialization and recovery](references/initialization.md), plus the [framework integration](references/motion-system.md#initialization-and-recovery).
 - Navigation hooks and their order, outro before navigation, the lock, back and forward, scroll, focus, links, preloading, View Transitions: [SvelteKit navigation](references/sveltekit-navigation.md).
 - Page reuse versus remount, layouts, `{#key}` versus `afterNavigate`, the Svelte 5 lifecycle, Svelte transitions beside GSAP, shallow-routed modals, SSR: [Page lifetime](references/page-lifetime.md).
 - The five phases, GSAP setup, contexts, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
@@ -37,9 +38,10 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 
 ## Rules
 
+- Preserve invisible intros on successful setup; recover the current incoming owner on failure. Follow the initialization contract before adding hiding rules.
 - GSAP runs only in the browser. `onMount` and `$effect` never run on the server; module-level code needs a `browser` guard. Scope selectors with `gsap.context` to a `bind:this` root. Clean up every tween, trigger, split, and listener in the effect teardown or the `onMount` return.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
-- Mount, then set initial values, then paint. Users never see the settled state before the intro. Server HTML paints before hydration, so hide intro targets only under a root attribute set by an inline script, only during the initial phase, with a no-JavaScript path.
+- Mount, then set initial values, then paint. Successful initialization never flashes settled content before the intro. Server HTML paints before hydration, so hide intro targets only under a root attribute set by an inline script, only during the initial phase, with a no-JavaScript path.
 - Animate to one settled state and clear temporary styles there.
 - Keep outgoing pages mounted and visible through outro and end state. Hold the navigation with `beforeNavigate` and re-issue it from the end callback, or return the outro's promise from `onNavigate`. The URL changes before `onNavigate` runs, so only the first keeps it unchanged during the outro.
 - A navigation to the same route with new params updates the page in place. Run the lifecycle again from `afterNavigate` against DOM that already holds settled values, or remount with `{#key}`.

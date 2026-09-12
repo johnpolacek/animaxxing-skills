@@ -1,5 +1,7 @@
 # Recipe: particle effects
 
+Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+
 Five treatments on the [particle field](particle-field.md). Each defines how its element assembles on entrance, what plays while it idles, what happens under the pointer, and what a blast looks like. The framework skill's controller runs the phases through `attachParticleEffect`; these modules never decide when.
 
 | Effect | Element | Layer | Bleed | Idle |

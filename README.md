@@ -2,7 +2,7 @@
 
 <img src="assets/logo.svg" alt="Animaxxing Skills logo" width="120">
 
-AI agent skills for ambitious, production-ready animation with [GSAP](https://gsap.com), in three composable families. **Framework skills** own routing, rendering, animation timing, interruption, and cleanup. **Motion skills** supply reusable effects that preserve the project's design. **Style skills** carry a complete art direction: tokens, typography, layout, and a curated selection of motion treatments.
+AI agent skills for ambitious, production-ready animation with [GSAP](https://gsap.com), in three composable families. **Framework skills** own routing, rendering, animation timing, initialization recovery, interruption, and cleanup. **Motion skills** supply reusable effects that preserve the project's design. **Style skills** carry a complete art direction: tokens, typography, layout, and a curated selection of motion treatments.
 
 These skills sit above the [official GSAP skills](https://github.com/greensock/gsap-skills), which cover the GSAP API itself. Install both.
 
@@ -56,6 +56,8 @@ Copy the folders under `skills/` into your agent's skill directory:
 | **animaxxing** | Reusable vanilla TypeScript and GSAP recipes: split-text entrances, scattering headlines, speak-in copy, letter waves, particle buttons/cards/links/fields, and blast-off exits. Includes text stability and effect verification. Preserves existing fonts, colors, and layout; the framework skill owns lifecycle timing |
 
 ### Framework skills
+
+Every framework includes an initialization and recovery contract: successful intros stay invisible before reveal; failed setup restores readable content. It covers partial styles and splits, stale work, rendering limits, indexing, and first-load performance.
 
 | Skill | Description |
 |-------|-------------|
@@ -115,12 +117,17 @@ animaxxing-skills/
   .github/
     copilot-instructions.md
     workflows/validate.yml
+  shared/
+    initialization.md    # Canonical recovery and first-load guidance
+  scripts/
+    sync_initialization.py # Packages the shared reference; validation checks drift
   skills/
     llms.txt             # Skill index for agents (names, summaries, trigger terms)
     animaxxing/
       SKILL.md
       agents/openai.yaml
       references/
+        effect-restoration.md # Partial setup rollback and effect teardown
         motion-vocabulary.md # Effect catalog and controller contract
         text-stability.md
         verification.md      # Effect and portability checks
@@ -140,6 +147,7 @@ animaxxing-skills/
         cross-document-navigation.md
         spa-navigation.md
         motion-system.md
+        initialization.md # Packaged recovery and first-load contract
         verification.md
     gsap-astro/
       SKILL.md
@@ -148,6 +156,7 @@ animaxxing-skills/
         client-router-navigation.md
         scripts-and-islands.md
         motion-system.md
+        initialization.md # Packaged recovery and first-load contract
         verification.md
     gsap-sveltekit/
       SKILL.md
@@ -156,6 +165,7 @@ animaxxing-skills/
         sveltekit-navigation.md
         page-lifetime.md
         motion-system.md
+        initialization.md # Packaged recovery and first-load contract
         verification.md
     gsap-nuxt/
       SKILL.md
@@ -164,6 +174,7 @@ animaxxing-skills/
         page-transitions.md
         navigation.md
         motion-system.md
+        initialization.md # Packaged recovery and first-load contract
         verification.md
     gsap-react-router/
       SKILL.md
@@ -172,6 +183,7 @@ animaxxing-skills/
         react-router-navigation.md
         route-lifetime.md
         motion-system.md
+        initialization.md # Packaged recovery and first-load contract
         verification.md
     gsap-tanstack-router/
       SKILL.md
@@ -180,6 +192,7 @@ animaxxing-skills/
         tanstack-navigation.md
         route-lifetime.md
         motion-system.md
+        initialization.md # Packaged recovery and first-load contract
         verification.md
     gsap-nextjs/
       SKILL.md
@@ -187,6 +200,7 @@ animaxxing-skills/
       references/
         app-router-navigation.md
         motion-system.md
+        initialization.md # Packaged recovery and first-load contract
         verification.md
     style-animaxxing/
       SKILL.md
@@ -202,15 +216,21 @@ animaxxing-skills/
 
 [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test) holds, for each framework, a starter site, the task prompt an agent is given, a reference implementation built by following the skill, and Playwright specs that assert the lifecycle behavior the skill promises: no flash before the intro, a clean settled state, an outro that finishes before navigation, intro-only history, one navigation at a time, interruptible intros, reduced motion through every phase, and cleanup. Its eval script rebuilds a framework's app from the starter with Claude Code and runs the specs against the result.
 
+The test repository also checks disabled-JavaScript routes and bundle failure after the early marker across all seven HTML-rendering references. An isolated GSAP/SplitText fixture tests partial setup, stalled preparation, late work, and owner isolation. It does not certify recovery inside every framework controller.
+
 The [Animaxxing](https://github.com/johnpolacek/animaxxing) demo is the reference for `style-animaxxing` and `animaxxing`. Each has its own `references/verification.md`: the style checks design and effect selection; the motion skill checks effect behavior, text stability, and reuse with the consuming app's fonts and colors. Dedicated style and motion suites in the test repository are planned.
 
 ## Demo
+
+See the [demo-agent recovery handoff](docs/demo-recovery-handoff.md) for the implementation contract and framework audit, and the [validation report](docs/recovery-validation.md) for executed checks and remaining gaps.
 
 The [Animaxxing](https://github.com/johnpolacek/animaxxing) repository holds a Next.js showcase that consumes these skills as a real project and validates their guidance against navigation, interruption, accessibility, responsive layout, and cleanup requirements. Its look is carried by `style-animaxxing` and its effects by `animaxxing`, and its install page at `/animaxx` walks through installing the skills.
 
 ## Contributing
 
 Read [AGENTS.md](AGENTS.md) before adding or editing a skill. New skills must follow the shared lifecycle and gate advice on framework versions. Framework skills stay free of project-specific design. Motion skills own reusable recipes and technical requirements without prescribing a brand. Style skills select and configure motion alongside their design. Both motion and style skills stay free of framework lifecycle ownership.
+
+After editing `shared/initialization.md`, run `python3 scripts/sync_initialization.py` to update the standalone skill copies. Framework-specific integration stays in each `motion-system.md`.
 
 Run the same checks as CI before opening a pull request:
 

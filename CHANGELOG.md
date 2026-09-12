@@ -2,6 +2,15 @@
 
 All notable changes to Animaxxing Skills are documented here. Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.2] - 2026-09-12
+
+### Changed
+
+- All seven framework skills preserve invisible intros while requiring bounded initialization, partial-setup rollback, per-visit recovery, and stale-work cancellation.
+- Added framework-specific recovery integration and failure checks, plus sourced guidance on rendering, indexing limits, and first-load LCP.
+- Motion recipes now require effect restoration when adapted; styles delegate recovery to the framework.
+- Packaged one maintained initialization reference inside every framework skill. Repository validation checks synchronization.
+
 ## [0.3.1] - 2026-09-12
 
 ### Changed

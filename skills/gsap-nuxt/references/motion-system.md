@@ -54,6 +54,15 @@ If the effect changes width, height, or position:
 
 Content must stay readable without JavaScript. The pre-paint rule in [SSR and first paint](navigation.md#ssr-and-first-paint) is the only sanctioned way to hide before the intro.
 
+## Initialization and recovery
+
+Apply the [initialization contract](initialization.md) whenever content starts hidden. It includes recovery ordering, indexing/performance limits, and failure checks.
+
+- Use the early head script described in [SSR and first paint](navigation.md#ssr-and-first-paint), with its own timer. Preserve SSR HTML; `ClientOnly`/`ssr: false` cannot supply missing page content without JavaScript.
+- Register rollback before first-load `onMounted` setup and before navigation's `onBeforeEnter` writes. Keep the deadline through preparation and `onEnter` timeline construction. Catch failures in both hooks and deferred callbacks; claiming the document does not cancel recovery.
+- Keep per-element records outside the page context that Nuxt may revert at leave start. Wrap each hook's `done` once and release it on completion, recovery, or cancellation as appropriate. A cancelled enter must not run stale `onAfterEnter` focus or reveal a leaving page.
+- Invalidate before leave, unmount, and keepalive deactivation; do not reveal keepalive storage. A real activation starts a new visit after layout is available. Persistent layouts/chrome retain their own records, including when `pageTransition: false`.
+
 ## Intro and settled
 
 Write reusable intro and outro builders only when behavior repeats. Each returns a timeline so the controller can compose, kill, reverse, or await it, and each takes the `done` callback when a Vue hook drives it.
@@ -128,7 +137,7 @@ Use SplitText when the effect needs per-character, word, or line targets.
 - Apparent weight changes can be clipped ink: check computed fonts/readiness, then mask edges, punctuation, and descenders. For confirmed clipping, add scoped mask padding with compensating negative margins; verify spacing and both hidden endpoints before trying compositing workarounds.
 - Keep reading accessible with the plugin's ARIA support. If text contains links or controls, keep an unsplit accessible version instead of hiding them.
 - Use word-aware wrapping for character animation. Use auto re-split for line animation that must survive width or font changes.
-- Wait for fonts or use the re-split lifecycle when line measurement matters. Reserve settled height before splitting if wrappers could shift layout.
+- When line measurement needs fonts, bound the wait or auto-split preparation by the [initialization deadline](initialization.md#bound-initialization-not-choreography). Reserve settled height before splitting if wrappers could shift layout.
 - With `autoSplit`, build the animation inside `onSplit` and return it. The plugin records the playhead before a re-split, restores it on the new lines, and waits for fonts itself.
 - A split heading takes its timing from the page phase, not its own clock. Give it its own pre-paint rule rather than marking it as a page target, or the page's stagger and the split's rise fight over one element.
 - Split after hydration, never in server-rendered markup. Revert splits on interruption, on leave, and on deactivate. Do not leave wrapper spans in stale content.

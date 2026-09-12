@@ -54,6 +54,15 @@ If the effect changes width, height, or position:
 
 Content must stay readable without JavaScript. Any pre-paint hiding rule needs a no-script path.
 
+## Initialization and recovery
+
+Apply the [initialization contract](initialization.md) whenever content starts hidden. It includes recovery ordering, indexing/performance limits, and failure checks.
+
+- Put the early marker and independent deadline in the root document before streamed content can paint. Use the installed Next.js script/CSP integration; verify emitted HTML, ordering, and hydration. A client effect is too late. Keep meaningful content in Server Components or SSR output.
+- In `useGSAP`, register rollback before initial writes or splits. Catch synchronous setup and async callback failures. Keep the initialization timer through preparation; `contextSafe` tracks GSAP resources but does not reject stale promises.
+- Store the visit's recovery decision in the persistent boundary, outside disposable effect setup. React's setup/cleanup replay must not reset it. Streamed or Suspense regions that arrive after recovery stay readable; give separately animated regions their own bounded owner.
+- With `cacheComponents`, invalidate work on hide and scope recovery to the active route. Never reveal a preserved `<Activity>` subtree. A real route re-show can start a new visit; a repeated setup cannot. Keep persistent shell recovery separate and release only the matching cover/focus request.
+
 ## Intro and settled
 
 Write reusable intro and outro builders only when behavior repeats. Each returns a timeline so the controller can compose, kill, reverse, or await it.
@@ -125,7 +134,7 @@ Use SplitText when the effect needs per-character, word, or line targets.
 - Apparent weight changes can be clipped ink: check computed fonts/readiness, then mask edges, punctuation, and descenders. For confirmed clipping, add scoped mask padding with compensating negative margins; verify spacing and both hidden endpoints before trying compositing workarounds.
 - Keep reading accessible with the plugin's ARIA support. If text contains links or controls, keep an unsplit accessible version instead of hiding them.
 - Use word-aware wrapping for character animation. Use auto re-split for line animation that must survive width or font changes.
-- Wait for fonts or use the re-split lifecycle when line measurement matters. Reserve settled height before splitting if wrappers could shift layout.
+- When line measurement needs fonts, bound the wait or auto-split preparation by the [initialization deadline](initialization.md#bound-initialization-not-choreography). Reserve settled height before splitting if wrappers could shift layout.
 - Keep a handle to the split's animation so re-split and cleanup can dispose of it. With `autoSplit`, build the animation inside `onSplit` and return it: the plugin records its playhead before a re-split and restores it on the new lines, and `revert()` undoes the tween's values. With line splitting and `autoSplit`, the plugin waits for fonts itself; no separate font wait is needed.
 - A split heading inside a page takes its timing from the page phase, not its own clock. Hold at initial while the page is initial, rise when the page enters, drop when it leaves. Give it its own pre-paint rule rather than marking it as a page target, or the page's stagger and the split's rise fight over one element.
 - Revert splits on interruption and unmount. Do not leave wrapper spans in stale content.

@@ -10,6 +10,12 @@ Check in proportion to what changed. Do not turn a focused animation task into a
 - Confirm the page is readable with JavaScript disabled and with the pre-paint mark set but the main script blocked.
 - Test reduced motion when the change has a reduced-motion branch.
 
+## Initially hidden content
+
+Run the [failure verification matrix](initialization.md#failure-verification) when adding or changing hiding, preparation, or recovery. It covers disabled JavaScript, a blocked bundle after the marker, throws before/after styles and splits, stalled fonts/media, late initialization, no-flash success, reduced motion, and interruption/repeated setup. Assert text and native links, not opacity alone. Include shell/footer and intentionally hidden content.
+
+Use this framework's [integration rules](motion-system.md#initialization-and-recovery) for rendering and navigation expectations. Measure document-load LCP separately from transitions when first-load behavior changes; report measured results and untested paths.
+
 ## Runtime changes
 
 Check the changed lifecycle in a real browser when practical:

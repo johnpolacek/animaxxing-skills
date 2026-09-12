@@ -21,6 +21,11 @@ In a real browser, at settled:
 - The twelve-column grid, the rail, and the ledgers hold at the narrow breakpoint: the rail becomes chips, rows fold their figures under the title.
 - Layout boxes do not move during any phase. Only transforms move pixels.
 
+## Readability
+
+- Static styling remains readable without GSAP or a motion skill, including headings, cards, navigation, and footer.
+- Selected animation delegates the failure matrix to the installed framework skill's `references/initialization.md`. Recovered content keeps the design, links, and intentional hidden states.
+
 ## Motion art direction
 
 - The selected intensity matches the request. A static or minimal-motion restyle does not automatically acquire scattering, speak-in, waves, or particles.

@@ -69,6 +69,8 @@ Do not animate here, and do not measure `event.newDocument`: it is an inert pars
 
 ## Initial state on the incoming page
 
+Arm a per-navigation deadline before marking the incoming document. Dispose the outgoing entrance timer before its outro; never let it reveal the outgoing page. Use the [recovery integration](motion-system.md#initialization-and-recovery) for swap failure, persisted nodes, and late setup.
+
 The inline head script that marks `<html>` before first paint runs once per visit, and its attributes do not survive the swap because `<html>` attributes are replaced by the new document's. So:
 
 - In `astro:before-swap`, set the mark and the initial phase on `event.newDocument.documentElement`. The pre-paint CSS rule then hides intro targets in the new body from the first frame it exists.

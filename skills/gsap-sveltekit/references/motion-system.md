@@ -50,6 +50,15 @@ If the effect changes width, height, or position:
 
 Content must stay readable without JavaScript. The pre-paint rule in [The swap gap and initial state](sveltekit-navigation.md#the-swap-gap-and-initial-state) is the only sanctioned way to hide server-rendered content before the intro.
 
+## Initialization and recovery
+
+Apply the [initialization contract](initialization.md) whenever content starts hidden. It includes recovery ordering, indexing/performance limits, and failure checks.
+
+- Put the early marker and independent deadline before `%sveltekit.body%` in `src/app.html`, respecting the installed CSP integration. SSR/prerendered pages stay readable without hydration; with `ssr = false`, test the actual static fallback.
+- Keep the visit and recovery record in the persistent layout controller. Register rollback from synchronous `onMount`/`$effect` setup before writes. Check the token again after `tick()`, fonts, media, and navigation promises; async setup must not lose its teardown.
+- `afterNavigate` handles reused pages as well as newly mounted ones. Start a deadline when the incoming owner first hides, including the swap gap. Do not reset it when the same route's builder registers again or data invalidates.
+- Invalidate the outgoing entrance before `onNavigate` starts its outro. Resolve interrupted navigation waits once. Remove only that visit's cover/snapshot and lock; never reveal a lingering `out:` block, stale clone, or shallow-route modal. Recheck on bfcache return and leave the restored active page readable.
+
 ## Intro and settled
 
 Write reusable intro and outro builders only when behavior repeats. Each returns a timeline so the controller can compose, kill, reverse, or await it.
@@ -122,7 +131,7 @@ Use SplitText when the effect needs per-character, word, or line targets.
 - Apparent weight changes can be clipped ink: check computed fonts/readiness, then mask edges, punctuation, and descenders. For confirmed clipping, add scoped mask padding with compensating negative margins; verify spacing and both hidden endpoints before trying compositing workarounds.
 - Keep reading accessible with the plugin's ARIA support. If text contains links or controls, keep an unsplit accessible version instead of hiding them.
 - Use word-aware wrapping for character animation. Use auto re-split for line animation that must survive width or font changes.
-- Wait for fonts or use the re-split lifecycle when line measurement matters. Reserve settled height before splitting if wrappers could shift layout.
+- When line measurement needs fonts, bound the wait or auto-split preparation by the [initialization deadline](initialization.md#bound-initialization-not-choreography). Reserve settled height before splitting if wrappers could shift layout.
 - With `autoSplit`, build the animation inside `onSplit` and return it. The plugin records the playhead before a re-split, restores it on the new lines, and waits for fonts itself.
 - Svelte updates a `{expression}` text node in place, so a split that replaced it with spans goes stale or breaks when the expression changes. Keep split text out of reactive expressions, or revert in `$effect.pre` and re-split after `tick()` when it must change.
 - A split heading takes its timing from the page phase, not its own clock. Give it its own pre-paint rule rather than marking it as a page target, or the page's stagger and the split's rise fight over one element.

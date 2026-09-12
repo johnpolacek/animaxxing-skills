@@ -1,5 +1,7 @@
 # Recipe: speak in
 
+Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+
 A paragraph arrives one word at a time at roughly the pace you would say it: short words quickly, long words a beat longer, a full stop earns a pause. Ordinary words each get one of a handful of small entrances; words marked for emphasis are split further into letters and given a bigger one, and may be left with a finish: `broken` (each letter at its own weight and width on the variable axis) or `tilt`.
 
 The framework skill's controller calls `speakIn` during intro at the chosen position in its sequence; this module never decides when. Keep the returned `revert` for as long as the finishes should persist, and call it on outro or unmount. Use for short display copy such as a hero subhead; leave ordinary reading text immediately readable.

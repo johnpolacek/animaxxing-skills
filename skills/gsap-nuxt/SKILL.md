@@ -1,6 +1,6 @@
 ---
 name: gsap-nuxt
-description: "Build or review Nuxt 3/4 animation: GSAP pageTransition and layoutTransition hooks, component enter/exit, scroll effects, keepalive, and cleanup. Use for interrupted navigation, missing done callbacks, or choosing Vue CSS and View Transitions, even when GSAP is unnamed. Not for plain Vue or isolated GSAP API questions."
+description: "Build or review Nuxt 3/4 animation: GSAP pageTransition and layoutTransition hooks, component enter/exit, scroll effects, keepalive, and cleanup. Use for interrupted navigation, missing done callbacks, or choosing Vue CSS and View Transitions, even when GSAP is unnamed. Also covers hidden-content recovery and first-load performance. Not for plain Vue or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: GSAP page and component lifecycles in Nuxt
@@ -28,6 +28,7 @@ Use Vue Transition CSS for simple page fades/slides, `experimental.viewTransitio
 
 ## Read only what you need
 
+- Invisible entrances, failed initialization, indexing, and first-load performance: [Initialization and recovery](references/initialization.md), plus the [framework integration](references/motion-system.md#initialization-and-recovery).
 - The hooks, `done`, modes, what dies when the leave starts, first load, layouts, direction, interruptions: [Page transitions](references/page-transitions.md).
 - Page keys, keepalive, Nuxt app hooks, scroll and focus, outro before navigation, back and forward, View Transitions, SSR and first paint: [Navigation](references/navigation.md).
 - The five phases, GSAP setup, Vue lifecycle, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
@@ -37,9 +38,10 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 
 ## Rules
 
+- Preserve invisible intros on successful setup; recover the current incoming owner on failure. Follow the initialization contract before adding hiding rules.
 - GSAP runs only on the client. Guard with `import.meta.client`, `onMounted`, or `<ClientOnly>`. Scope selectors. Clean up every tween, trigger, split, and listener.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space. Pages and layouts need a single root element or the transition does not run.
-- Mount, then set initial values, then paint. `onBeforeEnter` runs before the incoming root is inserted and `onEnter` right after, before the browser paints. Users never see the settled state before the intro.
+- Mount, then set initial values, then paint. `onBeforeEnter` runs before the incoming root is inserted and `onEnter` right after, before the browser paints. Successful initialization never flashes settled content before the intro.
 - Animate to one settled state and clear temporary styles there.
 - Always call `done`: from `onComplete`, from `onInterrupt`, and synchronously under reduced motion. A leave that never calls `done` leaves the old page in the DOM forever.
 - The page component is unmounted, or deactivated under keepalive, when the leave starts, not when it ends. Its context revert and `onUnmounted` run while the outro plays. Build the outro in `onLeave` against `el`, in a context the hooks own.
