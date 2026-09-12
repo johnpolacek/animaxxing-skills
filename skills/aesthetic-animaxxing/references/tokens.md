@@ -263,7 +263,7 @@ With Tailwind, the same tokens become utilities (`bg-canvas`, `text-muted`, `bor
 
 ## Motion tokens
 
-Used by every recipe. Keep them in one module.
+Art-direction defaults for this look. Configure the selected `motion-animaxxing` recipes with these values; its recipes remain usable without this token file. Keep the selected values in one module in the consuming app.
 
 ```ts
 export const DURATION = { micro: 0.14, component: 0.2, page: 0.28 } as const;

@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "animaxxing-skills",
-  "description": "Production-ready GSAP page transition and component lifecycle skills for modern web frameworks, plus aesthetic skills that carry a complete look and its effect recipes.",
+  "description": "Composable GSAP skills: framework lifecycle guidance, reusable text and particle motion that preserves existing brands, and aesthetic art direction for the complete Animaxxing look.",
   "owner": {
     "name": "John Polacek"
   },
   "plugins": [
     {
       "name": "animaxxing-skills",
-      "description": "GSAP page transitions, component lifecycles, and cleanup across Next.js, Astro, SvelteKit, Nuxt, React Router, TanStack Router, and vanilla sites, plus the Animaxxing aesthetic: monochrome editorial tokens, type, and portable GSAP effect recipes.",
+      "description": "Composable GSAP skills: framework lifecycle guidance, reusable text and particle motion that preserves existing brands, and aesthetic art direction for the complete Animaxxing look.",
       "author": {
         "name": "John Polacek"
       },

@@ -2,9 +2,9 @@
 
 The framework skill's controller calls these during intro and outro; this module never decides when. Each builder returns a timeline the controller can compose, kill, or await. Display type only.
 
-Dependencies: `gsap`, `gsap/SplitText` (free since 3.13). `scrambleIn`/`Out` also need `gsap/ScrambleTextPlugin`.
+Dependencies: `gsap`, `gsap/SplitText` (free since 3.13). `scrambleIn`/`Out` also need `gsap/ScrambleTextPlugin`. `charsWeightWave` needs a variable face covering its configured `WEIGHT` endpoints (400–800 in the example); adjust those and the midpoint choice to the loaded axis, or select a transform-only recipe. No font family is prescribed.
 
-Setup: follow [stable typography for character animation](../typography-and-layout.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. For confirmed clipped ink, use the optional `charMaskClass` with the [targeted mask CSS](../typography-and-layout.md#apparent-weight-change-from-clipped-glyph-ink); verify both hidden endpoints after expanding masks. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+Setup: follow [stable typography for character animation](../text-stability.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. For confirmed clipped ink, use the optional `charMaskClass` with the [targeted mask CSS](../text-stability.md#apparent-weight-change-from-clipped-glyph-ink); verify both hidden endpoints after expanding masks. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
 
 ```ts
 import gsap from "gsap";

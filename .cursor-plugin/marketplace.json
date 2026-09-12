@@ -4,15 +4,15 @@
     "name": "John Polacek"
   },
   "metadata": {
-    "description": "Production-ready GSAP animation skills for modern web frameworks, plus aesthetic skills that carry a complete look.",
-    "version": "0.2.2"
+    "description": "Composable GSAP skills: framework lifecycle guidance, reusable text and particle motion that preserves existing brands, and aesthetic art direction for the complete Animaxxing look.",
+    "version": "0.3.0"
   },
   "plugins": [
     {
       "name": "animaxxing-skills",
       "source": "./",
-      "description": "GSAP page transitions, component lifecycles, and cleanup across Next.js, Astro, SvelteKit, Nuxt, React Router, TanStack Router, and vanilla sites, plus the Animaxxing aesthetic: monochrome editorial tokens, type, and portable GSAP effect recipes.",
-      "version": "0.2.2",
+      "description": "Composable GSAP skills: framework lifecycle guidance, reusable text and particle motion that preserves existing brands, and aesthetic art direction for the complete Animaxxing look.",
+      "version": "0.3.0",
       "author": {
         "name": "John Polacek"
       },

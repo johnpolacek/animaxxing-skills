@@ -1,0 +1,140 @@
+# Motion vocabulary
+
+Read this to select and adapt reusable effects. The framework skill decides when each phase runs. Existing design or an explicitly selected aesthetic determines which surfaces receive them; none of the recipes requires the Animaxxing layout or palette.
+
+## Tokens
+
+The examples use three durations, three eases, and three distances. These are editable starting points: micro 0.14s / 4px, component 0.2s / 8px, page 0.28s / 16px; entrance `power2.out`, exit `power2.in`, shift `power2.inOut`. Reuse the consuming app's motion values where appropriate. Recipe-specific display sequences can run longer. No token file is required. Transforms, `autoAlpha`, `clip-path`, blur, and `fontWeight` only; never `width`, `height`, `top`, `left`, `color`, or `display`. Timeline defaults are `{ overwrite: "auto" }`.
+
+Reduced motion uses a `set()` to reach the documented entrance or exit state, so the timeline still completes and every callback still fires.
+
+```ts
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return true;
+  const choice = document.documentElement.dataset.motion;
+  if (choice === "reduced") return true;
+  if (choice === "full") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+```
+
+`data-motion` on `<html>` is an optional app-level override (`full` or `reduced`) so reduced motion can be reviewed without changing system settings. Every builder reads the helper when it builds, so an override applies to the next animation at once. If the project already has a helper, use it everywhere instead.
+
+## The shelf: paired entrances and exits
+
+Named in/out pairs, each built the same way. Pick from the shelf by watching them, then promote the one a screen uses under a name that says what it is for.
+
+```ts
+import gsap from "gsap";
+
+type MotionOptions = { delay?: number; stagger?: number; onComplete?: () => void };
+type MotionTarget = gsap.TweenTarget;
+type Pair = (target: MotionTarget, options?: MotionOptions) => gsap.core.Timeline;
+
+function build(options: MotionOptions): gsap.core.Timeline {
+  const tl = gsap.timeline({ delay: options.delay ?? 0, defaults: { overwrite: "auto" } });
+  if (options.onComplete) tl.eventCallback("onComplete", options.onComplete);
+  return tl;
+}
+
+/** Builds an in/out pair from vars, with the reduced path handled once. */
+function pair(from: gsap.TweenVars, to: gsap.TweenVars, settledIn: gsap.TweenVars, outVars: gsap.TweenVars): [Pair, Pair] {
+  const entrance: Pair = (target, options = {}) => {
+    const tl = build(options);
+    if (prefersReducedMotion()) return tl.set(target, { autoAlpha: 1, ...settledIn });
+    return tl.fromTo(target, from, { ...to, stagger: options.stagger ?? 0 });
+  };
+  const exit: Pair = (target, options = {}) => {
+    const tl = build(options);
+    if (prefersReducedMotion()) return tl.set(target, { autoAlpha: 0 });
+    return tl.to(target, { ...outVars, stagger: options.stagger ?? 0 });
+  };
+  return [entrance, exit];
+}
+
+const SETTLED = { x: 0, y: 0, scale: 1, rotationX: 0, filter: "blur(0px)" };
+```
+
+| Pair | From | In | Out | When |
+|---|---|---|---|---|
+| `fadeIn` / `fadeOut` | `{ autoAlpha: 0 }` | `{ autoAlpha: 1, duration: 0.2, ease: "power2.out" }` | `{ autoAlpha: 0, duration: 0.14, ease: "power2.in" }` | The plainest thing there is. |
+| `riseIn` / `riseOut` | `{ autoAlpha: 0, y: 8 }` | `{ autoAlpha: 1, y: 0, 0.2, power2.out }` | `{ autoAlpha: 0, y: -4, 0.14, power2.in }` | The workhorse: anything just committed. |
+| `dropIn` / `dropOut` | `{ autoAlpha: 0, y: -8 }` | `{ y: 0, 0.2, power2.out }` | `{ y: 4, 0.14, power2.in }` | Things that interrupt: a status, a banner. |
+| `slideInLeft` / `slideOutLeft` | `{ autoAlpha: 0, x: -16 }` | `{ x: 0, 0.2, power2.out }` | `{ x: -8, 0.14, power2.in }` | A pane from the left edge. Mirror for right. |
+| `scaleIn` / `scaleOut` | `{ autoAlpha: 0, scale: 0.96 }` | `{ scale: 1, 0.2, power2.out }` | `{ scale: 0.98, 0.14, power2.in }` | Reads as focus, not zoom. |
+| `popIn` / `popOut` | `{ autoAlpha: 0, scale: 0.4 }` | `{ scale: 1, 0.2, "back.out(2.4)" }` | `{ scale: 0.6, 0.14, "back.in(2)" }` | Small and infrequent. |
+| `wipeUp` / `wipeDown` | `{ clipPath: "inset(0% 0% 100% 0%)" }` | `{ clipPath: "inset(0% 0% 0% 0%)", 0.28, power2.out }` | `{ clipPath: "inset(100% 0% 0% 0%)", 0.2, power2.in }` | The most editorial. Settled vars: the open inset. |
+| `wipeAcross` / `wipeBack` | `{ clipPath: "inset(0% 100% 0% 0%)" }` | same, 0.28 | `{ clipPath: "inset(0% 0% 0% 100%)", 0.2 }` | Rules, bars, code lines. |
+| `flipIn` / `flipOut` | `{ autoAlpha: 0, rotationX: -60, transformPerspective: 800, transformOrigin: "50% 0%" }` | `{ rotationX: 0, 0.28, power2.out }` | `{ rotationX: 25, 0.2, power2.in }` | The loudest. Almost never. |
+| `focusIn` / `focusOut` | `{ autoAlpha: 0, filter: "blur(8px)" }` | `{ filter: "blur(0px)", 0.28, power2.out }` | `{ filter: "blur(6px)", 0.2, power2.in }` | Costly to paint; one element at a time. |
+| `weightIn` / `weightOut` | `{ autoAlpha: 0, fontWeight: 400, y: 4 }` | `{ fontWeight: 800, y: 0, 0.28, power2.inOut }` | `{ fontWeight: 400, 0.2, power2.inOut }` | Type that gains its weight as it arrives. Settled: `{ fontWeight: 800, y: 0 }`. |
+
+Table entries abbreviate `duration` and `ease`; they are not copyable object literals. Every entrance merges `autoAlpha: 1` into its destination and every exit merges `autoAlpha: 0`. Wipes keep `autoAlpha: 1` at both ends and animate only the clip. Pass the matching settled vars to `pair`.
+
+## Split families
+
+Use character effects on display type such as headings. Keep ordinary reading text immediately readable; use speak-in only for selected short display copy. Keep the existing type scale and font family.
+
+| Family | Split | Move | Role |
+|---|---|---|---|
+| `charsRiseIn` | chars, masked | `yPercent: 115 → 0`, 0.5s, `power3.out`, stagger 0.03 | Masked character reveal. Check [mask ink clearance](text-stability.md#apparent-weight-change-from-clipped-glyph-ink) for tight type. |
+| `charsSpringIn` | chars, unmasked | `yPercent: 115`, `autoAlpha`, 1.1s, `elastic.out(1, 0.5)` | An elastic character entrance. Unmasked because the overshoot would clip. |
+| `charsCascadeIn` / `Out` | chars | `y: -18`, random `rotation ±14`, `back.out(1.8)`, stagger 0.02 from random | A dealer flicking cards. |
+| `charsFlipIn` / `Out` | chars | `rotationX: -90` about the top edge | Each letter tips over. |
+| `charsScatterIn` / `Out` | chars | random `x ±120`, `y ±60`, `rotation ±45`, `scale 0.6`, `power3.out`, stagger from center | Letters converge from wherever they were thrown. The route version scales the spread to the viewport. |
+| `charsWeightWave` | chars, widths pinned | `fontWeight` dips to the far end of the axis and back, stagger 0.03 | A wave of weight through a line. |
+| `wordsSlideIn` / `Out` | words | `x ±40` alternating sides, `power2.out`, stagger 0.05 | Words zip together. |
+| `linesMaskIn` / `Out` | lines, masked | `yPercent: 110 → 0`, 0.28s, `power3.out`, stagger 0.05 | Whole lines wiped up behind masks. |
+| `scrambleIn` / `Out` | none | ScrambleText over `01{}/<>()=;` | Text resolving out of noise. Display only; needs ScrambleTextPlugin. |
+
+Split entrances use `aria: "auto"` and revert when their timeline completes. Under reduced motion nothing is split; the text is simply already there. Code is in [split-entrances.md](recipes/split-entrances.md).
+
+Weight moves require a variable face. The table and recipe examples use 400–800; adapt endpoints and the resting weight to the loaded axis, or choose effects without weight motion. Do not change the font to enable an effect. Weight moves pin each character to its width at the heaviest weight it will reach, `display: inline-block; text-align: center`, so the axis can move without letters shoving each other along the line.
+
+## Route grammar
+
+When a page transition is requested, its selected elements opt in with a `data-page-transition` attribute. These markers belong to the route recipe and do not require a particular page layout. The outro orders items in reverse document order; the intro uses document order. The framework controller determines the swap timing. A page with no marked elements is treated as one whole-page item.
+
+| Value | Entrance | Exit |
+|---|---|---|
+| `""` (standard) | `autoAlpha 0, y 16 → 0`, 0.42s, `power3.out`, stagger 0.09. Starts at `enter+=0.89` when the page has letters, else at `enter`. | `autoAlpha 0, y -8`, 0.22s, `power2.in`, each item 0.055s after the previous. |
+| `letters` | Split to chars. Each starts at random `x ±60vw`, `y ±60vh`, `rotation ±90`, `scale 0.5`, hidden. After a 0.75s hold, 0.75s `power4.out`, stagger 0.02 from random. | Chars fly back out to the same spread at `scale 1.6`, 0.28s, `power2.in`, stagger 0.012 from edges, 0.1s after the standard items start. |
+| `letters-sides` | Chars alternate from `x ∓60vw`, no vertical spread. 0.6s `power4.out`, stagger 0.012 from center, starting 0.14s after the letters. | Same sides, 0.24s, stagger 0.008 from center. |
+| `slide-horizontal` | `autoAlpha 0, x -16 → 0`, 0.2s, `power2.out`, 0.09s after the standard items. Its own CSS transition is suspended for the tween. | `x 8`, 0.14s, `power2.in`. |
+
+Reduced motion: `set(items, { autoAlpha: 1 })` on enter, `set(items, { autoAlpha: 0 })` on exit. Code is in [route-letters.md](recipes/route-letters.md).
+
+### Transition state
+
+The page container reports its phase on `data-transition-state`:
+
+| Value | Framework phase | Meaning |
+|---|---|---|
+| `entering` | intro | The intro timeline is running. Surface effects that play alongside it start here. |
+| `idle` | settled | Intro complete, splits reverted, temporary styles cleared. Effects that need the letters back (the wave) start here. |
+| `exiting` | outro | The outro is running. Every effect winds down. |
+| `waiting` | end state | The outro finished. The page is sealed until the framework swaps it. |
+
+These are optional labels for the framework controller's existing phase state. It invokes surface controls directly; recipes do not observe the document or own phase transitions.
+
+### Pre-paint hiding
+
+The framework controller applies its pre-paint/no-script mechanism to the recipe's targets: `data-page-transition`, `data-speak-intro`, `data-hero-actions`, `data-particle-card`, and any shell/logo/footer intro hooks used. Keep them hidden only until their initial values are ready; `autoAlpha: 1` reveals them. A hidden particle wrapper also needs an explicit reveal because revealing its child cannot reveal the wrapper.
+
+If the controller uses `waiting` for its swap barrier, it owns that rule and its release. Do not add unconditional hiding CSS or a separate readiness mechanism here.
+
+## Resize
+
+Width changes can invalidate split positions and the wave's pinned character widths; height-only changes from mobile browser chrome do not. Keep text readable during a resize. Particle fields remeasure through their own observers.
+
+The framework controller decides whether to rebuild an affected effect or replay an entrance. Supply fresh measurements when called; no recipe remounts the page or resets page state. Reduced motion stays settled.
+
+## Ambient motion
+
+Loops that run while a surface idles: the letter wave on a headline, embers off a button, a runner on a card outline. Rules:
+
+- Avoid competing ambient effects on the same target. An aesthetic can select a wave for a headline or particles for a button, but neither is required.
+- Expose controls for the framework controller to call at settled, outro, and unmount; it owns those signals.
+- Pause off screen. The particle field does this through an `IntersectionObserver`; the wave should be stopped by the same signal if the headline can scroll away.
+- Every cycle ends exactly where it started. The wave clears its transforms; embers die.
+- Never under reduced motion. The helper returns before anything is split or spawned.

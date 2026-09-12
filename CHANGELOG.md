@@ -2,6 +2,24 @@
 
 All notable changes to Animaxxing Skills are documented here. Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-09-12
+
+### Added
+
+- `motion-animaxxing`: independently installable vanilla TypeScript and GSAP text and particle recipes, with effect selection, font and SplitText requirements, and technical verification. Effects preserve the consuming project's fonts, palette, and layout.
+
+### Changed
+
+- Split responsibilities into three families: framework skills own lifecycle, motion skills own reusable effect implementations, and aesthetic skills own visual design and motion art direction.
+- `aesthetic-animaxxing` keeps its tokens, typography, layout, pacing, and surface choices, and composes `motion-animaxxing` for the full treatment. Static and minimal-motion restyles have explicit scope guidance.
+- Moved the seven recipe files and generic SplitText stability/verification guidance from the aesthetic into the motion skill. Recipe builder signatures and TypeScript implementations are unchanged; particle markup now inherits the consuming app's color instead of requiring an aesthetic token.
+- Documented adaptation of weight ranges to existing variable fonts and alternatives for static fonts.
+- Updated discovery metadata, installation/composition and migration guidance, contributor instructions, and plugin manifests for all three families. Repository link validation now covers nested skill references.
+
+### Migration
+
+- Install `motion-animaxxing` alongside `aesthetic-animaxxing` and the matching framework skill to retain the full animated treatment. Recipe reference paths now belong to the motion skill; existing copied application modules do not need migration.
+
 ## [0.2.2] - 2026-09-08
 
 ### Fixed

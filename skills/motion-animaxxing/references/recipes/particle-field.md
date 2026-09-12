@@ -8,12 +8,12 @@ Dependencies: `gsap`.
 
 ## Markup
 
-The canvas sits in a wrapper with the target, offset by the effect's bleed, colored from the tokens, out of the accessibility tree and pointer flow. `z-index` above the target for `layer: "over"` effects, below for `"under"`.
+The canvas sits in a wrapper with the target, offset by the effect's bleed, colored through the canvas's CSS `color`, out of the accessibility tree and pointer flow. `z-index` above the target for `layer: "over"` effects, below for `"under"`.
 
 ```html
 <div class="relative isolate" data-particle-button>
-  <canvas aria-hidden="true" class="pointer-events-none absolute z-10 text-foreground" style="left:-180px; top:-180px"></canvas>
-  <button class="relative z-20 …">Get Animaxxed</button>
+  <canvas aria-hidden="true" class="pointer-events-none absolute z-10 text-inherit" style="left:-180px; top:-180px"></canvas>
+  <button class="relative z-20 …">Continue</button>
 </div>
 ```
 
@@ -22,12 +22,12 @@ Plain CSS equivalent for the positioning classes above (under-layer example):
 ```css
 [data-particle-button] { position: relative; isolation: isolate; }
 [data-particle-button] canvas {
-  pointer-events: none; position: absolute; z-index: 10; color: var(--foreground);
+  pointer-events: none; position: absolute; z-index: 10; color: inherit;
 }
 [data-particle-button] button { position: relative; z-index: 20; }
 ```
 
-The framework controller handles any pre-paint hiding and wrapper reveal.
+The canvas inherits the wrapper's text color by default; set its `color` to an existing brand token when needed for contrast. No palette or token name is required. The framework controller handles any pre-paint hiding and wrapper reveal.
 
 ## field.ts
 

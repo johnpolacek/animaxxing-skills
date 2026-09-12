@@ -1,7 +1,7 @@
 interface:
   display_name: "Animaxxing Aesthetic"
-  short_description: "The Animaxxing look, monochrome editorial type and motion"
-  default_prompt: "Use $aesthetic-animaxxing together with the gsap skill for this framework to restyle and animate this site in the Animaxxing look."
+  short_description: "The Animaxxing look and its motion art direction"
+  default_prompt: "Use $aesthetic-animaxxing to restyle this site in the Animaxxing look, composing motion-animaxxing and the matching GSAP framework skill when animation is requested."
 
 policy:
   allow_implicit_invocation: true

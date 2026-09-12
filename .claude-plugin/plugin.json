@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "animaxxing-skills",
   "displayName": "Animaxxing Skills",
-  "description": "Production-ready GSAP page transition and component lifecycle guidance for modern web frameworks, plus aesthetic skills that carry a complete look and its effect recipes.",
-  "version": "0.2.2",
+  "description": "Composable GSAP skills: framework lifecycle guidance, reusable text and particle motion that preserves existing brands, and aesthetic art direction for the complete Animaxxing look.",
+  "version": "0.3.0",
   "author": {
     "name": "John Polacek",
     "url": "https://github.com/johnpolacek"

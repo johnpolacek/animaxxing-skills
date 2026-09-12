@@ -56,13 +56,13 @@ def main() -> None:
         if name not in index:
             raise SystemExit(f"skills/llms.txt does not mention {name}")
 
-    for skill_file in SKILLS.glob("*/SKILL.md"):
-        for target in LINK_PATTERN.findall(skill_file.read_text(encoding="utf-8")):
+    for document in SKILLS.rglob("*.md"):
+        for target in LINK_PATTERN.findall(document.read_text(encoding="utf-8")):
             if re.match(r"^(?:https?://|mailto:)", target):
                 continue
-            resolved = (skill_file.parent / target).resolve()
+            resolved = (document.parent / target).resolve()
             if not resolved.exists():
-                raise SystemExit(f"Broken link in {skill_file.relative_to(ROOT)}: {target}")
+                raise SystemExit(f"Broken link in {document.relative_to(ROOT)}: {target}")
 
     print(f"Validated {len(skill_names)} skills and {len(MANIFESTS)} manifests at version {claude_version}.")
 
