@@ -1,6 +1,6 @@
 # Motion art direction
 
-Motion is part of the Animaxxing look: big display gestures, quiet reading text, and controls that assemble from particles. This file selects and configures effects. Load `motion-animaxxing` for their implementation and the matching framework skill for **mount → initial state → intro → settled → outro → end state → unmount**.
+Motion is part of the Animaxxing look: big display gestures, quiet reading text, and controls that assemble from particles. This file selects and configures effects. Load `animaxxing` for their implementation and the matching framework skill for **mount → initial state → intro → settled → outro → end state → unmount**.
 
 ## Intensity
 
@@ -12,9 +12,9 @@ The user's requested intensity takes precedence. System or app reduced motion al
 
 ## Recipe selection
 
-Install and load `motion-animaxxing`, then read only the selected reference inside that skill. Do not assume its installation directory is adjacent to this one.
+Install and load `animaxxing`, then read only the selected reference inside that skill. Do not assume its installation directory is adjacent to this one.
 
-| Visual choice | Reference in `motion-animaxxing` |
+| Visual choice | Reference in `animaxxing` |
 |---|---|
 | Ordinary fade/rise/wipe pairs and route marker values | `references/motion-vocabulary.md` |
 | Masked display entrance; elastic wordmark | `references/recipes/split-entrances.md` |
@@ -28,13 +28,13 @@ Install and load `motion-animaxxing`, then read only the selected reference insi
 
 Use the ordinary motion values in [tokens](tokens.md#motion-tokens). The motion recipes carry matching example defaults; when composing them, keep the selected values in the consuming app's motion module. Display recipes deliberately use longer sequences and larger spreads.
 
-Rethink Sans display type rests at 800, so the wave's example dips through 400–500 and returns to 800. Speak-in's `broken` finish uses 400–800. These are settings for this aesthetic; the reusable recipes can use other supported font ranges. Particle canvases use `color: var(--foreground)` from the theme, with sufficient contrast against the surface.
+Rethink Sans display type rests at 800, so the wave's example dips through 400–500 and returns to 800. Speak-in's `broken` finish uses 400–800. These are settings for this style; the reusable recipes can use other supported font ranges. Particle canvases use `color: var(--foreground)` from the theme, with sufficient contrast against the surface.
 
-Use the route recipe's `letters` treatment for the main display headline and standard rise for supporting page items. The framework controller applies the recipe's target markers, initial visibility, and cleanup; this aesthetic does not add a second readiness or navigation mechanism.
+Use the route recipe's `letters` treatment for the main display headline and standard rise for supporting page items. The framework controller applies the recipe's target markers, initial visibility, and cleanup; this style does not add a second readiness or navigation mechanism.
 
 ## Surface effects
 
-For the full treatment, select these recipes from `motion-animaxxing`. These are art-direction choices mapped onto the framework skill's phases; its controller owns execution timing.
+For the full treatment, select these recipes from `animaxxing`. These are art-direction choices mapped onto the framework skill's phases; its controller owns execution timing.
 
 | Surface | Intro | Settled | Outro |
 |---|---|---|---|

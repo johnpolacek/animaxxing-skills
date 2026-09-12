@@ -1,6 +1,12 @@
 # Animaxxing Skills — Agent Index
 
-Load one framework skill for GSAP lifecycle ownership, a motion skill for requested reusable effects, and an aesthetic only when its look is requested. A static restyle needs only the aesthetic. Install this repo alongside https://github.com/greensock/gsap-skills; load its API/plugin skills only as needed. Each entry links to an independently installable skill. Framework skills also cover component enter/exit, scroll effects, interruption, and cleanup.
+Load one framework skill for GSAP lifecycle ownership, a motion skill for requested reusable effects, and a style only when its look is requested. A static restyle needs only the style. Install this repo alongside https://github.com/greensock/gsap-skills; load its API/plugin skills only as needed. Each entry links to an independently installable skill. Framework skills also cover component enter/exit, scroll effects, interruption, and cleanup.
+
+## Motion skills
+
+[animaxxing](animaxxing/SKILL.md)
+  Reusable vanilla TypeScript and GSAP text and particle effects with text stability and technical checks. Preserve existing fonts, colors, and layout; no style skill required. The framework skill owns lifecycle timing.
+  Triggers: animate without restyling, preserve branding, Animaxxing motion, split-text entrance, scattering headline, speak-in, letter wave, particle buttons, blast-off.
 
 ## Framework skills
 
@@ -32,14 +38,8 @@ Load one framework skill for GSAP lifecycle ownership, a motion skill for reques
   Next.js App Router: transition-aware links, cacheComponents route preservation, streaming, GSAP versus React View Transitions.
   Triggers: Next.js animation, App Router page transition, onNavigate, Activity, interrupted intro.
 
-## Motion skills
+## Style skills
 
-[motion-animaxxing](motion-animaxxing/SKILL.md)
-  Reusable vanilla TypeScript and GSAP text and particle effects with text stability and technical checks. Preserve existing fonts, colors, and layout; no aesthetic required. The framework skill owns lifecycle timing.
-  Triggers: animate without restyling, preserve branding, Animaxxing motion, split-text entrance, scattering headline, speak-in, letter wave, particle buttons, blast-off.
-
-## Aesthetic skills
-
-[aesthetic-animaxxing](aesthetic-animaxxing/SKILL.md)
-  Monochrome editorial art direction: Rethink Sans, JetBrains Mono, poster type, hairlines, layout, and surface choices that configure motion-animaxxing. Apply only when the user requests this look. For the full treatment, also load motion-animaxxing and the matching framework skill; for a static restyle, omit animation.
+[style-animaxxing](style-animaxxing/SKILL.md)
+  Monochrome editorial art direction: Rethink Sans, JetBrains Mono, poster type, hairlines, layout, and surface choices that configure animaxxing. Apply only when the user requests this look. For the full treatment, also load animaxxing and the matching framework skill; for a static restyle, omit animation.
   Triggers: animaxx it, Animaxxing look, Swiss monochrome redesign, Animaxxing design with minimal motion.

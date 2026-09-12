@@ -1,6 +1,6 @@
 # Motion vocabulary
 
-Read this to select and adapt reusable effects. The framework skill decides when each phase runs. Existing design or an explicitly selected aesthetic determines which surfaces receive them; none of the recipes requires the Animaxxing layout or palette.
+Read this to select and adapt reusable effects. The framework skill decides when each phase runs. Existing design or an explicitly selected style determines which surfaces receive them; none of the recipes requires the Animaxxing layout or palette.
 
 ## Tokens
 
@@ -133,7 +133,7 @@ The framework controller decides whether to rebuild an affected effect or replay
 
 Loops that run while a surface idles: the letter wave on a headline, embers off a button, a runner on a card outline. Rules:
 
-- Avoid competing ambient effects on the same target. An aesthetic can select a wave for a headline or particles for a button, but neither is required.
+- Avoid competing ambient effects on the same target. A style can select a wave for a headline or particles for a button, but neither is required.
 - Expose controls for the framework controller to call at settled, outro, and unmount; it owns those signals.
 - Pause off screen. The particle field does this through an `IntersectionObserver`; the wave should be stopped by the same signal if the headline can scroll away.
 - Every cycle ends exactly where it started. The wave clears its transforms; embers die.

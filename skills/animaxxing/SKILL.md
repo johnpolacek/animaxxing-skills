@@ -1,14 +1,14 @@
 ---
-name: motion-animaxxing
+name: animaxxing
 description: "Build reusable GSAP text and particle effects while preserving the project's design: split-text entrances, scattering headlines, speak-in copy, letter waves, particle buttons/cards, and blast-off exits. Use for Animaxxing motion, expressive animation, or these individual effects without a restyle. Pair with the matching GSAP framework skill for lifecycle ownership. Not for choosing a brand, redesigning layout, framework routing, or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text and particle motion for any brand
 ---
 
-# Animaxxing Motion
+# Animaxxing
 
-Portable vanilla TypeScript and GSAP recipes drawn from Animaxxing. Keep the project's fonts, colors, layout, and component styling. No aesthetic skill, design tokens, or particular font family is required.
+Portable vanilla TypeScript and GSAP recipes drawn from Animaxxing. Keep the project's fonts, colors, layout, and component styling. No style skill, design tokens, or particular font family is required.
 
 Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for plain sites). It owns **mount → initial state → intro → settled → outro → end state → unmount**, navigation, interruption, and cleanup timing. This skill supplies effect builders its controller calls. Install the matching framework skill if unavailable; do not invent framework lifecycle guidance here.
 
@@ -19,7 +19,7 @@ Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for p
 - Recipe constants are editable defaults, not brand rules. Adapt timing, stagger, spread, and intensity to the surface. Use each recipe's documented options; expose additional constants in the copied module if the app needs runtime configuration.
 - Weight effects require a loaded variable weight axis, not Rethink Sans. Match endpoints and resting weight to the existing face; the examples use 400–800. Choose transform-only effects or omit weight moves when that capability is absent.
 - Particle canvases use their computed CSS `color`; inherit or assign an existing brand color with suitable contrast. Keep existing control geometry and focus styling.
-- Use `aesthetic-animaxxing` only when its visual design is requested. It selects and configures these recipes for the full Animaxxing look.
+- Use `style-animaxxing` only when its visual design is requested. It selects and configures these recipes for the full Animaxxing look.
 
 ## Read only what you need
 

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Animaxxing Style"
+  short_description: "The Animaxxing look and its motion art direction"
+  default_prompt: "Use $style-animaxxing to restyle this site in the Animaxxing look, composing animaxxing and the matching GSAP framework skill when animation is requested."
+
+policy:
+  allow_implicit_invocation: true

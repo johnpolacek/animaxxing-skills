@@ -2,6 +2,18 @@
 
 All notable changes to Animaxxing Skills are documented here. Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] - 2026-09-12
+
+### Changed
+
+- Renamed `motion-animaxxing` to `animaxxing` so the core animation skill appears first in the installer.
+- Renamed `aesthetic-animaxxing` to `style-animaxxing` for visual design and motion art direction. Framework, motion, and style responsibilities remain unchanged.
+- Updated skill metadata, composition references, contributor guidance, and the README/index to use the new names and lead with the core animation skill.
+
+### Migration
+
+- Replace installed `motion-animaxxing` and `aesthetic-animaxxing` entries with `animaxxing` and `style-animaxxing`, respectively. Existing copied application modules and recipe APIs are unchanged.
+
 ## [0.3.0] - 2026-09-12
 
 ### Added

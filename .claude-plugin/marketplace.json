@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "animaxxing-skills",
-  "description": "Composable GSAP skills: framework lifecycle guidance, reusable text and particle motion that preserves existing brands, and aesthetic art direction for the complete Animaxxing look.",
+  "description": "Composable GSAP skills: framework lifecycle guidance, reusable text and particle motion that preserves existing brands, and style art direction for the complete Animaxxing look.",
   "owner": {
     "name": "John Polacek"
   },
   "plugins": [
     {
       "name": "animaxxing-skills",
-      "description": "Composable GSAP skills: framework lifecycle guidance, reusable text and particle motion that preserves existing brands, and aesthetic art direction for the complete Animaxxing look.",
+      "description": "Composable GSAP skills: framework lifecycle guidance, reusable text and particle motion that preserves existing brands, and style art direction for the complete Animaxxing look.",
       "author": {
         "name": "John Polacek"
       },

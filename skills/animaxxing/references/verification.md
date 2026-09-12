@@ -1,10 +1,10 @@
 # Verification
 
-Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exercises these recipes with `aesthetic-animaxxing`; it is not a required design. Until a motion suite exists in animaxxing-skills-test, verify changed recipes there or in the consuming app, alongside the framework skill's relevant checks.
+Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exercises these recipes with `style-animaxxing`; it is not a required design. Until a motion suite exists in animaxxing-skills-test, verify changed recipes there or in the consuming app, alongside the framework skill's relevant checks.
 
 ## Portability
 
-- An effect-only request preserves the app's fonts, palette, layout, and component styling. No aesthetic tokens or fonts are needed to copy a recipe and its named helpers.
+- An effect-only request preserves the app's fonts, palette, layout, and component styling. No style-specific tokens or fonts are needed to copy a recipe and its named helpers.
 - Particle color follows the canvas's computed `color`, including theme changes; its contrast works on the actual background.
 - Weight effects use a loaded variable face and its supported axis range. Confirm the configured resting weight matches the target. For a static face, choose a transform-only effect or omit weight moves.
 - Selected timing, spread, intensity, and stagger suit the actual surface and viewport. Layout boxes remain stable through the effect.

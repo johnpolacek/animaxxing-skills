@@ -2,7 +2,7 @@
 
 <img src="assets/logo.svg" alt="Animaxxing Skills logo" width="120">
 
-AI agent skills for ambitious, production-ready animation with [GSAP](https://gsap.com), in three composable families. **Framework skills** own routing, rendering, animation timing, interruption, and cleanup. **Motion skills** supply reusable effects that preserve the project's design. **Aesthetic skills** carry a complete art direction: tokens, typography, layout, and a curated selection of motion treatments.
+AI agent skills for ambitious, production-ready animation with [GSAP](https://gsap.com), in three composable families. **Framework skills** own routing, rendering, animation timing, interruption, and cleanup. **Motion skills** supply reusable effects that preserve the project's design. **Style skills** carry a complete art direction: tokens, typography, layout, and a curated selection of motion treatments.
 
 These skills sit above the [official GSAP skills](https://github.com/greensock/gsap-skills), which cover the GSAP API itself. Install both.
 
@@ -49,6 +49,12 @@ Copy the folders under `skills/` into your agent's skill directory:
 
 ## Skills
 
+### Motion skills
+
+| Skill | Description |
+|-------|-------------|
+| **animaxxing** | Reusable vanilla TypeScript and GSAP recipes: split-text entrances, scattering headlines, speak-in copy, letter waves, particle buttons/cards/links/fields, and blast-off exits. Includes text stability and effect verification. Preserves existing fonts, colors, and layout; the framework skill owns lifecycle timing |
+
 ### Framework skills
 
 | Skill | Description |
@@ -61,38 +67,34 @@ Copy the folders under `skills/` into your agent's skill directory:
 | **gsap-tanstack-router** | TanStack Router for React and TanStack Start: page transitions, outro before navigation with `useBlocker`, pending components and `pendingMs`, route reuse and `remountDeps`, `router.subscribe` events, back and forward, `viewTransition`, scroll restoration, SSR first paint with `ScriptOnce` |
 | **gsap-nextjs** | Next.js App Router: page transitions, enter and exit motion, show and hide of conditional content, scroll-driven effects, GSAP versus React View Transitions, route lifetime under `cacheComponents`, transition-aware links, back and forward, cleanup |
 
-### Motion skills
+### Style skills
 
 | Skill | Description |
 |-------|-------------|
-| **motion-animaxxing** | Reusable vanilla TypeScript and GSAP recipes: split-text entrances, scattering headlines, speak-in copy, letter waves, particle buttons/cards/links/fields, and blast-off exits. Includes text stability and effect verification. Preserves existing fonts, colors, and layout; the framework skill owns lifecycle timing |
-
-### Aesthetic skills
-
-| Skill | Description |
-|-------|-------------|
-| **aesthetic-animaxxing** | The Animaxxing art direction: monochrome editorial design in Rethink Sans and JetBrains Mono, poster-scale type, hairline rules, light and dark schemes, and a curated motion treatment. Tokens in plain CSS and Tailwind v4, type and layout grammar, and surface choices that configure `motion-animaxxing` |
+| **style-animaxxing** | The Animaxxing art direction: monochrome editorial design in Rethink Sans and JetBrains Mono, poster-scale type, hairline rules, light and dark schemes, and a curated motion treatment. Tokens in plain CSS and Tailwind v4, type and layout grammar, and surface choices that configure `animaxxing` |
 
 ## Composing the skills
 
 | Request | Skills to use |
 |---|---|
-| Animate an existing brand with these effects | Matching `gsap-<framework>` + `motion-animaxxing` |
-| Apply the Animaxxing design without animation | `aesthetic-animaxxing` |
-| Apply the design with minimal motion | `aesthetic-animaxxing` + matching framework skill; add `motion-animaxxing` when using its effects |
-| Give it the full Animaxxing treatment | All three: framework + motion + aesthetic |
+| Animate an existing brand with these effects | Matching `gsap-<framework>` + `animaxxing` |
+| Apply the Animaxxing design without animation | `style-animaxxing` |
+| Apply the design with minimal motion | `style-animaxxing` + matching framework skill; add `animaxxing` when using its effects |
+| Give it the full Animaxxing treatment | All three: framework + motion + style |
 
-Each skill is independently installable; install and load the skills needed for the requested combination. The framework skill owns the lifecycle below, navigation timing, interruption, and cleanup. Motion recipes return timelines or `enter`/`exit`/`blast`/`idle` instances for its controller to call. An aesthetic selects and configures those effects alongside its visual design. Load only the references needed for the current task.
+Each skill is independently installable; install and load the skills needed for the requested combination. The framework skill owns the lifecycle below, navigation timing, interruption, and cleanup. Motion recipes return timelines or `enter`/`exit`/`blast`/`idle` instances for its controller to call. A style selects and configures those effects alongside its visual design. Load only the references needed for the current task.
 
 Ask the agent to "animaxx it" for the full treatment, or specify "keep our branding" to use the effects alone. Asking for a static restyle does not require GSAP or a motion skill.
 
-### Updating from 0.2.x
+### Updating existing installations
 
-The implementations previously inside `aesthetic-animaxxing/references/recipes/` now live in `motion-animaxxing/references/recipes/`. Install `motion-animaxxing` alongside the aesthetic to keep using the full treatment. Generic SplitText guidance moved from the aesthetic's typography reference to `motion-animaxxing/references/text-stability.md`, and effect checks moved to its verification reference. Existing copied application modules are unaffected; recipe builder signatures are unchanged.
+In 0.3.1, `motion-animaxxing` is renamed to `animaxxing` and `aesthetic-animaxxing` to `style-animaxxing`. Replace the old installed entries with the new names to avoid duplicate discovery. `animaxxing` appears first in the installer; the optional `style-animaxxing` carries the visual design.
+
+From 0.2.x, the implementations previously inside `aesthetic-animaxxing/references/recipes/` now live in `animaxxing/references/recipes/`. Install `animaxxing` alongside `style-animaxxing` and the matching framework skill for the full treatment. Generic SplitText guidance lives in `animaxxing/references/text-stability.md`, with effect checks in its verification reference. Existing copied application modules are unaffected; recipe builder signatures are unchanged.
 
 ## The lifecycle
 
-Every framework skill uses the same model; motion recipes map onto it, and aesthetics select their visual treatment. An animated page or component runs through:
+Every framework skill uses the same model; motion recipes map onto it, and styles select their visual treatment. An animated page or component runs through:
 
 **mount → initial state → intro → settled → outro → end state → unmount**
 
@@ -115,6 +117,21 @@ animaxxing-skills/
     workflows/validate.yml
   skills/
     llms.txt             # Skill index for agents (names, summaries, trigger terms)
+    animaxxing/
+      SKILL.md
+      agents/openai.yaml
+      references/
+        motion-vocabulary.md # Effect catalog and controller contract
+        text-stability.md
+        verification.md      # Effect and portability checks
+        recipes/
+          split-entrances.md
+          route-letters.md
+          speak-in.md
+          wave.md
+          blast-off.md
+          particle-field.md
+          particle-effects.md
     gsap-vanilla/
       SKILL.md
       agents/openai.yaml
@@ -171,7 +188,7 @@ animaxxing-skills/
         app-router-navigation.md
         motion-system.md
         verification.md
-    aesthetic-animaxxing/
+    style-animaxxing/
       SKILL.md
       agents/openai.yaml
       references/
@@ -179,36 +196,21 @@ animaxxing-skills/
         typography-and-layout.md
         motion-vocabulary.md # Art direction and surface choices
         verification.md      # Design checks
-    motion-animaxxing/
-      SKILL.md
-      agents/openai.yaml
-      references/
-        motion-vocabulary.md # Effect catalog and controller contract
-        text-stability.md
-        verification.md      # Effect and portability checks
-        recipes/
-          split-entrances.md
-          route-letters.md
-          speak-in.md
-          wave.md
-          blast-off.md
-          particle-field.md
-          particle-effects.md
 ```
 
 ## Verification
 
 [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test) holds, for each framework, a starter site, the task prompt an agent is given, a reference implementation built by following the skill, and Playwright specs that assert the lifecycle behavior the skill promises: no flash before the intro, a clean settled state, an outro that finishes before navigation, intro-only history, one navigation at a time, interruptible intros, reduced motion through every phase, and cleanup. Its eval script rebuilds a framework's app from the starter with Claude Code and runs the specs against the result.
 
-The [Animaxxing](https://github.com/johnpolacek/animaxxing) demo is the reference for `aesthetic-animaxxing` and `motion-animaxxing`. Each has its own `references/verification.md`: the aesthetic checks design and effect selection; the motion skill checks effect behavior, text stability, and reuse with the consuming app's fonts and colors. Dedicated aesthetic and motion suites in the test repository are planned.
+The [Animaxxing](https://github.com/johnpolacek/animaxxing) demo is the reference for `style-animaxxing` and `animaxxing`. Each has its own `references/verification.md`: the style checks design and effect selection; the motion skill checks effect behavior, text stability, and reuse with the consuming app's fonts and colors. Dedicated style and motion suites in the test repository are planned.
 
 ## Demo
 
-The [Animaxxing](https://github.com/johnpolacek/animaxxing) repository holds a Next.js showcase that consumes these skills as a real project and validates their guidance against navigation, interruption, accessibility, responsive layout, and cleanup requirements. Its look is carried by `aesthetic-animaxxing` and its effects by `motion-animaxxing`, and its install page at `/animaxx` walks through installing the skills.
+The [Animaxxing](https://github.com/johnpolacek/animaxxing) repository holds a Next.js showcase that consumes these skills as a real project and validates their guidance against navigation, interruption, accessibility, responsive layout, and cleanup requirements. Its look is carried by `style-animaxxing` and its effects by `animaxxing`, and its install page at `/animaxx` walks through installing the skills.
 
 ## Contributing
 
-Read [AGENTS.md](AGENTS.md) before adding or editing a skill. New skills must follow the shared lifecycle and gate advice on framework versions. Framework skills stay free of project-specific design. Motion skills own reusable recipes and technical requirements without prescribing a brand. Aesthetic skills select and configure motion alongside their design. Both motion and aesthetic skills stay free of framework lifecycle ownership.
+Read [AGENTS.md](AGENTS.md) before adding or editing a skill. New skills must follow the shared lifecycle and gate advice on framework versions. Framework skills stay free of project-specific design. Motion skills own reusable recipes and technical requirements without prescribing a brand. Style skills select and configure motion alongside their design. Both motion and style skills stay free of framework lifecycle ownership.
 
 Run the same checks as CI before opening a pull request:
 

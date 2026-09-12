@@ -1,6 +1,6 @@
 # Verification
 
-Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). Until an aesthetic suite exists in animaxxing-skills-test, verify the changed design there or in the consuming app. For selected animation, also run `motion-animaxxing`'s `references/verification.md` and the framework skill's relevant checks; those own effect behavior, SplitText cleanup stability, and lifecycle verification.
+Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). Until an style suite exists in animaxxing-skills-test, verify the changed design there or in the consuming app. For selected animation, also run `animaxxing`'s `references/verification.md` and the framework skill's relevant checks; those own effect behavior, SplitText cleanup stability, and lifecycle verification.
 
 ## Tokens and type
 

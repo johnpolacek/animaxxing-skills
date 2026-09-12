@@ -34,7 +34,7 @@ Card headings: `font-sans text-4xl font-extrabold uppercase tracking-[-0.03em] s
 
 ## Character animation
 
-When character motion is selected, load `motion-animaxxing` and its `references/text-stability.md` before splitting. That reference owns kerning, font readiness, mask clearance, and split/revert checks. Omit `text-balance` on split targets and use stable normal wrapping. Preserve the design's font, scale, and tracking; choose words or lines if character splitting would compromise them.
+When character motion is selected, load `animaxxing` and its `references/text-stability.md` before splitting. That reference owns kerning, font readiness, mask clearance, and split/revert checks. Omit `text-balance` on split targets and use stable normal wrapping. Preserve the design's font, scale, and tracking; choose words or lines if character splitting would compromise them.
 
 ## Mono vocabulary
 
@@ -65,7 +65,7 @@ BUTTON_SOLID   = "inline-flex cursor-pointer items-center rounded-lg bg-inverse 
 BUTTON_OUTLINE = same, with "border-2 border-foreground bg-transparent text-foreground hover:bg-surface-hover" in place of the inverse fill
 ```
 
-For the full motion treatment, the primary action is solid and gets `reactor`; the secondary is outlined and gets `marquee` from `motion-animaxxing`. With minimal or no motion, keep the same button styling. Only one solid button per composition.
+For the full motion treatment, the primary action is solid and gets `reactor`; the secondary is outlined and gets `marquee` from `animaxxing`. With minimal or no motion, keep the same button styling. Only one solid button per composition.
 
 The `transition-colors` on chips and buttons is the one CSS transition in the system. GSAP never animates `color`, so they do not collide.
 
