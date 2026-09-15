@@ -16,7 +16,11 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 - No inline `transform`, `will-change`, or `transition` remains on route items at settled.
 - If the controller uses `data-transition-state`, it reports `entering → idle` for intro and `exiting → waiting` for outro. It never reports completion while the relevant timeline still runs.
 - Particle canvases: one per treated element, positioned at `-bleed`, `pointer-events: none`, `aria-hidden`, colored from the consuming app's chosen canvas `color`. The GSAP ticker drops each field once its particles are gone and no emitter is attached.
-- Hover and focus produce the same state on treated elements.
+- Mouse hover and keyboard focus share a hot state; leaving one input preserves the other.
+- Touch buttons and text fields: flare while pressed, cool on release or swipe cancellation. Tap-derived focus stays cold.
+- Keyboard input after touch restores focus treatment. Repeated keys must not repeat bursts.
+- Coarse input thins transient particles while preserving outlines and owned particles. Runner counts stay unchanged.
+- At phone width with 4x CPU throttling, lower budgets if idle frame pacing fails.
 - Reduced motion (`prefers-reduced-motion: reduce`, or `data-motion="reduced"` on `<html>`): entrances reach the readable settled state immediately, exits reach their documented end state, no splits, no particles, no wave, and every completion callback still fires.
 - Off screen: scroll a treated element out of view and confirm its field stops ticking.
 

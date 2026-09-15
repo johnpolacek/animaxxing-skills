@@ -32,6 +32,7 @@ Use Vue Transition CSS for simple page fades/slides, `experimental.viewTransitio
 - The hooks, `done`, modes, what dies when the leave starts, first load, layouts, direction, interruptions: [Page transitions](references/page-transitions.md).
 - Page keys, keepalive, Nuxt app hooks, scroll and focus, outro before navigation, back and forward, View Transitions, SSR and first paint: [Navigation](references/navigation.md).
 - The five phases, GSAP setup, Vue lifecycle, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 
 Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alongside this repository. Load `gsap-core` for API details and `gsap-frameworks` for component setup only as needed.
@@ -42,7 +43,8 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 - GSAP runs only on the client. Guard with `import.meta.client`, `onMounted`, or `<ClientOnly>`. Scope selectors. Clean up every tween, trigger, split, and listener.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space. Pages and layouts need a single root element or the transition does not run.
 - Mount, then set initial values, then paint. `onBeforeEnter` runs before the incoming root is inserted and `onEnter` right after, before the browser paints. Successful initialization never flashes settled content before the intro.
-- Animate to one settled state and clear temporary styles there.
+- Clear temporary styles at settled. Use `will-change` only while animating; this overrides `gsap-performance`'s static hint.
+- Use capability queries for device tiers. Touch states release; controls work without hover.
 - Always call `done`: from `onComplete`, from `onInterrupt`, and synchronously under reduced motion. A leave that never calls `done` leaves the old page in the DOM forever.
 - The page component is unmounted, or deactivated under keepalive, when the leave starts, not when it ends. Its context revert and `onUnmounted` run while the outro plays. Build the outro in `onLeave` against `el`, in a context the hooks own.
 - Keep outgoing pages and components in the DOM through outro and end state. Vue does this as long as `done` waits.

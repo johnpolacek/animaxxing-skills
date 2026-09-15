@@ -131,6 +131,14 @@ Width changes can invalidate split positions and the wave's pinned character wid
 
 The framework controller decides whether to rebuild an affected effect or replay an entrance. Supply fresh measurements when called; no recipe remounts the page or resets page state. Reduced motion stays settled.
 
+## Input and devices
+
+Only particle treatments use pointer states; text effects are input-independent.
+
+- [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
+- Tune `COARSE_POINTER_DENSITY` for transient particles; preserve outlines and owned particles.
+- The installed framework skill's `references/devices.md` owns viewport tiers, orientation handling, and CPU budgets.
+
 ## Ambient motion
 
 Loops that run while a surface idles: the letter wave on a headline, embers off a button, a runner on a card outline. Rules:
@@ -138,5 +146,6 @@ Loops that run while a surface idles: the letter wave on a headline, embers off 
 - Avoid competing ambient effects on the same target. A style can select a wave for a headline or particles for a button, but neither is required.
 - Expose controls for the framework controller to call at settled, outro, and unmount; it owns those signals.
 - Pause off screen. The particle field does this through an `IntersectionObserver`; the wave should be stopped by the same signal if the headline can scroll away.
+- On small screens, lower particle density and limit wave character counts.
 - Every cycle ends exactly where it started. The wave clears its transforms; embers die.
 - Never under reduced motion. The helper returns before anything is split or spawned.

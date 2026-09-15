@@ -32,6 +32,7 @@ In data/framework mode, use Link, Form, or `navigate` with `viewTransition` for 
 - The blocker outro, transition-aware links, the lock, pending state, back and forward, the swap gap, scroll, focus, View Transitions: [React Router navigation](references/react-router-navigation.md).
 - Modes and their hooks, route reuse versus remount, layouts and `<Outlet>`, SSR and SPA mode first paint, streaming, fetchers, modal routes: [Route lifetime](references/route-lifetime.md).
 - The five phases, GSAP setup, React lifecycle, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 
 Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alongside this repository. Load `gsap-core` for API details and `gsap-react` for component setup only as needed.
@@ -42,7 +43,8 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 - GSAP runs only in the browser. Framework mode evaluates route modules on the server, so keep GSAP calls inside `useGSAP` or effects and registration in a `.client` side-effect module. Import `gsap` and `useGSAP` from their packages: `.client` exports are undefined during SSR. Scope selectors. Clean up every tween, trigger, split, and listener.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
 - Mount, then set initial values, then paint. Server HTML paints before hydration: hide intro targets only under a root attribute set by an inline script in the root `Layout`, only during the initial phase, with a no-JavaScript path.
-- Animate to one settled state and clear temporary styles there.
+- Clear temporary styles at settled. Use `will-change` only while animating; this overrides `gsap-performance`'s static hint.
+- Use capability queries for device tiers. Touch states release; controls work without hover.
 - Keep outgoing routes mounted and visible through outro and end state. The router unmounts the old route when the new one commits, so hold the commit: `useBlocker` and `proceed()` from the end callback, or prevent the Link default and `navigate` after the outro.
 - Never block or outro a `POP`. Back and forward get initial state and intro only, after scroll restoration.
 - A navigation to the same route with new params reuses the element. Key the outlet on `location.pathname`, or run the lifecycle again from a `pathname` dependency against DOM that already holds settled values.

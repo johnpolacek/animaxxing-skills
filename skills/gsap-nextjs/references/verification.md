@@ -7,7 +7,9 @@ Check in proportion to what changed. Do not turn a focused animation task into a
 - Run the repo's type, lint, format, and test commands where they exist.
 - Confirm settled content is visible, interactive, and free of leftover GSAP inline styles.
 - Confirm timelines, triggers, listeners, and plugin DOM changes are cleaned up.
-- Test reduced motion when the change has a reduced-motion branch.
+- Test reduced motion: the same settled state, every completion callback fired.
+- At phone width: readable text, stable boxes, no horizontal overflow.
+- Touch-treated controls release after taps. For device changes, run the [device checks](devices.md#verify).
 
 ## Initially hidden content
 

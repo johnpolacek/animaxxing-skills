@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build reusable GSAP text and particle effects while preserving the project's design: split-text entrances, scattering headlines, speak-in copy, letter waves, particle buttons/cards, and blast-off exits. Use for Animaxxing motion, expressive animation, or these individual effects without a restyle. Pair with the matching GSAP framework skill for lifecycle ownership. Not for choosing a brand, redesigning layout, framework routing, or isolated GSAP API questions."
+description: "Build GSAP text and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, particle controls, and blast-off exits. Use for Animaxxing motion or hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle timing. Not for branding, layout redesign, routing, or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text and particle motion for any brand
@@ -34,6 +34,7 @@ Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for p
 | Ambient headline ripple | [Wave](references/recipes/wave.md) |
 | Dispersal on a call to action | [Blast-off](references/recipes/blast-off.md) |
 | Particle buttons, cards, links, or command fields | [Particle effects](references/recipes/particle-effects.md) plus [field/attach helpers](references/recipes/particle-field.md) |
+| Touch, focus, stuck hover, mobile particle budgets | [Input and devices](references/motion-vocabulary.md#input-and-devices) |
 | Roll back partial setup and restore modified content | [Effect restoration](references/effect-restoration.md) |
 | Verify effects and reuse on another brand | [Verification](references/verification.md), then the framework's relevant checks |
 
@@ -56,5 +57,6 @@ Copy only the selected recipe and its named local helpers. Return shapes differ:
 - Retain required split markup only while an effect needs it (speak-in finishes and an active wave are exceptions to immediate revert). Revert on the controller's cleanup boundary; preserve accessible text and nested controls.
 - Use `overwrite: "auto"`; clear temporary styles and `will-change` when their phase ends.
 - Reduced motion reaches the documented settled or exit state and preserves completion callbacks. Use the project's preference helper, including any app override; no ambient motion under reduced motion.
-- Avoid competing effects on a target. Expose controls so the owner can pause ambient motion off screen and stop it on exit. Pointer states need keyboard parity.
+- Avoid competing effects on a target. Expose controls so the owner can pause ambient motion off screen and stop it on exit.
+- Particle input and density follow the [field contract](references/recipes/particle-field.md#input-and-density). Controls must work without hover.
 - Width changes can invalidate split measurements; report those requirements to the framework controller. Recipes do not prescribe page remounts.

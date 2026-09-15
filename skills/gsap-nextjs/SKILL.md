@@ -32,6 +32,7 @@ Use React `<ViewTransition>` for shared-element morphs, page crossfades, and Sus
 - Loading/auth flashes and shifting async sections: [Data readiness](references/initialization.md#data-readiness-and-layout-stability), plus [React data integration](references/motion-system.md#data-ready-entrances).
 - Page intros and outros, transition-aware links, back and forward, focus, route swaps: [App Router navigation](references/app-router-navigation.md).
 - The five phases, GSAP setup, React lifecycle, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 
 Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alongside this repository. Load `gsap-core` for API details and `gsap-react` for component setup only as needed.
@@ -43,7 +44,8 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
 - Reveal each owner when its structural data is ready; unresolved auth or queries must not masquerade as guest or empty content.
 - Mount, then set initial values, then paint. Successful initialization never flashes settled content before the intro.
-- Animate to one settled state and clear temporary styles there.
+- Clear temporary styles at settled. Use `will-change` only while animating; this overrides `gsap-performance`'s static hint.
+- Use capability queries for device tiers. Touch states release; controls work without hover.
 - Keep outgoing pages and components mounted and visible through outro and end state. Unmount, or let the router hide, only after the end callback.
 - Under `cacheComponents`, a page lifecycle runs again on re-show against DOM that already holds settled values. Never assume a fresh node.
 - Back and forward never run an outro. Give them an intro-only path.

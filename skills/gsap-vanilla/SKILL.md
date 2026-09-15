@@ -42,6 +42,7 @@ Use cross-document View Transitions for snapshot morphs or page crossfades, with
 - `@view-transition`, `pageswap`, `pagereveal`, types, render blocking, and handing off between the browser and GSAP: [Cross-document navigation](references/cross-document-navigation.md).
 - Fetch and swap routers, link interception, history, scroll, focus, script re-execution, and when to use a library: [Same-document navigation](references/spa-navigation.md).
 - The five phases, GSAP setup, contexts, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 
 Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alongside this repository. Load `gsap-core` for API details and the relevant plugin skill only as needed.
@@ -52,7 +53,8 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 - GSAP runs after the DOM it targets exists. Scope selectors with `gsap.context` to the page or component root. Clean up every tween, trigger, split, and listener when its owner goes away.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
 - Set initial values before first paint, then reveal. Successful initialization never flashes settled content before the intro, and never a blank page without JavaScript.
-- Animate to one settled state and clear temporary styles there.
+- Clear temporary styles at settled. Use `will-change` only while animating; this overrides `gsap-performance`'s static hint.
+- Use capability queries for device tiers. Touch states release; controls work without hover.
 - Keep outgoing content in the DOM and visible through outro and end state. Follow the link, remove the node, or swap only from the end callback.
 - Back and forward never run an outro. A fresh document reached by history gets an intro-only path, and a bfcache restore gets no intro at all.
 - A prerendered page sets initial state at once and waits for activation before it animates.

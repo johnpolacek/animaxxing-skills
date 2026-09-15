@@ -32,6 +32,7 @@ Use Svelte `transition:` / `in:` / `out:` for simple block motion and `{#key}` s
 - Navigation hooks and their order, outro before navigation, the lock, back and forward, scroll, focus, links, preloading, View Transitions: [SvelteKit navigation](references/sveltekit-navigation.md).
 - Page reuse versus remount, layouts, `{#key}` versus `afterNavigate`, the Svelte 5 lifecycle, Svelte transitions beside GSAP, shallow-routed modals, SSR: [Page lifetime](references/page-lifetime.md).
 - The five phases, GSAP setup, contexts, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 
 Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alongside this repository. Load `gsap-core` for API details and `gsap-frameworks` for component setup only as needed.
@@ -42,7 +43,8 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 - GSAP runs only in the browser. `onMount` and `$effect` never run on the server; module-level code needs a `browser` guard. Scope selectors with `gsap.context` to a `bind:this` root. Clean up every tween, trigger, split, and listener in the effect teardown or the `onMount` return.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
 - Mount, then set initial values, then paint. Successful initialization never flashes settled content before the intro. Server HTML paints before hydration, so hide intro targets only under a root attribute set by an inline script, only during the initial phase, with a no-JavaScript path.
-- Animate to one settled state and clear temporary styles there.
+- Clear temporary styles at settled. Use `will-change` only while animating; this overrides `gsap-performance`'s static hint.
+- Use capability queries for device tiers. Touch states release; controls work without hover.
 - Keep outgoing pages mounted and visible through outro and end state. Hold the navigation with `beforeNavigate` and re-issue it from the end callback, or return the outro's promise from `onNavigate`. The URL changes before `onNavigate` runs, so only the first keeps it unchanged during the outro.
 - A navigation to the same route with new params updates the page in place. Run the lifecycle again from `afterNavigate` against DOM that already holds settled values, or remount with `{#key}`.
 - Back and forward arrive as `popstate` through the same hooks. Never run an outro for them. Give them an intro-only path after scroll restoration.

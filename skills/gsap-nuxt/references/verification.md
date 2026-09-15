@@ -9,7 +9,9 @@ Check in proportion to what changed. Do not turn a focused animation task into a
 - Confirm timelines, triggers, listeners, and plugin DOM changes are cleaned up, on unmount and on deactivate.
 - Confirm every transition hook calls `done` on completion, on interruption, and under reduced motion.
 - On server-rendered projects, confirm the page is readable with JavaScript disabled and with the pre-paint mark set but the client bundle blocked.
-- Test reduced motion when the change has a reduced-motion branch.
+- Test reduced motion: the same settled state, `done` and every completion callback called.
+- At phone width: readable text, stable boxes, no horizontal overflow.
+- Touch-treated controls release after taps. For device changes, run the [device checks](devices.md#verify).
 
 ## Initially hidden content
 

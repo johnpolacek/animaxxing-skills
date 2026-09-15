@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
-"""Package the shared contract inside each independently installable framework skill."""
+"""Package every shared reference inside each independently installable framework skill."""
 
 from pathlib import Path
 import argparse
 
 ROOT = Path(__file__).resolve().parent.parent
-HEADER = "<!-- Generated from shared/initialization.md; run scripts/sync_initialization.py. -->\n\n"
+SHARED = ROOT / "shared"
+
+
+def header(name: str) -> str:
+    return f"<!-- Generated from shared/{name}; run scripts/sync_initialization.py. -->\n\n"
 
 
 def sync(check: bool = False) -> None:
-    expected = HEADER + (ROOT / "shared/initialization.md").read_text()
-    for skill in sorted((ROOT / "skills").glob("gsap-*/SKILL.md")):
-        target = skill.parent / "references/initialization.md"
-        if check:
-            if not target.exists() or target.read_text() != expected:
-                raise SystemExit(f"Stale packaged reference: {target.relative_to(ROOT)}")
-        else:
-            target.write_text(expected)
+    sources = sorted(SHARED.glob("*.md"))
+    if not sources:
+        raise SystemExit("No shared references found")
+    for source in sources:
+        expected = header(source.name) + source.read_text()
+        for skill in sorted((ROOT / "skills").glob("gsap-*/SKILL.md")):
+            target = skill.parent / "references" / source.name
+            if check:
+                if not target.exists() or target.read_text() != expected:
+                    raise SystemExit(f"Stale packaged reference: {target.relative_to(ROOT)}")
+            else:
+                target.write_text(expected)
 
 
 if __name__ == "__main__":

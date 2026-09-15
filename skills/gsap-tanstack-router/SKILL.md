@@ -34,6 +34,7 @@ Use `defaultViewTransition` or Link/`navigate` `viewTransition` for snapshot mor
 - Router APIs and the order of one navigation, outro before navigation with `useBlocker` or an intercepted Link, the lock, back and forward, pending UI, the swap gap, scroll, focus, View Transitions: [TanStack navigation](references/tanstack-navigation.md).
 - Route reuse versus `remountDeps`, layouts and `Outlet`, the React lifecycle for GSAP, conditional content, TanStack Start SSR and hydration, deferred data: [Route lifetime](references/route-lifetime.md).
 - The five phases, GSAP setup, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 
 Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alongside this repository. Load `gsap-core` for API details and `gsap-react` for component setup only as needed.
@@ -44,7 +45,8 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 - GSAP runs only on the client. `useGSAP` never runs on the server; keep GSAP calls out of module scope in files Start renders on the server. Scope selectors. Clean up every tween, trigger, split, and listener.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
 - Mount, then set initial values, then paint. Successful initialization never flashes settled content before the intro. Under Start, server HTML paints before hydration, so hide intro targets only under a root attribute set by a `ScriptOnce` inline script, only during the initial phase, with a no-JavaScript path.
-- Animate to one settled state and clear temporary styles there.
+- Clear temporary styles at settled. Use `will-change` only while animating; this overrides `gsap-performance`'s static hint.
+- Use capability queries for device tiers. Touch states release; controls work without hover.
 - Keep outgoing pages mounted and visible through outro and end state. The router swaps only after every blocker allows the navigation and the loaders finish; resolve the blocker from the end callback.
 - No router event fires before the URL changes. `onBeforeNavigate` runs after the history commit; only a blocker runs before it.
 - A navigation to the same route with new params reuses the component. Run the lifecycle again against DOM that already holds settled values, keyed on the params, or set `remountDeps`.

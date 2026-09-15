@@ -4,6 +4,18 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+### Added
+
+- Shared device guidance in every framework skill: capability tiers, touch, viewport changes, performance budgets, and verification.
+- Editable particle density for coarse pointers; outlines and owned particles are preserved.
+
+### Changed
+
+- Particle input tracks hover, touch presses, and keyboard focus without sticky tap states or repeated bursts.
+- Framework and motion checks cover phone widths, touch, and reduced motion.
+- Framework rules limit `will-change` to active animation and select tiers by capability.
+- `scripts/sync_initialization.py` packages all shared Markdown references.
+
 ## [0.3.3] - 2026-09-14
 
 ### Changed

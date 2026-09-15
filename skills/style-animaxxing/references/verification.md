@@ -31,6 +31,7 @@ In a real browser, at settled:
 - The selected intensity matches the request. A static or minimal-motion restyle does not automatically acquire scattering, speak-in, waves, or particles.
 - For the full treatment, the chosen effects match [the surface mapping](motion-vocabulary.md#surface-effects). Reading text stays still apart from the selected hero subhead; effects do not compete on a display surface.
 - Particle colors follow the chosen theme and maintain contrast. Reduced motion preserves the same readable design.
+- Touch treatments release after taps; pointer-derived focus does not sustain them.
 - For character animation, use the motion skill's text stability checks; visual design is not verified by heading height alone.
 
 ## Report

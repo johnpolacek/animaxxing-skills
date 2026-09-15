@@ -89,6 +89,8 @@ export class ParticleField {
   radius = 0;
   color = "#000";
   time = 0;
+  /** Transient particle budget; outlines and owned particles are exempt. */
+  density = 1;
 
   private readonly ctx: CanvasRenderingContext2D;
   private readonly target: HTMLElement;
@@ -129,6 +131,8 @@ export class ParticleField {
 
   spawn(init: Partial<Particle> & { x: number; y: number }): Particle {
     const p: Particle = { ...DEFAULTS, ...init };
+    const structural = p.life === Infinity || p.shape === "outline";
+    if (!structural && this.density < 1 && Math.random() > this.density) return p;
     this.particles.push(p);
     this.start();
     return p;
@@ -304,7 +308,7 @@ export function perimeterPoint(box: Box, radius: number, t: number): EdgePoint {
 
 ## attach.ts
 
-Keeps the field sized to the target, re-reads its colour when the theme changes, pauses it off screen, and treats pointer hover and keyboard focus as one state. Returns the controls and a `destroy` for unmount.
+Sizes the field, tracks theme changes, pauses off screen, and combines hover, keyboard focus, and touch presses. Returns phase controls and `destroy`.
 
 ```ts
 import gsap from "gsap";
@@ -319,6 +323,14 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/** Editable coarse-pointer budget. 1 keeps all transient particles. */
+export const COARSE_POINTER_DENSITY = 0.6;
+
+/** Focus visibility alone does not identify keyboard input. */
+function isFocusVisible(el: Element): boolean {
+  try { return el.matches(":focus-visible"); } catch { return true; }
+}
+
 export type ParticleEffectInstance = {
   /** Builds the entrance, starting after `delay` seconds. The timeline reveals the target itself. */
   enter(delay: number): gsap.core.Timeline;
@@ -328,6 +340,7 @@ export type ParticleEffectInstance = {
   blast(): void;
   /** Restarts the ambient loop after an exit or blast. */
   idle(): void;
+  /** Intensifies the effect while hovered, keyboard-focused, or touch-pressed. */
   hover(on: boolean): void;
   destroy(): void;
 };
@@ -367,13 +380,50 @@ export function attachParticleEffect(
   theme.observe(document.documentElement, { attributes: true });
   const visibility = new IntersectionObserver(([entry]) => field.setOnScreen(entry?.isIntersecting ?? true));
   visibility.observe(root);
+  // Re-evaluate when the primary pointer changes.
+  const coarse = window.matchMedia("(pointer: coarse)");
+  const applyDensity = () => { field.density = coarse.matches ? COARSE_POINTER_DENSITY : 1; };
+  applyDensity();
+  coarse.addEventListener("change", applyDensity);
 
-  const on = () => { if (ready) instance.hover(true); };
-  const off = () => { if (ready) instance.hover(false); };
-  target.addEventListener("pointerenter", on);
-  target.addEventListener("pointerleave", off);
-  target.addEventListener("focus", on);
-  target.addEventListener("blur", off);
+  const listeners = new AbortController();
+  const { signal } = listeners;
+  let keyboardInput = false;
+  let hovering = false;
+  let pressing = false;
+  let hot = false;
+  const syncHot = () => {
+    if (!ready) return;
+    const focused = keyboardInput && document.activeElement === target && isFocusVisible(target);
+    const on = !prefersReducedMotion() && (hovering || pressing || focused);
+    if (on === hot) return;
+    hot = on;
+    instance.hover(on);
+  };
+  // Capture modality before focus fires, including focus after touch release.
+  document.addEventListener("pointerdown", () => { keyboardInput = false; syncHot(); }, { capture: true, signal });
+  document.addEventListener("keydown", (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey || ["Shift", "Control", "Alt", "Meta"].includes(e.key)) return;
+    keyboardInput = true;
+    syncHot();
+  }, { capture: true, signal });
+  target.addEventListener("pointerenter", (e) => {
+    if (e.pointerType !== "touch") { hovering = true; syncHot(); }
+  }, { signal });
+  target.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "touch") { pressing = true; syncHot(); }
+  }, { signal });
+  target.addEventListener("pointerup", (e) => {
+    if (e.pointerType === "touch") { pressing = false; syncHot(); }
+  }, { signal });
+  const release = (e: PointerEvent) => {
+    if (e.pointerType === "touch") pressing = false; else hovering = false;
+    syncHot();
+  };
+  target.addEventListener("pointercancel", release, { signal });
+  target.addEventListener("pointerleave", release, { signal });
+  target.addEventListener("focus", syncHot, { signal });
+  target.addEventListener("blur", syncHot, { signal });
 
   return {
     enter(delay = 0) {
@@ -384,7 +434,7 @@ export function attachParticleEffect(
         return;
       }
       entrance = instance.enter(delay);
-      entrance.eventCallback("onComplete", () => { ready = true; });
+      entrance.eventCallback("onComplete", () => { ready = true; syncHot(); });
     },
     exit() {
       ready = false;
@@ -402,12 +452,11 @@ export function attachParticleEffect(
     idle() {
       if (!prefersReducedMotion()) instance.idle();
       ready = true;
+      syncHot();
     },
     destroy() {
-      target.removeEventListener("pointerenter", on);
-      target.removeEventListener("pointerleave", off);
-      target.removeEventListener("focus", on);
-      target.removeEventListener("blur", off);
+      listeners.abort();
+      coarse.removeEventListener("change", applyDensity);
       resize.disconnect();
       theme.disconnect();
       visibility.disconnect();
@@ -426,3 +475,11 @@ export function attachParticleEffect(
 `attachParticleEffect(wrapper, canvas, target, effect)` returns `enter`, `exit`, `blast`, `idle`, and `destroy` controls. These controls return void; they are surface effects, not navigation-completion promises. The framework controller owns their GSAP context and calls `destroy` to release observers, listeners, timelines, and the ticker.
 
 The target is prepared by `enter`; reveal a hidden wrapper separately so its canvas can show while the target assembles. Use the framework skill for first-paint readiness and lifecycle subscriptions.
+
+## Input and density
+
+- Hover uses `pointerType`; touch presses end on `pointerup`, `pointercancel`, or `pointerleave`. The controller owns click blasts.
+- Keyboard focus requires keyboard input and `:focus-visible`. Text fields match `:focus-visible` after taps too.
+- Programmatic focus follows the last input modality. Pointer-derived focus stays cold; keyboard-derived focus remains accessible.
+- `COARSE_POINTER_DENSITY` thins transient particles. Outlines and `life: Infinity` particles are exempt; runner counts stay unchanged.
+- Reduced motion blocks hot activation. Unchanged input states do not repeat bursts.

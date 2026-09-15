@@ -2,7 +2,7 @@
 
 Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
 
-Five treatments on the [particle field](particle-field.md). Each defines how its element assembles on entrance, what plays while it idles, what happens under the pointer, and what a blast looks like. The framework skill's controller runs the phases through `attachParticleEffect`; these modules never decide when.
+Five [particle field](particle-field.md) treatments define entrance, idle, hot, and blast states. The framework controller calls them through `attachParticleEffect`.
 
 | Effect | Element | Layer | Bleed | Idle |
 |---|---|---|---|---|
@@ -710,6 +710,10 @@ export const ignite: ParticleEffectDefinition<ParticleEffectInstance> = {
 ```
 
 On copy or submit, `blast()`, kick the block with a short `x`/`y` jitter, and call `idle()` about a second later.
+
+## Hot state and touch
+
+`attach.ts` owns [input and density](particle-field.md#input-and-density). Treatments expose `hover(on)`; transitions must tolerate short taps and interruption by `blast()`. Runner counts remain structural; reduce them explicitly when needed.
 
 ## Controller contract
 

@@ -33,6 +33,7 @@ Use `transition:name` / `transition:animate` for snapshot morphs, fades, or slid
 - The router's event sequence, outro before the swap, cleanup, initial state on the incoming page, direction, back and forward, scroll, focus, prefetch, fallback browsers: [ClientRouter navigation](references/client-router-navigation.md).
 - Which scripts run again, listeners that outlive pages, custom elements, islands and `client:*` directives, `transition:persist`: [Scripts and islands](references/scripts-and-islands.md).
 - The five phases, GSAP setup, contexts, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 
 Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alongside this repository. Load `gsap-core` for API details and `gsap-frameworks` for component setup only as needed.
@@ -45,7 +46,8 @@ Install the [official GSAP skills](https://github.com/greensock/gsap-skills) alo
 - Listeners on `document` and `window` outlive the page. Register router listeners once, in one place, and have each handler find the current page before acting.
 - Reserve final geometry with normal CSS and a stable wrapper; overlap outgoing/incoming content without doubling layout space.
 - Set initial values before paint, then reveal. On first load that is the inline head script; after a swap it is `astro:before-swap` and `astro:after-swap`. Successful initialization never flashes settled content before the intro, and never a blank page without JavaScript.
-- Animate to one settled state and clear temporary styles there.
+- Clear temporary styles at settled. Use `will-change` only while animating; this overrides `gsap-performance`'s static hint.
+- Use capability queries for device tiers. Touch states release; controls work without hover.
 - The outro plays on live DOM inside `event.loader` in `astro:before-preparation`, and the router waits for it. Never animate in `astro:before-swap`: the user is looking at a snapshot.
 - Back and forward get an intro-only path. A traverse fires every event, so skip the outro on `navigationType === "traverse"` on purpose.
 - Keep `transition:persist` elements out of page-level cleanup and page-level intros. They cross the swap alive, timelines included.

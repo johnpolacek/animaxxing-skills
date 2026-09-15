@@ -8,7 +8,9 @@ Check in proportion to what changed. Do not turn a focused animation task into a
 - Confirm settled content is visible, interactive, and free of leftover GSAP inline styles.
 - Confirm timelines, triggers, listeners, and plugin DOM changes are cleaned up on unmount and on a reused page's re-run.
 - Confirm the page is readable with JavaScript disabled and with the pre-paint mark set but hydration blocked.
-- Test reduced motion when the change has a reduced-motion branch, for GSAP and for any Svelte directive.
+- Test reduced motion: the same settled state, every completion callback fired, for GSAP and for any Svelte directive.
+- At phone width: readable text, stable boxes, no horizontal overflow.
+- Touch-treated controls release after taps. For device changes, run the [device checks](devices.md#verify).
 
 ## Initially hidden content
 

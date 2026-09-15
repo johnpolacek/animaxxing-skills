@@ -57,7 +57,7 @@ Copy the folders under `skills/` into your agent's skill directory:
 
 ### Framework skills
 
-Every framework includes an initialization and recovery contract: successful intros stay invisible before reveal; failed setup restores readable content. It covers data-ready entrances, authentication/loading flashes, reserved layout space, partial styles and splits, stale work, rendering limits, indexing, and first-load performance.
+Every framework packages two shared references: initialization and recovery for reliable reveals, and device guidance for touch, viewport changes, and performance budgets.
 
 | Skill | Description |
 |-------|-------------|
@@ -119,8 +119,9 @@ animaxxing-skills/
     workflows/validate.yml
   shared/
     initialization.md    # Canonical recovery and first-load guidance
+    devices.md           # Canonical device tiers, touch, viewport, and budgets
   scripts/
-    sync_initialization.py # Packages the shared reference; validation checks drift
+    sync_initialization.py # Packages every shared reference; validation checks drift
   skills/
     llms.txt             # Skill index for agents (names, summaries, trigger terms)
     animaxxing/
@@ -148,6 +149,7 @@ animaxxing-skills/
         spa-navigation.md
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
+        devices.md        # Packaged device and input tiers
         verification.md
     gsap-astro/
       SKILL.md
@@ -157,6 +159,7 @@ animaxxing-skills/
         scripts-and-islands.md
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
+        devices.md        # Packaged device and input tiers
         verification.md
     gsap-sveltekit/
       SKILL.md
@@ -166,6 +169,7 @@ animaxxing-skills/
         page-lifetime.md
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
+        devices.md        # Packaged device and input tiers
         verification.md
     gsap-nuxt/
       SKILL.md
@@ -175,6 +179,7 @@ animaxxing-skills/
         navigation.md
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
+        devices.md        # Packaged device and input tiers
         verification.md
     gsap-react-router/
       SKILL.md
@@ -184,6 +189,7 @@ animaxxing-skills/
         route-lifetime.md
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
+        devices.md        # Packaged device and input tiers
         verification.md
     gsap-tanstack-router/
       SKILL.md
@@ -193,6 +199,7 @@ animaxxing-skills/
         route-lifetime.md
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
+        devices.md        # Packaged device and input tiers
         verification.md
     gsap-nextjs/
       SKILL.md
@@ -201,6 +208,7 @@ animaxxing-skills/
         app-router-navigation.md
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
+        devices.md        # Packaged device and input tiers
         verification.md
     style-animaxxing/
       SKILL.md
@@ -230,7 +238,7 @@ The [Animaxxing](https://github.com/johnpolacek/animaxxing) repository holds a N
 
 Read [AGENTS.md](AGENTS.md) before adding or editing a skill. New skills must follow the shared lifecycle and gate advice on framework versions. Framework skills stay free of project-specific design. Motion skills own reusable recipes and technical requirements without prescribing a brand. Style skills select and configure motion alongside their design. Both motion and style skills stay free of framework lifecycle ownership.
 
-After editing `shared/initialization.md`, run `python3 scripts/sync_initialization.py` to update the standalone skill copies. Framework-specific integration stays in each `motion-system.md`.
+After editing any file in `shared/`, run `python3 scripts/sync_initialization.py` to update the standalone skill copies. Framework-specific integration stays in each `motion-system.md`.
 
 Run the same checks as CI before opening a pull request:
 
