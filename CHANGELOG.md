@@ -4,6 +4,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-09-15
+
 ### Added
 
 - Shared device guidance in every framework skill: capability tiers, touch, viewport changes, performance budgets, and verification.
