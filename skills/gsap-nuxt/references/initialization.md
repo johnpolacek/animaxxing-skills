@@ -23,6 +23,19 @@ Names are examples. Use separate attributes for boot status, motion preference, 
 - Before releasing CSS hiding, prepare all required start values and attach the entrance's completion/interruption handlers. Start the timeline in the same turn. Do not flip the phase early to claim readiness: that can flash settled content.
 - Do not hide server content through unconditional CSS, inline styles, client-only wrappers, or a hidden ancestor that the fallback cannot restore.
 
+## Data readiness and layout stability
+
+A mounted node or the first query response does not mean the visible layout is ready. Have the application's data layer tell the framework controller when each owner has the state that determines its content and geometry. Keep this separate from animation initialization.
+
+- Distinguish unresolved authentication from signed out, a pending query from a resolved empty result, and an initial connection handshake from a sustained disconnect. Do not enter guest prompts, empty lists, zero scores, or reconnect warnings just because those values have not arrived yet. Include browser-restored state when it changes the initial controls or content.
+- Identify dependent queries before choosing the reveal boundary. If several sections insert above or resize one another, reveal that group after its structural dependencies resolve. Fetch independent dependencies concurrently. If sections can load independently without moving visible content, give each a reserved region and its own entrance; do not delay the primary heading for unrelated below-fold data.
+- Keep the geometry owner outside conditional loading/content branches. Use matched skeletons or minimum sizes where dimensions are predictable; reserve authentication controls, image/avatar dimensions, and status rows. When the final size is unknown, use a quiet loading region until it is known instead of displaying a false final layout. Resolve genuinely absent sections without leaving permanent empty space.
+- Include persistent chrome in the audit. A footer can flash near the top before a long page arrives; a late sign-in control can move every navigation tab. Keep their positions stable or coordinate their reveal with the region that determines their position.
+- Do not label a normal initial handshake as a reconnect. Delay brief status notices when appropriate, and use a reserved slot or an unobtrusive overlay for sustained connection notices so they do not push the page. Preserve useful offline/error feedback and an accessible loading status.
+- Prepare initial styles for the resolved content before releasing its gate. Give elements present at first reveal one entrance owner, including initially open conditional panels. Later data updates do not replay the whole page; a newly appearing region may own its own entrance.
+
+An animation recovery timeout must restore the application's **current valid state**. If data is still pending, expose its usable loading/error state, not a guessed guest or empty state. Keep the application's request cancellation, retry, and error handling; a motion deadline neither completes a query nor permits indefinitely hidden content. Once data arrives, the controller uses that owner's current visit/recovery decision before entering or settling it.
+
 ## Bound initialization, not choreography
 
 Give each incoming owner an initialization deadline, measured from its first pre-paint hiding. Choose and document a short budget; roughly one second is a starting point, not a universal performance target.
@@ -80,6 +93,10 @@ Use the framework's production build and actual rendering mode. For every suppor
 | Fonts/media stall or reject | Bounded fallback. Resolve them afterward and confirm no new hiding or splitting. |
 | Initialization arrives after recovery | Observe multiple frames after release and beyond the old timeline/deadline. No hidden frame or duplicate completion. |
 | Successful delayed startup within budget | Hidden first frame, then full intended intro. No flash of settled content; intentional duration may exceed the boot budget. |
+| Authentication and personal data resolve separately | No guest, empty, or zero-value content appears before its state is known. Test signed-in and signed-out visits. |
+| Primary query resolves before dependent sections | The chosen group enters with its final structure, or reserved regions enter independently without moving visible siblings. |
+| Initial handshake, brief disconnect, sustained disconnect | No startup warning flash; persistent feedback remains usable without shifting navigation or page content. |
+| Motion deadline expires while data is pending | Recovery shows the current loading/error state. Late data cannot expose a stale branch or restart a recovered owner's animation. |
 | Reduced motion | Readable first paint, functional links, normal completion semantics without travel. |
 | Navigation during preparation or intro | One correct destination; stale recovery cannot reveal outgoing/hidden content or unlock/focus the new visit. |
 | Repeated setup, history, and preserved nodes | No duplicate wrappers, listeners, callbacks, or replay after recovery within the same visit. |

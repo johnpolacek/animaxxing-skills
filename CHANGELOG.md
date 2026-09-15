@@ -2,6 +2,14 @@
 
 All notable changes to Animaxxing Skills are documented here. Releases follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Clarified data readiness separately from motion initialization across all framework skills, including authentication, dependent queries, loading geometry, and connection notices.
+- Added Next.js integration and verification for staggered data arrival, stable page chrome, and entrances that do not replay on ordinary updates.
+- Routed the core `animaxxing` skill's loading-flash guidance to the framework owner.
+
 ## [0.3.2] - 2026-09-12
 
 ### Changed

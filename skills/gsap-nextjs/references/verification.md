@@ -17,6 +17,8 @@ Use this framework's [integration rules](motion-system.md#initialization-and-rec
 
 ## Runtime changes
 
+For loading changes, stagger authentication, the first query, dependent queries, and font delivery. Inspect frame-by-frame on cold desktop/mobile loads. Assert the correct branch at first reveal, stable navigation/footer positions, and no entrance replay on ordinary data updates. Record layout shifts as well as filmstrip observations; zero CLS alone does not prove that no temporary content flashed. Cover signed-in and signed-out states, resolved empty results, reduced motion, and navigation while data is pending. Label mocked auth checks separately from authenticated browser sessions.
+
 Check the changed lifecycle in a real browser when practical:
 
 - Initial state is applied before reveal.

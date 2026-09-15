@@ -54,6 +54,16 @@ If the effect changes width, height, or position:
 
 Content must stay readable without JavaScript. Any pre-paint hiding rule needs a no-script path.
 
+## Data-ready entrances
+
+Apply the shared [data-readiness contract](initialization.md#data-readiness-and-layout-stability) before selecting page or region boundaries.
+
+- Trace the queries and authentication states that choose each branch, including nested client components. A parent's first result does not prove its child subscriptions are ready. Start independent reads together and include dependent reads in the chosen owner's readiness signal.
+- When identity and backend authentication settle separately, wait for the backend's confirmed state before subscribing to personal data. Include any required app-user synchronization. Use the installed client's supported query-skip mechanism; a deliberately skipped query is not a required pending dependency.
+- Mount the page's content/ready marker only when the selected structure can enter. `loading.tsx` covers router/Suspense work, but does not automatically cover client subscription or authentication loading. Give those branches an explicit loading state. Preserve server-rendered content where available.
+- Keep a late component's wrapper mounted with appropriate geometry. Register its entrance when the resolved content mounts; an empty wrapper's mount-only effect cannot animate children that arrive afterward. Forward animation attributes through wrappers and ensure nested boundaries do not animate the same target twice.
+- Keep the ready signal about structural readiness, not object identity. Refreshed scores, countdowns, and query snapshots should update settled content without replaying its entrance. Invalidate pending preparation on route changes and recheck ownership after awaited fonts or data.
+
 ## Initialization and recovery
 
 Apply the [initialization contract](initialization.md) whenever content starts hidden. It includes recovery ordering, indexing/performance limits, and failure checks.

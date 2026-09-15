@@ -57,7 +57,7 @@ Copy the folders under `skills/` into your agent's skill directory:
 
 ### Framework skills
 
-Every framework includes an initialization and recovery contract: successful intros stay invisible before reveal; failed setup restores readable content. It covers partial styles and splits, stale work, rendering limits, indexing, and first-load performance.
+Every framework includes an initialization and recovery contract: successful intros stay invisible before reveal; failed setup restores readable content. It covers data-ready entrances, authentication/loading flashes, reserved layout space, partial styles and splits, stale work, rendering limits, indexing, and first-load performance.
 
 | Skill | Description |
 |-------|-------------|

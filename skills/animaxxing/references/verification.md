@@ -8,6 +8,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 - Particle color follows the canvas's computed `color`, including theme changes; its contrast works on the actual background.
 - Weight effects use a loaded variable face and its supported axis range. Confirm the configured resting weight matches the target. For a static face, choose a transform-only effect or omit weight moves.
 - Selected timing, spread, intensity, and stagger suit the actual surface and viewport. Layout boxes remain stable through the effect.
+- In a data-driven app, exercise the framework's data-readiness checks: temporary guest/empty content must not flash before the selected effect starts. Confirm reserved regions keep visible siblings still.
 
 ## Motion
 

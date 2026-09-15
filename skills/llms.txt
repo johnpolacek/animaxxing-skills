@@ -10,7 +10,7 @@ Load one framework skill for GSAP lifecycle ownership, a motion skill for reques
 
 ## Framework skills
 
-Shared triggers: initially hidden content, invisible intro, failed entrance, stalled fonts/media, late hydration, no-JavaScript fallback, first-load performance.
+Shared triggers: initially hidden content, invisible intro, failed entrance, stalled fonts/media, late hydration, no-JavaScript fallback, first-load performance, loading flashes, auth-dependent content, layout shifts.
 
 [gsap-vanilla](gsap-vanilla/SKILL.md)
   Plain HTML/CSS/JS: first paint, full-document or fetch/swap navigation, View Transitions, bfcache and prerendering.
@@ -38,7 +38,7 @@ Shared triggers: initially hidden content, invisible intro, failed entrance, sta
 
 [gsap-nextjs](gsap-nextjs/SKILL.md)
   Next.js App Router: transition-aware links, cacheComponents route preservation, streaming, GSAP versus React View Transitions.
-  Triggers: Next.js animation, App Router page transition, onNavigate, Activity, interrupted intro.
+  Triggers: Next.js animation, App Router page transition, onNavigate, Activity, interrupted intro, data-ready entrances.
 
 ## Style skills
 

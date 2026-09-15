@@ -26,6 +26,7 @@ Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for p
 | Task | Reference |
 |---|---|
 | Choose in/out effects, configure defaults, coordinate with the controller | [Motion vocabulary](references/motion-vocabulary.md) |
+| Loading flashes, auth-dependent content, or layout shifts | Matching installed framework skill's `references/initialization.md`, **Data readiness and layout stability** |
 | Character animation: font readiness, kerning, masks, stable split/revert | [Text stability](references/text-stability.md) |
 | Character, word, line, or scramble entrances/exits | [Split entrances](references/recipes/split-entrances.md) |
 | Page items, including scattering headlines | [Route letters](references/recipes/route-letters.md) |
@@ -51,6 +52,7 @@ Copy only the selected recipe and its named local helpers. Return shapes differ:
 
 - Apply the [effect restoration contract](references/effect-restoration.md) when copying a recipe, including failure before a handle returns.
 - Builders do not navigate, mount, remount, or subscribe to page lifecycle changes. The framework controller calls them and owns phase state.
+- An effect's invisible start does not make incomplete application data ready. The framework controller supplies resolved targets or reserved independent regions; do not use an entrance to disguise temporary guest/empty content.
 - Retain required split markup only while an effect needs it (speak-in finishes and an active wave are exceptions to immediate revert). Revert on the controller's cleanup boundary; preserve accessible text and nested controls.
 - Use `overwrite: "auto"`; clear temporary styles and `will-change` when their phase ends.
 - Reduced motion reaches the documented settled or exit state and preserves completion callbacks. Use the project's preference helper, including any app override; no ambient motion under reduced motion.
