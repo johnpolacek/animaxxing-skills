@@ -4,6 +4,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-09-14
+
 ### Changed
 
 - Clarified data readiness separately from motion initialization across all framework skills, including authentication, dependent queries, loading geometry, and connection notices.
