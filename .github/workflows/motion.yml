@@ -1,0 +1,58 @@
+name: Motion recipes
+
+# Type-checks every animaxxing recipe and runs the motion suite in Chromium.
+# Recipes live in animaxxing-skills and specs in animaxxing-skills-test, so
+# both repositories run this job, each checking out the other alongside it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  motion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: animaxxing-skills
+
+      - name: Check out animaxxing-skills-test
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: johnpolacek/animaxxing-skills-test
+          path: animaxxing-skills-test
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install the motion suite
+        working-directory: animaxxing-skills-test
+        run: pnpm install --frozen-lockfile --filter animaxxing-skills-test --filter motion-recipes
+
+      - name: Install Chromium
+        working-directory: animaxxing-skills-test
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run the motion suite
+        working-directory: animaxxing-skills-test
+        run: pnpm test:motion
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: motion-test-results
+          path: animaxxing-skills-test/motion/test-results
+          retention-days: 7
