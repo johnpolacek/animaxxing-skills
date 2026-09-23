@@ -162,6 +162,8 @@ export const reactor: ButtonEffect = {
     const state = { rate: EMBER_RATE.idle, rise: EMBER_RISE.idle, hovering: false };
     let emberAcc = 0;
     let pulseIn = 1.2;
+    let echoes: gsap.core.Tween[] = [];
+    let swell: gsap.core.Tween | undefined;
 
     const ambient = (dt: number) => {
       const { box } = field;
@@ -250,18 +252,22 @@ export const reactor: ButtonEffect = {
       blast() {
         field.removeEmitter(ambient);
         shockwave(120, 0.6, 1);
-        gsap.delayedCall(0.08, () => shockwave(160, 0.7, 0.6));
-        gsap.delayedCall(0.16, () => shockwave(200, 0.8, 0.3));
+        echoes = [gsap.delayedCall(0.08, () => shockwave(160, 0.7, 0.6)), gsap.delayedCall(0.16, () => shockwave(200, 0.8, 0.3))];
         erupt(140, [400, 1000]);
       },
       idle() { field.addEmitter(ambient); },
       hover(on) {
         state.hovering = on;
         gsap.to(state, { rate: on ? EMBER_RATE.hover : EMBER_RATE.idle, rise: on ? EMBER_RISE.hover : EMBER_RISE.idle, duration: on ? 0.3 : 0.9, ease: on ? "power3.out" : "power2.inOut", overwrite: true });
-        gsap.to(button, { scale: on ? 1.04 : 1, duration: 0.3, ease: on ? "back.out(2)" : "power2.out", overwrite: "auto" });
+        swell = gsap.to(button, { scale: on ? 1.04 : 1, duration: 0.3, ease: on ? "back.out(2)" : "power2.out", overwrite: "auto" });
         if (on) { shockwave(40, 0.5, 0.8); erupt(56, [160, 360]); }
       },
-      destroy() { field.removeEmitter(ambient); gsap.killTweensOf(state); },
+      destroy() {
+        field.removeEmitter(ambient);
+        gsap.killTweensOf(state);
+        echoes.forEach((echo) => echo.kill());
+        swell?.kill();
+      },
     };
   },
 };
@@ -405,6 +411,7 @@ export const slipstream: ButtonEffect = {
     const state = { rate: STREAK_RATE.idle, speed: STREAK_SPEED.idle, hovering: false };
     let streakAcc = 0;
     let sparkIn = 1;
+    let leaning: gsap.core.Tween | undefined;
 
     /** One level hairline crossing the band, left to right. */
     function streak(x: number, speed: number, life = rnd(0.5, 0.9), alpha = rnd(0.3, 0.7)) {
@@ -462,10 +469,14 @@ export const slipstream: ButtonEffect = {
       hover(on) {
         state.hovering = on;
         gsap.to(state, { rate: on ? STREAK_RATE.hover : STREAK_RATE.idle, speed: on ? STREAK_SPEED.hover : STREAK_SPEED.idle, duration: on ? 0.3 : 0.8, ease: on ? "power3.out" : "power2.inOut", overwrite: true });
-        gsap.to(button, { x: on ? LEAN : 0, duration: 0.3, ease: on ? "back.out(2)" : "power2.out", overwrite: "auto" });
+        leaning = gsap.to(button, { x: on ? LEAN : 0, duration: 0.3, ease: on ? "back.out(2)" : "power2.out", overwrite: "auto" });
         if (on) tip(10, [200, 500]);
       },
-      destroy() { field.removeEmitter(ambient); gsap.killTweensOf(state); },
+      destroy() {
+        field.removeEmitter(ambient);
+        gsap.killTweensOf(state);
+        leaning?.kill();
+      },
     };
   },
 };
@@ -709,7 +720,7 @@ export const ignite: ParticleEffectDefinition<ParticleEffectInstance> = {
 };
 ```
 
-On copy or submit, `blast()`, kick the block with a short `x`/`y` jitter, and call `idle()` about a second later.
+On copy or submit, `blast()`, kick the block with a short `x`/`y` jitter, and call `idle()` about a second later. A blast during the entrance leaves the command partly revealed until that `idle()` lands it.
 
 ## Hot state and touch
 
@@ -719,4 +730,4 @@ On copy or submit, `blast()`, kick the block with a short `x`/`y` jitter, and ca
 
 Pass the selected definition to `attachParticleEffect(wrapper, canvas, target, effect)` from [particle-field.md](particle-field.md). The owner calls the returned controls for the relevant phase and reveals a hidden wrapper once its target is prepared.
 
-A new treatment supplies `layer`, `bleed`, and `create(field, target)` returning `enter`, `exit`, `blast`, `idle`, `hover`, and `destroy`. Keep it monochrome and inexpensive at rest.
+A new treatment supplies `layer`, `bleed`, and `create(field, target)` returning `enter`, `exit`, `blast`, `idle`, `hover`, and `destroy`. Its `enter` returns one timeline holding every entrance tween, so a cut-short entrance can land its end state. Particles a tween steers use `life: Infinity` until that tween completes. `destroy` kills the treatment's own tweens and delayed calls. Keep it monochrome and inexpensive at rest.

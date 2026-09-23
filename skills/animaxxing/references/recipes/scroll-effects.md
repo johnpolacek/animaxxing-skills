@@ -70,11 +70,18 @@ function own(setup: (dispose: Register, after: Register) => void): Teardown {
     restores.splice(0).reverse().forEach(attempt);
     if (failure) throw failure;
   };
-  try {
-    ctx.add(() => setup((fn) => disposers.push(fn), (fn) => restores.push(fn)));
-  } catch (error) {
+  let failure: { error: unknown } | undefined;
+  // Catch inside add: GSAP restores its current context only when add returns.
+  ctx.add(() => {
+    try {
+      setup((fn) => disposers.push(fn), (fn) => restores.push(fn));
+    } catch (error) {
+      failure = { error };
+    }
+  });
+  if (failure) {
     teardown();
-    throw error;
+    throw failure.error;
   }
   return teardown;
 }
@@ -104,7 +111,7 @@ function snapshotStyles(elements: HTMLElement[], props = SCENE_PROPS): () => voi
 
 ## revealOnScroll
 
-Items rise into place in small batches as they cross into view, once. Items already past the line when the builder runs (a reload or restored scroll position) reveal at once, so nothing above the fold stays hidden.
+Items rise into place in small batches as they cross into view, once. Items already past the line when the builder runs (a reload or restored scroll position) reveal at once, so nothing above the fold stays hidden. Waiting items are transparent, not `visibility: hidden`, so screen readers and the tab order still reach them; focus moving into one reveals it at once.
 
 ```ts
 export type RevealOptions = {
@@ -126,14 +133,15 @@ export function revealOnScroll(
     // Reveal tweens start later, outside the context, so they are tracked here.
     const live = new Set<gsap.core.Tween>();
     dispose(() => live.forEach((tween) => tween.kill()));
-    gsap.set(items, { autoAlpha: 0, y });
+    // Opacity only: visibility would drop waiting items from the accessibility tree and the tab order.
+    gsap.set(items, { opacity: 0, y });
     ScrollTrigger.batch(items, {
       start,
       once: true,
       scroller,
       onEnter: (batch) => {
         const tween = gsap.to(batch, {
-          autoAlpha: 1,
+          opacity: 1,
           y: 0,
           duration,
           stagger,
@@ -141,12 +149,21 @@ export function revealOnScroll(
           overwrite: "auto",
           onComplete: () => {
             live.delete(tween);
-            gsap.set(batch, { clearProps: "transform,opacity,visibility" });
+            gsap.set(batch, { clearProps: "transform,opacity" });
           },
         });
         live.add(tween);
       },
     });
+    // Focus can reach an item before it crosses the line; a focused item is never invisible.
+    const onFocus = (event: FocusEvent) => {
+      const item = event.currentTarget as HTMLElement;
+      // Only the reveal's own properties; other effects on the item keep running.
+      gsap.killTweensOf(item, "opacity,y");
+      gsap.set(item, { clearProps: "transform,opacity" });
+    };
+    items.forEach((item) => item.addEventListener("focusin", onFocus));
+    dispose(() => items.forEach((item) => item.removeEventListener("focusin", onFocus)));
   });
 }
 ```
@@ -230,7 +247,10 @@ export function pinnedScene(
 ): Teardown {
   if (prefersReducedMotion()) return () => {};
   return own((_dispose, after) => {
-    after(snapshotStyles(gsap.utils.toArray<HTMLElement>("*", section)));
+    const saved = new Map(gsap.utils.toArray<HTMLElement>("*", section).map((element) => [element, snapshotStyles([element])]));
+    let animated: Set<unknown> | undefined;
+    // Restore only what the scene animates; other effects inside it keep their inline values. A failed build restores all.
+    after(() => saved.forEach((restore, element) => (!animated || animated.has(element)) && restore()));
     const timeline = gsap.timeline({
       defaults: { ease: "none" },
       scrollTrigger: {
@@ -244,6 +264,7 @@ export function pinnedScene(
       },
     });
     build(timeline, section);
+    animated = new Set(timeline.getChildren(true, true, false).flatMap((tween) => (tween as gsap.core.Tween).targets()));
   });
 }
 ```
@@ -258,7 +279,7 @@ pinnedScene(section, (tl, root) => {
 }, { length: 2 });
 ```
 
-Write the static CSS as the readable fallback (all steps stacked and visible); the build positions them for the scene with `set`/`from` tweens, which the context reverts. Build with transforms, opacity, filter, and clip-path; teardown restores those inline properties on the section's descendants, so the scene owns them while it runs.
+Write the static CSS as the readable fallback (all steps stacked and visible); the build positions them for the scene with `set`/`from` tweens, which the context reverts. Build with transforms, opacity, filter, and clip-path; teardown restores those inline properties on the descendants the scene's tweens target, so the scene owns them while it runs. Other effects inside the section, such as a magnetic button, keep their own inline values.
 
 ## horizontalRun
 
@@ -313,7 +334,8 @@ export function horizontalRun(
       const item = event.target as HTMLElement;
       const travel = distance();
       section.scrollLeft = 0;
-      if (!trigger || !travel) return;
+      // Pressing a card focuses it too; only keyboard focus should scroll the page.
+      if (!trigger || !travel || !item.matches(":focus-visible")) return;
       const left = item.getBoundingClientRect().left - track.getBoundingClientRect().left;
       const x = gsap.utils.clamp(0, travel, left - (viewport() - item.offsetWidth) / 2);
       trigger.scroll(trigger.start + (x / travel) * (trigger.end - trigger.start));

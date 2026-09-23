@@ -51,11 +51,18 @@ function own(setup: (dispose: Register, after: Register) => void): Teardown {
     restores.splice(0).reverse().forEach(attempt);
     if (failure) throw failure;
   };
-  try {
-    ctx.add(() => setup((fn) => disposers.push(fn), (fn) => restores.push(fn)));
-  } catch (error) {
+  let failure: { error: unknown } | undefined;
+  // Catch inside add: GSAP restores its current context only when add returns.
+  ctx.add(() => {
+    try {
+      setup((fn) => disposers.push(fn), (fn) => restores.push(fn));
+    } catch (error) {
+      failure = { error };
+    }
+  });
+  if (failure) {
     teardown();
-    throw error;
+    throw failure.error;
   }
   return teardown;
 }
@@ -77,7 +84,7 @@ function snapshotStyles(elements: HTMLElement[], props: string[]): () => void {
 
 ## countUp
 
-The element's text is its final value, written by the server or template. The builder parses it, counts up from `from`, and writes each frame with the same formatting, so `1,204`, `98.6%`, and `$3.2M` keep their separators, decimals, prefix, and suffix. The element's width is reserved at the final value so neighbors never shift, and assistive technology reads the final value throughout.
+The element's text is its final value, written by the server or template. The builder parses it with the locale's decimal mark, counts up from `from`, and writes each frame with the same formatting, so `1,204`, `98.6%`, `0.125`, and `$3.2M` keep their separators, decimals, prefix, and suffix. The locale is `locale`, else the document's `lang`, else the browser's, which also covers a malformed tag; pass it when the figure's formatting differs from the page's. The element's width is reserved at the final value so neighbors never shift. The counting digits are `aria-hidden` beside a visually hidden copy of the final text, so assistive technology only ever reads the final value.
 
 ```html
 <span class="stat" data-count>12,480</span>
@@ -89,48 +96,80 @@ The element's text is its final value, written by the server or template. The bu
 ```
 
 ```ts
-export type CountOptions = { from?: number; duration?: number; delay?: number; locale?: string; onComplete?: () => void };
+export type CountOptions = {
+  from?: number;
+  duration?: number;
+  delay?: number;
+  /** Locale of the figure's formatting, for reading and writing it. Defaults to the document's `lang`. */
+  locale?: string;
+  onComplete?: () => void;
+};
 export type Count = { timeline: gsap.core.Timeline; revert: Teardown };
 
+/** `locale`, else the document's `lang`. An unsupported or malformed tag, such as `en_US`, falls back to the browser's. */
+function numberLocale(locale: string | undefined): string | undefined {
+  const tag = locale ?? (document.documentElement.lang || undefined);
+  try {
+    return tag && Intl.NumberFormat.supportedLocalesOf(tag).length > 0 ? tag : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** The locale's decimal mark: "." for en, "," for de. */
+function decimalMark(locale: string | undefined): string {
+  return new Intl.NumberFormat(locale).formatToParts(1.5).find((part) => part.type === "decimal")?.value ?? ".";
+}
+
 /** Splits "$3.2M" into "$", 3.2, "M" and keeps the decimals shown. */
-function parseFigure(text: string) {
+function parseFigure(text: string, decimal: string) {
   const match = text.match(/^(\D*?)(-?[\d.,\s]*\d)(.*)$/s);
   if (!match) return undefined;
   const [, prefix = "", digits = "", suffix = ""] = match;
-  const decimalMark = /[.,]\d{1,2}$/.test(digits) && !/^\d{1,3}([.,]\d{3})+$/.test(digits) ? digits.slice(-3).match(/[.,]/)?.[0] : undefined;
-  const whole = decimalMark ? digits.slice(0, digits.lastIndexOf(decimalMark)) : digits;
-  const fraction = decimalMark ? digits.slice(digits.lastIndexOf(decimalMark) + 1) : "";
-  const value = Number(`${whole.replace(/\D/g, "")}.${fraction || 0}`) * (digits.trim().startsWith("-") ? -1 : 1);
+  // A mark that appears twice is grouping in another convention, not a decimal point.
+  const at = digits.indexOf(decimal) === digits.lastIndexOf(decimal) ? digits.lastIndexOf(decimal) : -1;
+  const whole = at >= 0 ? digits.slice(0, at) : digits;
+  const fraction = at >= 0 ? digits.slice(at + 1).replace(/\D/g, "") : "";
+  const value = Number(`${whole.replace(/\D/g, "") || 0}.${fraction || 0}`) * (digits.trim().startsWith("-") ? -1 : 1);
   return { prefix, suffix, value, decimals: fraction.length };
 }
+
+/** Visually hidden, still read by assistive technology. */
+const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", overflow: "hidden", clipPath: "inset(50%)", whiteSpace: "nowrap" };
 
 export function countUp(
   element: HTMLElement,
   { from = 0, duration = 1.6, delay = 0, locale, onComplete }: CountOptions = {},
 ): Count {
   const finalText = element.textContent ?? "";
-  const figure = parseFigure(finalText.trim());
-  const timeline = gsap.timeline({ delay });
+  const figureLocale = numberLocale(locale);
+  const figure = parseFigure(finalText.trim(), decimalMark(figureLocale));
+  const timeline = gsap.timeline({ delay, defaults: { overwrite: "auto" } });
   if (onComplete) timeline.eventCallback("onComplete", onComplete);
   const revert = own((dispose, after) => {
     after(snapshotStyles([element], ["min-width", "display"]));
     after(() => {
       element.textContent = finalText;
-      element.removeAttribute("aria-label");
     });
     dispose(() => timeline.kill());
     if (!figure || prefersReducedMotion()) return;
-    const format = new Intl.NumberFormat(locale, {
+    const format = new Intl.NumberFormat(figureLocale, {
       minimumFractionDigits: figure.decimals,
       maximumFractionDigits: figure.decimals,
     });
-    const write = (n: number) => {
-      element.textContent = `${figure.prefix}${format.format(n)}${figure.suffix}`;
-    };
-    // Reserve the final width, then read the final value to assistive technology throughout.
+    // Reserve the final width before the digits change.
     const width = element.getBoundingClientRect().width;
     gsap.set(element, { display: "inline-block", minWidth: `${width}px` });
-    element.setAttribute("aria-label", finalText.trim());
+    // The counting digits are hidden from assistive technology, which reads the final value from its twin.
+    const shown = document.createElement("span");
+    shown.setAttribute("aria-hidden", "true");
+    const spoken = document.createElement("span");
+    spoken.textContent = finalText;
+    Object.assign(spoken.style, VISUALLY_HIDDEN);
+    element.replaceChildren(shown, spoken);
+    const write = (n: number) => {
+      shown.textContent = `${figure.prefix}${format.format(n)}${figure.suffix}`;
+    };
     const counter = { n: from };
     write(from);
     timeline.to(counter, {
@@ -140,7 +179,6 @@ export function countUp(
       onUpdate: () => write(counter.n),
       onComplete: () => {
         element.textContent = finalText;
-        element.removeAttribute("aria-label");
       },
     });
   });

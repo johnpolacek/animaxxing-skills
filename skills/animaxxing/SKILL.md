@@ -61,6 +61,7 @@ Copy only the selected recipe and its named local helpers. Return shapes differ:
 - Retain required split markup only while an effect needs it (speak-in finishes and an active wave are exceptions to immediate revert). Revert on the controller's cleanup boundary; preserve accessible text and nested controls.
 - Use `overwrite: "auto"`; clear temporary styles and `will-change` when their phase ends.
 - Reduced motion reaches the documented settled or exit state and preserves completion callbacks. Use the project's preference helper, including any app override; no ambient motion under reduced motion.
-- Avoid competing effects on a target. Expose controls so the owner can pause ambient motion off screen and stop it on exit.
+- Killing a parent timeline never reaches a nested builder's interrupt callback. When the controller composes builders into one timeline, it kills the parent and then calls each builder's revert, such as `revertText` for split runners.
+- Avoid competing effects on a target. Expose controls so the owner can pause ambient motion off screen and stop it on exit. Loops that run past five seconds also need a user-facing pause (WCAG 2.2.2).
 - Particle input and density follow the [field contract](references/recipes/particle-field.md#input-and-density). Controls must work without hover.
 - Width changes can invalidate split measurements; report those requirements to the framework controller. Recipes do not prescribe page remounts.

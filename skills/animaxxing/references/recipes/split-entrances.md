@@ -31,14 +31,19 @@ function prefersReducedMotion(): boolean {
 function guarded<T>(setup: () => T, onFail?: () => void): T {
   const ctx = gsap.context(() => {});
   let result: T | undefined;
-  try {
-    ctx.add(() => {
+  let failure: { error: unknown } | undefined;
+  // Catch inside add: GSAP restores its current context only when add returns.
+  ctx.add(() => {
+    try {
       result = setup();
-    });
-  } catch (error) {
+    } catch (error) {
+      failure = { error };
+    }
+  });
+  if (failure) {
     onFail?.();
     ctx.revert();
-    throw error;
+    throw failure.error;
   }
   return result as T;
 }
@@ -62,6 +67,35 @@ function build(options: MotionOptions): gsap.core.Timeline {
   return timeline;
 }
 
+type ActiveRun = { timeline: gsap.core.Timeline; restore: () => void };
+/** The runner currently animating each element. */
+const activeRuns = new WeakMap<HTMLElement, ActiveRun>();
+
+/**
+ * Stops the runner animating `element` and restores its text. Killing a parent
+ * timeline never reaches a nested runner's interrupt callback, so a controller
+ * that composes runners calls this for each target when it kills the parent.
+ * Starting another runner on the same element does this first.
+ */
+export function revertText(element: HTMLElement): void {
+  const run = activeRuns.get(element);
+  if (!run) return;
+  activeRuns.delete(element);
+  run.timeline.kill();
+  run.restore();
+}
+
+/** Registers a run. Its release restores once, and only while the run is still current. */
+function track(element: HTMLElement, timeline: gsap.core.Timeline, restore: () => void): () => void {
+  const run = { timeline, restore };
+  activeRuns.set(element, run);
+  return () => {
+    if (activeRuns.get(element) !== run) return;
+    activeRuns.delete(element);
+    restore();
+  };
+}
+
 /**
  * Splits, runs `choreograph`, and puts the element back together afterwards.
  * The settled state is applied first so an interrupted run cannot leave text
@@ -76,25 +110,29 @@ function withSplit(
   settled: gsap.TweenVars = { autoAlpha: 1 },
 ): gsap.core.Timeline {
   if (!element) return build(options);
+  revertText(element);
   if (prefersReducedMotion()) return build(options).set(element, settled);
 
-  return guarded(() => {
-    const tl = build(options);
-    const split = SplitText.create(element, { aria: "auto", ...config });
-    if (config.mask === "chars" && options.charMaskClass) {
-      for (const mask of split.masks) mask.classList.add(options.charMaskClass);
-    }
-    tl.set(element, { autoAlpha: 1 });
-    choreograph(split, tl);
-    tl.eventCallback("onComplete", () => {
-      const previous = options.onComplete;
-      split.revert();
-      previous?.();
-    });
-    // A run killed mid-way puts the text back too; the controller applies the settled or end state.
-    tl.eventCallback("onInterrupt", () => split.revert());
-    return tl;
-  });
+  return guarded(
+    () => {
+      const tl = build(options);
+      const split = SplitText.create(element, { aria: "auto", ...config });
+      const release = track(element, tl, () => split.revert());
+      if (config.mask === "chars" && options.charMaskClass) {
+        for (const mask of split.masks) mask.classList.add(options.charMaskClass);
+      }
+      tl.set(element, { autoAlpha: 1 });
+      choreograph(split, tl);
+      tl.eventCallback("onComplete", () => {
+        release();
+        options.onComplete?.();
+      });
+      // A run killed mid-way puts the text back too; the controller applies the settled or end state.
+      tl.eventCallback("onInterrupt", release);
+      return tl;
+    },
+    () => activeRuns.delete(element),
+  );
 }
 
 /** Pins each character to the width it needs at its heaviest, so the weight axis can move without reflow. */
@@ -322,16 +360,32 @@ export const linesMaskOut: SplitRunner = (element, options = {}) =>
 
 ## Scramble
 
-Needs `ScrambleTextPlugin` registered. Display only: reading text must never look like it is being typed.
+This block registers `ScrambleTextPlugin`; copy it whole. Scramble replaces the element's text, so use it on plain text without nested markup. Display only: reading text must never look like it is being typed.
 
 ```ts
+import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
+
+gsap.registerPlugin(ScrambleTextPlugin);
+
+/** Scrambles `element`, restoring its real words when the run completes, is killed, or is reverted. */
+function scramble(element: HTMLElement, tl: gsap.core.Timeline, options: MotionOptions, text: string): void {
+  const release = track(element, tl, () => {
+    element.textContent = text;
+  });
+  tl.eventCallback("onComplete", () => {
+    release();
+    options.onComplete?.();
+  });
+  tl.eventCallback("onInterrupt", release);
+}
+
 export const scrambleIn: SplitRunner = (element, options = {}) => {
   const tl = build(options);
   if (!element) return tl;
+  revertText(element);
   const text = element.textContent ?? "";
   if (prefersReducedMotion()) return tl.set(element, { autoAlpha: 1 });
-  // Killed mid-scramble, the text goes back to the real words.
-  tl.eventCallback("onInterrupt", () => { element.textContent = text; });
+  scramble(element, tl, options, text);
   return tl.set(element, { autoAlpha: 1 }).to(element, {
     duration: 0.9,
     ease: "none",
@@ -342,13 +396,13 @@ export const scrambleIn: SplitRunner = (element, options = {}) => {
 export const scrambleOut: SplitRunner = (element, options = {}) => {
   const tl = build(options);
   if (!element) return tl;
+  revertText(element);
   if (prefersReducedMotion()) return tl.set(element, { autoAlpha: 0 });
   const text = element.textContent ?? "";
-  tl.eventCallback("onInterrupt", () => { element.textContent = text; });
+  scramble(element, tl, options, text);
   return tl
     .to(element, { duration: 0.5, ease: "none", scrambleText: { text: text.replace(/\S/g, "0"), chars: "01{}/<>()=;", speed: 0.8 } })
-    .to(element, { autoAlpha: 0, duration: DURATION.micro, ease: EASE.exit })
-    .call(() => { element.textContent = text; });
+    .to(element, { autoAlpha: 0, duration: DURATION.micro, ease: EASE.exit });
 };
 ```
 
@@ -364,9 +418,13 @@ const intro = gsap.timeline();
 const headlineOptions = { charMaskClass: "title-char-mask" };
 intro.add(charsRiseIn(heading, headlineOptions), 0);
 intro.add(linesMaskIn(lede), 0.2);
+// Killing `intro` never reaches the runners' own interrupt callbacks. On interruption:
+// intro.kill(); revertText(heading); revertText(lede);
 // The outro is the paired exit, in reverse order:
 const outro = gsap.timeline();
 outro.add(linesMaskOut(lede), 0).add(charsFallOut(heading, headlineOptions), 0.05);
 ```
+
+Each builder's own timeline reverts its split when it completes or is killed. A parent timeline that contains it cannot: kill the parent, then call `revertText` for each target. Building inside the controller's `gsap.context()`, including async builds added with `context.add()`, also reverts the splits when that context reverts. A new runner on an element releases the previous one first.
 
 Give a split heading its own pre-paint hiding rule rather than marking it as a page item too, or the page's stagger and the split's rise will fight over one element.

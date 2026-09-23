@@ -15,6 +15,9 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 ## Motion
 
 - Entrance splits are reverted at settled. Only an active wave or speak-in finishes retain required markup; both release it at their documented cleanup boundary.
+- Compose split runners into a parent timeline and kill the parent mid-way. `revertText` restores each target, and a new runner on the same element starts from clean markup.
+- A setup that throws leaves GSAP's global context untouched: later tweens outside any context are not recorded by the failed one.
+- Scramble runners visibly scramble, then end on the real words; killed mid-way, they restore them.
 - No inline `transform`, `will-change`, or `transition` remains on route items at settled.
 - If the controller uses `data-transition-state`, it reports `entering → idle` for intro and `exiting → waiting` for outro. It never reports completion while the relevant timeline still runs.
 - Particle canvases: one per treated element, positioned at `-bleed`, `pointer-events: none`, `aria-hidden`, colored from the consuming app's chosen canvas `color`. The GSAP ticker drops each field once its particles are gone and no emitter is attached.
@@ -25,14 +28,19 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 - At phone width with 4x CPU throttling, lower budgets if idle frame pacing fails.
 - Reduced motion (`prefers-reduced-motion: reduce`, or `data-motion="reduced"` on `<html>`): entrances reach the readable settled state immediately, exits reach their documented end state, no splits, no particles, no wave, and every completion callback still fires.
 - Off screen: scroll a treated element out of view and confirm its field stops ticking.
+- `blast()` or `exit()` during a particle entrance leaves no particle alive after a second and stops the ticker. `idle()` after that blast shows the target whole, unscaled, and unclipped.
+- After `destroy()`, the field stays stopped even for delayed callbacks, and the target's inline styles match their state before attachment.
+- The wave, particle controls, and follower hold still on `pause()` and continue on `play()` or `resume()`. The page offers a control or motion setting wired to them.
 
 ## Scroll
 
 - Reload mid-page and restore via back: reveal targets above the fold are visible, never stuck hidden.
+- Reveal targets waiting below the fold stay in the accessibility tree and the tab order; tabbing into one shows it at once.
 - Scroll down and back through every scrubbed effect; each returns exactly to its start values.
 - Pinned scenes and runs: no jump entering or leaving the pin; content below lands in place.
 - Resize across a breakpoint and refresh: pin lengths and run distance recompute; nothing overlaps.
-- Tab through a horizontal run: each focused item scrolls into view; the section never scrolls itself.
+- Tab through a horizontal run: each focused item scrolls into view; the section never scrolls itself. Clicking an item with the mouse does not scroll the page.
+- Teardown of a pinned scene restores only what its tweens animated; other effects' inline values inside it survive.
 - Tear down mid-pin: pin spacer removed, inline styles and `overflow` restored, page scroll stays usable.
 - Reduced motion: no pins, splits, or scrubbing; static fallbacks readable; progress rule still tracks.
 - With a custom scroller, every trigger receives it and cleanup leaves the app's proxy intact.
@@ -46,13 +54,14 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 - On touch, horizontal drags move the track and vertical swipes still scroll the page.
 - Keyboard focus slides the focused item into view; a mouse press on an item does not.
 - Revert during a throw: the track stops and its inline styles and the viewport's `overflow` restore.
-- Reduced motion: no magnetic, tilt, or follower; the track drags and snaps without a throw.
+- Reduced motion: no magnetic, tilt, or follower; the track drags and lands on the nearest item without a throw.
 
 ## SVG, counters, and marquees
 
 - Drawn strokes start hidden without a flash and end at the SVG's own appearance after revert.
 - A morphed icon returns to its original `d` on revert; `set()` after revert does nothing.
-- Counted figures keep their prefix, suffix, separators, and decimals, and end on the exact source text.
+- Counted figures keep their prefix, suffix, separators, and decimals, and end on the exact source text. Check three or more decimals, such as `99.999%`, and the page locale's decimal mark.
+- While counting, assistive technology finds only the final value; the counting digits are hidden from it.
 - Neighbors of a counted figure do not shift while it counts; assistive technology reads the final value.
 - Marquee clones are `aria-hidden` and `inert` with no duplicate ids; each item is announced and focused once.
 - The marquee loops without a visible seam, slows on hover, pauses on focus, off screen, and on `pause()`.

@@ -32,14 +32,19 @@ function prefersReducedMotion(): boolean {
 function guarded<T>(setup: () => T, onFail?: () => void): T {
   const ctx = gsap.context(() => {});
   let result: T | undefined;
-  try {
-    ctx.add(() => {
+  let failure: { error: unknown } | undefined;
+  // Catch inside add: GSAP restores its current context only when add returns.
+  ctx.add(() => {
+    try {
       result = setup();
-    });
-  } catch (error) {
+    } catch (error) {
+      failure = { error };
+    }
+  });
+  if (failure) {
     onFail?.();
     ctx.revert();
-    throw error;
+    throw failure.error;
   }
   return result as T;
 }
@@ -86,7 +91,7 @@ function throwApart({ root, heading, words, pressed, others }: BlastOffOptions):
 
   // The page rocks the instant the button is pressed.
   timeline
-    .to(root, { x: () => rnd(-8, 8), y: () => rnd(-5, 5), duration: 0.04, repeat: 7, yoyo: true, ease: "none" }, 0)
+    .to(root, { x: () => rnd(-8, 8), y: () => rnd(-5, 5), duration: 0.04, repeat: 7, yoyo: true, repeatRefresh: true, ease: "none" }, 0)
     .set(root, { x: 0, y: 0 }, ">");
 
   // The pressed button flares and burns out; the others fold in on themselves.

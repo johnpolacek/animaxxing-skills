@@ -99,6 +99,8 @@ export class ParticleField {
   private height = 0;
   private running = false;
   private onScreen = true;
+  private paused = false;
+  private destroyed = false;
 
   constructor(canvas: HTMLCanvasElement, target: HTMLElement, bleed: number) {
     const ctx = canvas.getContext("2d");
@@ -126,11 +128,17 @@ export class ParticleField {
     this.canvas.style.height = `${this.height}px`;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.radius = parseFloat(getComputedStyle(this.target).borderTopLeftRadius) || 0;
+    this.recolor();
+  }
+
+  /** Re-read the particle colour from the canvas's computed `color`, without resizing or clearing. */
+  recolor(): void {
     this.color = getComputedStyle(this.canvas).color;
   }
 
   spawn(init: Partial<Particle> & { x: number; y: number }): Particle {
     const p: Particle = { ...DEFAULTS, ...init };
+    if (this.destroyed) return p;
     const structural = p.life === Infinity || p.shape === "outline";
     if (!structural && this.density < 1 && Math.random() > this.density) return p;
     this.particles.push(p);
@@ -148,7 +156,21 @@ export class ParticleField {
     }
   }
 
-  addEmitter(emitter: Emitter): void { this.emitters.add(emitter); this.start(); }
+  /** Let particles an interrupted tween still owns (`life: Infinity`) fade out within `within` seconds. */
+  releaseOwned(within = 0.3): void {
+    for (const p of this.particles) {
+      if (p.life === Infinity) {
+        p.life = p.age + within;
+        p.fade = true;
+      }
+    }
+  }
+
+  addEmitter(emitter: Emitter): void {
+    if (this.destroyed) return;
+    this.emitters.add(emitter);
+    this.start();
+  }
   removeEmitter(emitter: Emitter): void { this.emitters.delete(emitter); }
 
   setOnScreen(onScreen: boolean): void {
@@ -156,8 +178,14 @@ export class ParticleField {
     if (onScreen) this.start(); else this.stop();
   }
 
+  /** Holds the field still, as last drawn, until unpaused. */
+  setPaused(paused: boolean): void {
+    this.paused = paused;
+    if (paused) this.stop(); else this.start();
+  }
+
   start(): void {
-    if (this.running || !this.onScreen) return;
+    if (this.destroyed || this.paused || this.running || !this.onScreen) return;
     if (this.particles.length === 0 && this.emitters.size === 0) return;
     this.running = true;
     gsap.ticker.add(this.tick);
@@ -169,7 +197,9 @@ export class ParticleField {
     gsap.ticker.remove(this.tick);
   }
 
+  /** Stops for good: spawns, emitters, and delayed callbacks that arrive later draw nothing. */
   destroy(): void {
+    this.destroyed = true;
     this.stop();
     this.emitters.clear();
     this.particles.length = 0;
@@ -308,7 +338,7 @@ export function perimeterPoint(box: Box, radius: number, t: number): EdgePoint {
 
 ## attach.ts
 
-Sizes the field, tracks theme changes, pauses off screen, and combines hover, keyboard focus, and touch presses. Returns phase controls and `destroy`.
+Sizes the field, tracks theme changes, pauses off screen, and combines hover, keyboard focus, and touch presses. Returns phase controls and `destroy`, which also restores the target's inline styles.
 
 ```ts
 import gsap from "gsap";
@@ -325,6 +355,22 @@ function prefersReducedMotion(): boolean {
 
 /** Editable coarse-pointer budget. 1 keeps all transient particles. */
 export const COARSE_POINTER_DENSITY = 0.6;
+
+/** Inline properties the entrance, exit, and hover states write on the target; destroy puts them back. */
+const TARGET_PROPS = ["opacity", "visibility", "transform", "translate", "rotate", "scale", "transform-origin", "clip-path"];
+
+/** Records inline properties and returns a restore that also resets GSAP's cached transform. */
+function snapshotStyles(element: HTMLElement, props: string[]): () => void {
+  const saved = props.map((prop) => element.style.getPropertyValue(prop));
+  return () => {
+    gsap.set(element, { clearProps: props.join(",") });
+    props.forEach((prop, i) => {
+      const value = saved[i];
+      if (value) element.style.setProperty(prop, value);
+      else element.style.removeProperty(prop);
+    });
+  };
+}
 
 /** Focus visibility alone does not identify keyboard input. */
 function isFocusVisible(el: Element): boolean {
@@ -358,6 +404,10 @@ export type ParticleEffectControls = {
   exit(): void;
   blast(): void;
   idle(): void;
+  /** Holds the particles still, as drawn, for the page's pause control. */
+  pause(): void;
+  /** Resumes after `pause`. */
+  play(): void;
   /** Tear everything down. Call on unmount. */
   destroy(): void;
 };
@@ -368,6 +418,7 @@ export function attachParticleEffect(
   target: HTMLElement,
   effect: ParticleEffectDefinition,
 ): ParticleEffectControls {
+  const restoreTarget = snapshotStyles(target, TARGET_PROPS);
   const field = new ParticleField(canvas, target, effect.bleed);
   let instance: ParticleEffectInstance;
   try {
@@ -378,13 +429,28 @@ export function attachParticleEffect(
     throw error;
   }
   let entrance: gsap.core.Timeline | null = null;
+  /** An entrance a blast cut short; the next idle lands the target where it ends. */
+  let unfinished: gsap.core.Timeline | null = null;
+  let fade: gsap.core.Tween | null = null;
   let ready = false;
+
+  /** Stops the entrance. Particles its tweens still own fade out instead of hanging in place forever. */
+  const cutEntrance = () => {
+    const cut = entrance && entrance.progress() < 1 ? entrance : null;
+    entrance?.kill();
+    entrance = null;
+    field.releaseOwned();
+    return cut;
+  };
 
   const resize = new ResizeObserver(() => field.sync());
   resize.observe(target);
-  // Theme changes land on <html>; re-read the particle colour when they do.
-  const theme = new MutationObserver(() => field.sync());
+  // Theme changes land on <html> or follow the system scheme; re-read the colour without clearing the canvas.
+  const recolor = () => field.recolor();
+  const theme = new MutationObserver(recolor);
   theme.observe(document.documentElement, { attributes: true });
+  const scheme = window.matchMedia("(prefers-color-scheme: dark)");
+  scheme.addEventListener("change", recolor);
   const visibility = new IntersectionObserver(([entry]) => field.setOnScreen(entry?.isIntersecting ?? true));
   visibility.observe(root);
   // Re-evaluate when the primary pointer changes.
@@ -435,6 +501,7 @@ export function attachParticleEffect(
   return {
     enter(delay = 0) {
       entrance?.kill();
+      unfinished = null;
       if (prefersReducedMotion()) {
         gsap.set(target, { autoAlpha: 1, clearProps: "transform" });
         ready = true;
@@ -445,32 +512,44 @@ export function attachParticleEffect(
     },
     exit() {
       ready = false;
-      entrance?.kill();
-      entrance = null;
+      cutEntrance();
+      unfinished = null;
       instance.exit();
-      gsap.to(target, { autoAlpha: 0, duration: prefersReducedMotion() ? 0 : 0.2, overwrite: "auto" });
+      fade = gsap.to(target, { autoAlpha: 0, duration: prefersReducedMotion() ? 0 : 0.2, overwrite: "auto" });
     },
     blast() {
       ready = false;
-      entrance?.kill();
-      entrance = null;
+      unfinished = cutEntrance() ?? unfinished;
       if (!prefersReducedMotion()) instance.blast();
     },
     idle() {
+      // Land a cut-short entrance's end state (target shown, unclipped) without replaying its bursts.
+      unfinished?.progress(1, true);
+      unfinished = null;
       if (!prefersReducedMotion()) instance.idle();
       ready = true;
       syncHot();
     },
+    pause() {
+      field.setPaused(true);
+    },
+    play() {
+      field.setPaused(false);
+    },
     destroy() {
       listeners.abort();
       coarse.removeEventListener("change", applyDensity);
+      scheme.removeEventListener("change", recolor);
       resize.disconnect();
       theme.disconnect();
       visibility.disconnect();
       entrance?.kill();
       entrance = null;
+      unfinished = null;
+      fade?.kill();
       instance.destroy();
       field.destroy();
+      restoreTarget();
       ready = false;
     },
   };
@@ -479,7 +558,11 @@ export function attachParticleEffect(
 
 ## Controller contract
 
-`attachParticleEffect(wrapper, canvas, target, effect)` returns `enter`, `exit`, `blast`, `idle`, and `destroy` controls. These controls return void; they are surface effects, not navigation-completion promises. The framework controller owns their GSAP context and calls `destroy` to release observers, listeners, timelines, and the ticker.
+`attachParticleEffect(wrapper, canvas, target, effect)` returns `enter`, `exit`, `blast`, `idle`, `pause`, `play`, and `destroy` controls. These controls return void; they are surface effects, not navigation-completion promises. The framework controller owns their GSAP context and calls `destroy` to release observers, listeners, timelines, and the ticker. `destroy` is final, even for callbacks already scheduled, and restores the target's inline opacity, visibility, transform, and clip.
+
+Idle loops run for as long as the page does, so they need a way for the user to stop them (WCAG 2.2.2): wire the page's pause control or motion setting to `pause` and `play`, which hold the particles still without hiding the target.
+
+`exit` or `blast` during the entrance stops it, and the particles it was steering fade out. `idle` after a blast that cut the entrance short first lands the target at the entrance's end state, without replaying its bursts.
 
 The target is prepared by `enter`; reveal a hidden wrapper separately so its canvas can show while the target assembles. Use the framework skill for first-paint readiness and lifecycle subscriptions.
 

@@ -33,14 +33,19 @@ function prefersReducedMotion(): boolean {
 function guarded<T>(setup: () => T, onFail?: () => void): T {
   const ctx = gsap.context(() => {});
   let result: T | undefined;
-  try {
-    ctx.add(() => {
+  let failure: { error: unknown } | undefined;
+  // Catch inside add: GSAP restores its current context only when add returns.
+  ctx.add(() => {
+    try {
       result = setup();
-    });
-  } catch (error) {
+    } catch (error) {
+      failure = { error };
+    }
+  });
+  if (failure) {
     onFail?.();
     ctx.revert();
-    throw error;
+    throw failure.error;
   }
   return result as T;
 }
@@ -131,7 +136,7 @@ export function speakIn(
 }
 
 function speak(el: HTMLElement, emphasis: Emphasis[], delay: number) {
-  const timeline = gsap.timeline();
+  const timeline = gsap.timeline({ defaults: { overwrite: "auto" } });
 
   const wanted = new Map<string, { finish?: Finish; angle?: number }>(
     emphasis.map((e) =>

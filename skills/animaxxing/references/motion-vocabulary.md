@@ -131,7 +131,7 @@ Scroll effects tie motion to the reader's position instead of a page phase. Pick
 
 | Effect | Move | Role |
 |---|---|---|
-| `revealOnScroll` | `autoAlpha 0, y 16 → 0`, 0.42s, `power3.out`, stagger 0.09, batched, once | The workhorse below the fold: sections, cards, figures. |
+| `revealOnScroll` | `opacity 0, y 16 → 0`, 0.42s, `power3.out`, stagger 0.09, batched, once | The workhorse below the fold: sections, cards, figures. |
 | `scrubStatement` | words `opacity 0.15 → 1`, scrubbed through the reading zone | One display statement filling in as it is read. |
 | `parallax` | `y ∓ data-parallax` px, scrubbed across the section | Depth between media and captions. Small travel. |
 | `pinnedScene` | caller's timeline, pinned for `length` section heights | Steps, a product reveal, a diagram assembling. The loudest; one per page. |
@@ -175,7 +175,8 @@ Loops that run while a surface idles: the letter wave on a headline, embers off 
 
 - Avoid competing ambient effects on the same target. A style can select a wave for a headline or particles for a button, but neither is required.
 - Expose controls for the framework controller to call at settled, outro, and unmount; it owns those signals.
-- Pause off screen. The particle field does this through an `IntersectionObserver`; the wave should be stopped by the same signal if the headline can scroll away.
+- Pause off screen. The particle field does this through an `IntersectionObserver`; the wave's `pause()` and the follower's `pause()` answer the same signal when their surface can scroll away.
+- Let the user stop any loop that runs past five seconds ([WCAG 2.2.2](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide)). The wave, particle controls, follower, and marquee expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
 - On small screens, lower particle density and limit wave character counts.
 - Every cycle ends exactly where it started. The wave clears its transforms; embers die.
 - Never under reduced motion. The helper returns before anything is split or spawned.
