@@ -15,6 +15,7 @@ Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for p
 ## Setup and adaptation
 
 - Check installed GSAP docs/types. SplitText recipes require 3.13+ (`SplitText.create`, `smartWrap`, `mask`, `aria`); scroll recipes need ScrollTrigger; drag tracks need Draggable and InertiaPlugin; SVG recipes need DrawSVG, MorphSVG, or MotionPath; layout morphs need Flip; smooth scrolling needs ScrollSmoother or the `lenis` package. Register only the plugins used. Use the official GSAP skills for API details as needed.
+- Recipes register their plugins at module scope, which GSAP tolerates on a server. In server-rendered frameworks, still import recipe modules only from client code. Copies may import the project's own `gsap` module and drop their registration when the project registers plugins in one place.
 - Select only effects the request calls for. A particle button does not imply a page transition, a font change, or a complete hero sequence.
 - Recipe constants are editable defaults, not brand rules. Adapt timing, stagger, spread, and intensity to the surface. Use each recipe's documented options; expose additional constants in the copied module if the app needs runtime configuration.
 - Weight effects require a loaded variable weight axis, not Rethink Sans. Match endpoints and resting weight to the existing face; the examples use 400–800. Choose transform-only effects or omit weight moves when that capability is absent.
