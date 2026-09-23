@@ -34,6 +34,8 @@ For a reused page, the returning lifecycle must run initial state and intro on i
 
 When Svelte directives or View Transitions are involved, confirm no element is animated by two engines, outroing blocks are gone once their outro ends, and clicks land during a running transition.
 
+With a smooth scroller, run the [scroll checks](smooth-scroll.md#verify) on a link, a `popstate`, a `noScroll` link, and a hash-only link; `to.scroll` in `afterNavigate` matches where the page sits, and a page reused with new params keeps the same scroller. With a curtain, preloader, or shared element, run the [archetype checks](transition-archetypes.md#verify); also confirm the curtain covers the whole swap gap on the `beforeNavigate` path, the preloader shows only on `enter`, and a shared element still morphs when a `{#key}` block keeps the old page in the DOM.
+
 For conditional components, test show, hide, and one interruption. Confirm removal happens after the outro.
 
 ## Builds and wider checks

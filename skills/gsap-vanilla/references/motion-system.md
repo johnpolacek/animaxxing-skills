@@ -44,7 +44,7 @@ If the effect changes width, height, or position:
 
 - Animate a transform on an inner element while an outer wrapper holds the settled size.
 - For a real expand or collapse, measure start and end sizes first, animate the wrapper, and decide how surrounding content moves.
-- For layout-to-layout changes, use Flip: capture the old state, apply the new layout, animate.
+- For layout-to-layout changes, use Flip: capture the old state, apply the new layout, animate. In plain DOM that is synchronous: `captureLayout` from the `animaxxing` skill's `references/recipes/layout-flip.md`, change the attribute or class CSS lays out on, `play()`.
 - When old and new content share one region, reserve the parent and overlap the children so only the parent affects layout.
 
 Content must stay readable without JavaScript. The pre-paint hiding rule in [Page load and unload](page-load.md#initial-state-before-first-paint) is the only sanctioned way to hide before the intro.
@@ -116,6 +116,7 @@ Use `gsap-scrolltrigger` for the API; these rules cover page lifetime and measur
 - A page can load already scrolled, by reload, hash, or history. Reveal-on-scroll targets above the restored position must not stay hidden. Let the trigger evaluate on creation and keep the pre-paint rule from outliving the initial phase.
 - Reverting a scrubbed trigger's animation can leave start values inline on its targets, such as a zeroed `transform`, `opacity: 1`, or `visibility: inherit`. It always does with `invalidateOnRefresh` and can for a plain `to()` in a pinned timeline. When a re-show, a reused page, or another effect needs the targets clean, record their inline motion properties at setup and restore them after the revert; `clearProps` also resets GSAP's cached transform.
 - A `will-change` written from an `onToggle` callback is outside the context and survives its revert. Write it as a plain style and undo it in cleanup, or write it before the trigger is created.
+- With a smooth scroller, follow [Smooth scrolling](smooth-scroll.md): a page never creates, stops, or destroys it, and refreshes through the controller's `resize()` once its triggers exist, not through its own `ScrollTrigger.refresh()`.
 
 Under reduced motion, go straight from initial to settled without unnecessary triggers. Keep outro and end callbacks that control navigation or removal.
 

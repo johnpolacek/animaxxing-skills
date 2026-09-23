@@ -54,6 +54,15 @@ If the effect changes width, height, or position:
 
 Content must stay readable without JavaScript. Any pre-paint hiding rule needs a no-script path.
 
+## Layout changes with Flip
+
+For a filter, reorder, or expand driven by React state, use `captureLayout` from the `animaxxing` skill's `references/recipes/layout-flip.md` and keep the capture and the play on either side of one commit:
+
+- Capture in the event handler, wrapped in `contextSafe`, then commit the state with `flushSync` from `react-dom`, then `play()`. The synchronous commit means the DOM holds the new layout when `play()` measures it. The alternative is to keep the captured state in a ref and play from a layout effect keyed on the state, which also runs before paint.
+- Keys must survive the change. React moves a node only when its key stays the same; a remounted item is a leave plus an enter, not a move.
+- Items that leave must stay rendered, hidden with `display: none` or a leaving flag, until the Flip completes, or they vanish. Use a presence controller for that.
+- StrictMode double-runs the effect path, not the handler path. A layout-effect play needs a ref guard that clears the pending state after the first play. Under `cacheComponents`, capture only while the route is visible; a hidden route measures zero.
+
 ## Data-ready entrances
 
 Apply the shared [data-readiness contract](initialization.md#data-readiness-and-layout-stability) before selecting page or region boundaries.

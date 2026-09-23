@@ -63,3 +63,7 @@ For GSAP:
 ## Chrome
 
 Header, nav, and footer are part of `<body>`, so without `transition:persist` they are replaced on every swap, and an intro on them replays. Persist them when their state or a running animation should survive, or give them a once-per-session intro gated in module scope, plus `sessionStorage` for full loads. Name them with `transition:name` so the browser holds them still while content crossfades, or leave them unnamed under a root `none`.
+
+## Layout changes with Flip
+
+In a plain script, `captureLayout` from the `animaxxing` skill's `references/recipes/layout-flip.md` is synchronous: capture, change the attribute or class CSS lays out on, `play()`. Inside an island the change is a state update, and the island's framework decides when the new layout exists: React commits inside `flushSync`, Vue after `nextTick`, Svelte after `tick`, each under that framework's skill. A page script never Flips items inside an island, and an island never captures items outside its root.

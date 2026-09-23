@@ -33,6 +33,8 @@ Use `transition:name` / `transition:animate` for snapshot morphs, fades, or slid
 - The router's event sequence, outro before the swap, cleanup, initial state on the incoming page, direction, back and forward, scroll, focus, prefetch, fallback browsers: [ClientRouter navigation](references/client-router-navigation.md).
 - Which scripts run again, listeners that outlive pages, custom elements, islands and `client:*` directives, `transition:persist`: [Scripts and islands](references/scripts-and-islands.md).
 - The five phases, GSAP setup, contexts, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Lenis, ScrollSmoother, or eased page scrolling across swaps: [Smooth scrolling](references/smooth-scroll.md), plus the [router integration](references/client-router-navigation.md#scroll).
+- Curtains, first-visit preloaders, and shared-element morphs: [Transition archetypes](references/transition-archetypes.md), plus the [event mapping](references/client-router-navigation.md#curtains-preloaders-and-shared-elements).
 - Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 

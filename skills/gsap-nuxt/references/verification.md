@@ -35,6 +35,8 @@ With keepalive, also navigate away and back. The returning page must re-run init
 
 With `experimental.viewTransition`, confirm the Vue transition is disabled on those navigations, no element is animated by both engines, names are cleared afterward, and clicks land during a running transition.
 
+With a smooth scroller, run the [scroll checks](smooth-scroll.md#verify) on a `<NuxtLink>`, back and forward, a `scrollToTop: false` route, and a reload; the scroller stays stopped through `onEnter` and starts in `onAfterEnter` at the position Nuxt applied, and a keepalive page reactivates against the same scroller. With a curtain, preloader, or shared element, run the [archetype checks](transition-archetypes.md#verify); also confirm the curtain reveals from `onEnter` on a prepared root, a failed navigation leaves no curtain, the preloader shows only on first hydration, and `done` is still called once per hook with a morph in the intro.
+
 For conditional components, test show, hide, and one interruption. Confirm removal happens after the outro, and that a `v-show` re-show during an outro reverses or restarts as intended.
 
 ## Builds and wider checks

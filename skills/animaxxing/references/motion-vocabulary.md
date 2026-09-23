@@ -153,6 +153,18 @@ Scrubbed effects smooth with `scrub: 0.6` by default; parallax locks to the scro
 
 Code is in [svg-effects.md](recipes/svg-effects.md) and [counters-and-marquees.md](recipes/counters-and-marquees.md).
 
+## Covers, layout, and scroll feel
+
+| Effect | Move | Role |
+|---|---|---|
+| `curtain` | Panels `yPercent 100 → 0 → -100`, 0.6s each way, `power3.inOut`, stagger 0.06 | A full-screen wipe hiding a route swap. From the persistent shell; the loudest transition there is. |
+| `preloader` | Count eases to reported readiness; lifts `yPercent -100`, 0.7s, `power4.inOut` | First visit only, while real dependencies arrive. |
+| `captureLayout` | Flip from old boxes to new, 0.5s, `power2.inOut`; entering items fade and grow, leaving items fade and shrink | Filters, reorders, and panels that open in place. |
+| `captureShared` / `playShared` | Flip from one element's box onto its counterpart, 0.7s, `power3.inOut` | A thumbnail becoming the next page's hero. One per navigation. |
+| `lenisScroll` / `smootherScroll` | Eased document scrolling | The whole site's feel. Once per document, never per page. |
+
+A curtain and a shared-element morph never share a navigation: the curtain would hide the element the morph needs. The framework skill's `references/transition-archetypes.md` and `references/smooth-scroll.md` own their timing. Code is in [page-covers.md](recipes/page-covers.md), [layout-flip.md](recipes/layout-flip.md), and [smooth-scroll.md](recipes/smooth-scroll.md).
+
 ## Resize
 
 Width changes can invalidate split positions and the wave's pinned character widths; height-only changes from mobile browser chrome do not. Keep text readable during a resize. Particle fields remeasure through their own observers.

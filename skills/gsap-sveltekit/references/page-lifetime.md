@@ -45,7 +45,7 @@ Svelte transitions, GSAP, and View Transitions can share a page but not a node.
 - When a block with an `out:` directive is removed, every element in the block stays in the DOM until every outro in it finishes, and the new content is inserted at once, so old and new are in flow together. Use that when the effect is a crossfade in a stacked container. Avoid it when GSAP owns the outro: the block lingers past the GSAP end state after the router has moved on.
 - Directives are local by default: one plays when its own block is created or destroyed, including when the router swaps a page whose root carries it, but not when an outer `{#if}` in the same component toggles. Add `|global` only when that outer toggle should play it.
 - Svelte transitions ignore `@media (prefers-reduced-motion)` rules that zero CSS durations. Zero their `duration` from `prefersReducedMotion.current` in `svelte/motion` and take the GSAP reduced path in the same condition.
-- `svelte/animate` on `{#each}` items and GSAP Flip solve the same problem. Pick one per list.
+- `svelte/animate` on `{#each}` items and GSAP Flip solve the same problem. Pick one per list. With Flip, `captureLayout` from the `animaxxing` skill's `references/recipes/layout-flip.md` captures before the state change and plays after `await tick()`; `{#each}` drops leaving nodes at once, so an item can only animate out if the change hides it with a class instead of removing it from the list.
 - View Transitions snapshot whatever the DOM shows, including a half-finished directive or a GSAP end state. Start them only after both have reached the state you want photographed.
 
 ## Conditional content

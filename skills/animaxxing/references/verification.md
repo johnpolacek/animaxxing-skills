@@ -68,6 +68,14 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 - Resizing rebuilds the clones to fill; revert restores the original markup exactly.
 - Reduced motion: strokes whole, figures final, no follower, marquee static; completion callbacks still fire.
 
+## Smooth scroll, covers, and layout
+
+- Smooth scroll: wheel and trackpad ease; keyboard, scrollbar, find-in-page, and touch stay native. `stop()` holds the page; `scrollTo(..., { immediate: true })` still lands while stopped. ScrollTrigger effects fire at the eased position. `destroy()` removes the engine's classes, styles, and ticker callback. Reduced motion creates nothing.
+- Curtain: at rest the panels are hidden and the page takes clicks; covered, the panels take them. A cover requested mid-reveal turns back from where the panels are. Reduced motion never shows a panel, and both timelines complete.
+- Preloader: the count follows reported progress forward only, `aria-valuenow` matches it, and `finish()` leaves the preloader hidden and out of the accessibility tree.
+- Layout Flip: survivors slide, entering items grow in, leaving items shrink out while still displayed, and every target ends with no inline transform. The app's own inline styles survive. A shared element morphs from the old box onto the new element, never onto a hidden original.
+- Use the framework skill's `references/smooth-scroll.md` and `references/transition-archetypes.md` checks for navigation, history, and recovery.
+
 ## Effect failure and restoration
 
 - Throw before writes, after initial styles, and after a split or particle resource is created. Confirm partial setup rolls back even without a returned handle.

@@ -25,6 +25,9 @@ Apply this when adapting any recipe. Every recipe rolls back its own setup when 
 | SVG effects | Draw timelines, stroke dash styles, the original `d` of a morphed path, the follower's transform and origin, and any morph in flight. |
 | Counters and marquees | The count tween, original text, reserved width, the counting and visually hidden spans, the marquee strip and clones, observers, listeners, and the hover ease. |
 | Blast-off | Tweens and splits across the composition, including container transforms and button changes. |
+| Smooth scroll | The engine's ticker callback and scroll listener, its classes and inline styles on the document or wrapper, and a stopped state. |
+| Page covers | The running sweep, panel transforms and visibility, pointer blocking, and the preloader's count, bar, `aria-valuenow`, and position. |
+| Layout Flip | A running Flip: `revert()` jumps it to the end and clears its inline styles; `kill()` alone leaves them. |
 | Particle field/effects | Ticker callbacks, emitters, particles/tweens, delayed calls, observers, event listeners, effect-owned canvas/wrapper styles, and the target's inline opacity, visibility, transform, and clip. |
 
 Reduced motion preserves normal completion without creating unnecessary split or particle resources. Recovery teardown must also be safe when setup returned early or completed already. The controller decides whether essential completion still needs to run once.
