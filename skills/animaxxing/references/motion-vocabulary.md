@@ -178,7 +178,7 @@ A curtain and a shared-element morph never share a navigation: the curtain would
 | `scrubVideo` | `currentTime 0 → duration`, scrubbed across a section | A product turn or process read at scroll speed. Poster under reduced motion. |
 | `frameSequence` | canvas frame `0 → n-1`, nearest loaded frame, scrubbed | An image sequence with bounded loading; one per page. |
 | `textRoll` | label `yPercent 0 → -travel`, copy `travel → 0`, 0.35s, `power3.out` | A button or link label rolling over to itself on hover and focus. Whole label, no split. |
-| `underlineSweep` | `scaleX 0 → 1` from the left, `1 → 0` to the right, 0.3s, `power2.out` | An injected hairline under a link; `--underline-*` custom properties restyle it. Instant under reduced motion. |
+| `underlineSweep` | `scaleX 0 → 1` from the inline start, `1 → 0` toward the inline end, 0.3s, `power2.out` | An injected hairline under a link; `--underline-*` custom properties restyle it. Instant under reduced motion. |
 | `imageZoom` | `scale 1 → 1.05`, 0.6s, `power2.out`, inside a clipped frame | A card's image answering the card or its link; never clip the card itself. |
 
 Code is in [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), and [hover-effects.md](recipes/hover-effects.md).
