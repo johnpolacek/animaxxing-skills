@@ -63,11 +63,18 @@ function own(setup: (dispose: Register, after: Register) => void): Teardown {
     restores.splice(0).reverse().forEach(attempt);
     if (failure) throw failure;
   };
-  try {
-    ctx.add(() => setup((fn) => disposers.push(fn), (fn) => restores.push(fn)));
-  } catch (error) {
+  let failure: { error: unknown } | undefined;
+  // Catch inside add: GSAP restores its current context only when add returns.
+  ctx.add(() => {
+    try {
+      setup((fn) => disposers.push(fn), (fn) => restores.push(fn));
+    } catch (error) {
+      failure = { error };
+    }
+  });
+  if (failure) {
     teardown();
-    throw error;
+    throw failure.error;
   }
   return teardown;
 }
@@ -312,6 +319,13 @@ export function dragTrack(viewport: HTMLElement, track: HTMLElement, { snap = tr
     const minX = () => Math.min(0, viewport.clientWidth - track.scrollWidth);
     const clampX = (x: number) => gsap.utils.clamp(minX(), 0, x);
     const stops = () => items.map((item) => clampX(-item.offsetLeft));
+    const nearest = (x: number) => gsap.utils.snap(stops(), x);
+    // Draggable applies `snap` only through a throw, so without inertia the release lands on the nearest item here.
+    const land = () => {
+      if (!draggable) return;
+      gsap.set(track, { x: nearest(draggable.x) });
+      draggable.update();
+    };
 
     [draggable] = Draggable.create(track, {
       type: "x",
@@ -320,7 +334,8 @@ export function dragTrack(viewport: HTMLElement, track: HTMLElement, { snap = tr
       edgeResistance: 0.85,
       dragClickables: true,
       zIndexBoost: false,
-      snap: snap ? { x: (x: number) => gsap.utils.snap(stops(), x) } : undefined,
+      snap: snap ? { x: nearest } : undefined,
+      onDragEnd: reduced && snap ? land : undefined,
     });
     const drag = draggable;
     dispose(() => drag.kill());

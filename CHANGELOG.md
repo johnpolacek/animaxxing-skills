@@ -4,6 +4,25 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+### Added
+
+- Pause controls for every ambient loop (WCAG 2.2.2): the wave's stop function carries `pause()` and `resume()`, and particle controls add `pause()` and `play()`. Follower and wave guidance covers off-screen and user pausing.
+- `revertText(element)` in split entrances restores a runner's target when the controller kills a parent timeline, which never reaches a nested runner's interrupt callback.
+
+### Fixed
+
+- A recipe setup that throws no longer leaves its GSAP context current. Previously every later tween, trigger, and split in the app was recorded by the failed context.
+- `scrambleIn` and `scrambleOut` register ScrambleTextPlugin; they only logged a missing-plugin warning and never scrambled.
+- A new split runner on an element stops the previous run first, so the old run can no longer complete late, revert the new split, or fire its completion.
+- Particle `blast()` or `exit()` during an entrance releases the particles it was steering, and `idle()` after that blast lands the target at its entered state. `destroy()` is final, even for delayed callbacks, and restores the target's inline styles.
+- Particle colors follow theme changes without clearing the canvas, including `prefers-color-scheme`.
+- `revealOnScroll` hides waiting items with opacity only, so they stay in the accessibility tree and the tab order; focusing one reveals it.
+- `horizontalRun` scrolls the page for keyboard focus only, not mouse clicks.
+- `pinnedScene` teardown restores only the elements its tweens animated, leaving other effects' inline values alone.
+- `dragTrack` lands on the nearest item under reduced motion.
+- `countUp` reads the locale's decimal mark, so `99.999%` and `0.125` count correctly. Counting digits are hidden from assistive technology beside a visually hidden final value, and an existing `aria-label` is left alone.
+- A wave stopped with `keepSplit` hands its letters over at rest. Blast-off's shake picks new offsets on each repeat.
+
 ## [0.4.0] - 2026-09-23
 
 ### Added

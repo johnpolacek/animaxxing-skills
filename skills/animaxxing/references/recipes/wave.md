@@ -33,14 +33,19 @@ function prefersReducedMotion(): boolean {
 function guarded<T>(setup: () => T, onFail?: () => void): T {
   const ctx = gsap.context(() => {});
   let result: T | undefined;
-  try {
-    ctx.add(() => {
+  let failure: { error: unknown } | undefined;
+  // Catch inside add: GSAP restores its current context only when add returns.
+  ctx.add(() => {
+    try {
       result = setup();
-    });
-  } catch (error) {
+    } catch (error) {
+      failure = { error };
+    }
+  });
+  if (failure) {
     onFail?.();
     ctx.revert();
-    throw error;
+    throw failure.error;
   }
   return result as T;
 }
@@ -60,7 +65,7 @@ type Move = (chars: HTMLElement[]) => gsap.core.Timeline;
  */
 function ripple(chars: HTMLElement[], vars: gsap.TweenVars, ease = "sine.inOut") {
   return gsap
-    .timeline()
+    .timeline({ defaults: { overwrite: "auto" } })
     .to(chars, { ...vars, duration: LETTER_TIME / 2, ease, stagger: { each: RIPPLE, yoyo: true, repeat: 1 } })
     .set(chars, { clearProps: "transform,opacity,fontWeight" });
 }
@@ -68,7 +73,7 @@ function ripple(chars: HTMLElement[], vars: gsap.TweenVars, ease = "sine.inOut")
 /** A one-way tween per letter for moves that end where they began anyway. */
 function sweep(chars: HTMLElement[], vars: gsap.TweenVars, ease = "power2.inOut") {
   return gsap
-    .timeline()
+    .timeline({ defaults: { overwrite: "auto" } })
     .to(chars, { ...vars, duration: LETTER_TIME, ease, stagger: RIPPLE })
     .set(chars, { clearProps: "transform,opacity,fontWeight" });
 }
@@ -90,7 +95,7 @@ const MOVES: Move[] = [
   // Ink: weight snaps to thin, then fills back in to bold.
   (chars) =>
     gsap
-      .timeline()
+      .timeline({ defaults: { overwrite: "auto" } })
       .fromTo(chars, { fontWeight: 400 }, { fontWeight: 800, duration: LETTER_TIME, ease: "power2.out", stagger: RIPPLE, immediateRender: false })
       .set(chars, { clearProps: "fontWeight" }),
   // Shear: a quick italic slant.
@@ -116,13 +121,20 @@ export type WaveOptions = {
   period?: number;
 };
 
+/** Stops the wave. `keepSplit` leaves the letters split, at rest, for another animation to take over. */
+export type WaveStop = ((keepSplit?: boolean) => void) & {
+  /** Holds the next pass; a pass already running lands at rest. For off screen and the page's pause control. */
+  pause: () => void;
+  resume: () => void;
+};
+
 /**
  * Starts waving the heading's letters. Returns a stop function; pass
  * `keepSplit` when another animation is about to split the same element
  * and needs the current markup left in place.
  */
-export function startWave(heading: HTMLElement, { period = 4 }: WaveOptions = {}): (keepSplit?: boolean) => void {
-  if (prefersReducedMotion()) return () => {};
+export function startWave(heading: HTMLElement, { period = 4 }: WaveOptions = {}): WaveStop {
+  if (prefersReducedMotion()) return Object.assign(() => {}, { pause: () => {}, resume: () => {} });
   const { split, chars } = guarded(() => {
     const split = SplitText.create(heading, { type: "chars,words" });
     const chars = split.chars as HTMLElement[];
@@ -154,14 +166,29 @@ export function startWave(heading: HTMLElement, { period = 4 }: WaveOptions = {}
     clock.restart(true);
   });
 
-  return (keepSplit = false) => {
+  let stopped = false;
+  const stop = (keepSplit = false) => {
+    stopped = true;
     clock.kill();
     current?.kill();
-    if (!keepSplit) split.revert();
+    current = undefined;
+    // A kept split is handed over at rest, never mid-move.
+    if (keepSplit) gsap.set(chars, { clearProps: "transform,opacity,fontWeight,willChange" });
+    else split.revert();
   };
+  return Object.assign(stop, {
+    pause: () => {
+      if (!stopped) clock.pause();
+    },
+    resume: () => {
+      if (!stopped) clock.resume();
+    },
+  });
 }
 ```
 
 ## Controller contract
 
-`startWave(heading, { period: 1.5 })` returns a stop function. The owner invokes it only after other heading splits are released, and stops it before another effect takes the heading. Use the normal stop path to revert the split; `keepSplit` requires an explicit owner for the retained markup. The controller supplies visibility and resize signals.
+`startWave(heading, { period: 1.5 })` returns a stop function. The owner invokes it only after other heading splits are released, and stops it before another effect takes the heading. Use the normal stop path to revert the split; `keepSplit` requires an explicit owner for the retained markup, and hands it over with every letter at rest. The controller supplies visibility and resize signals.
+
+The stop function also carries `pause()` and `resume()`, which hold and restart the ripple without re-splitting. Call them when the heading leaves and re-enters the viewport. The wave repeats for as long as the page idles, so it needs a way for the user to stop it (WCAG 2.2.2): wire the page's pause control or its motion setting to `pause()`, or stop the wave when the app switches to reduced motion.

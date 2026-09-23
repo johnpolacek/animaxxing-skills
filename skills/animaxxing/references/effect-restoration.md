@@ -23,8 +23,8 @@ Apply this when adapting any recipe. Every recipe rolls back its own setup when 
 | Scroll effects | Triggers, pin spacers, splits, scrubbed and reveal tweens, the settle tween, focus listeners, the run's `overflow`, and inline motion values a pinned revert leaves behind. Inner `containerAnimation` triggers first. |
 | Pointer effects | Listeners, `quickTo` values left inline, `--pointer-*` properties, the `Draggable` and any throw in flight, its inline touch and selection styles, observers, and the viewport's `overflow`. |
 | SVG effects | Draw timelines, stroke dash styles, the original `d` of a morphed path, the follower's transform and origin, and any morph in flight. |
-| Counters and marquees | The count tween, original text, reserved width, `aria-label`, the marquee strip and clones, observers, listeners, and the hover ease. |
+| Counters and marquees | The count tween, original text, reserved width, the counting and visually hidden spans, the marquee strip and clones, observers, listeners, and the hover ease. |
 | Blast-off | Tweens and splits across the composition, including container transforms and button changes. |
-| Particle field/effects | Ticker callbacks, emitters, particles/tweens, observers, event listeners, and effect-owned canvas/wrapper styles. |
+| Particle field/effects | Ticker callbacks, emitters, particles/tweens, delayed calls, observers, event listeners, effect-owned canvas/wrapper styles, and the target's inline opacity, visibility, transform, and clip. |
 
 Reduced motion preserves normal completion without creating unnecessary split or particle resources. Recovery teardown must also be safe when setup returned early or completed already. The controller decides whether essential completion still needs to run once.

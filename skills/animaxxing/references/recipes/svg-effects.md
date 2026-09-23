@@ -56,11 +56,18 @@ function own(setup: (dispose: Register, after: Register) => void): Teardown {
     restores.splice(0).reverse().forEach(attempt);
     if (failure) throw failure;
   };
-  try {
-    ctx.add(() => setup((fn) => disposers.push(fn), (fn) => restores.push(fn)));
-  } catch (error) {
+  let failure: { error: unknown } | undefined;
+  // Catch inside add: GSAP restores its current context only when add returns.
+  ctx.add(() => {
+    try {
+      setup((fn) => disposers.push(fn), (fn) => restores.push(fn));
+    } catch (error) {
+      failure = { error };
+    }
+  });
+  if (failure) {
     teardown();
-    throw error;
+    throw failure.error;
   }
   return teardown;
 }
@@ -107,7 +114,7 @@ function draw(
   { duration = 0.8, stagger = 0.12, delay = 0, onComplete }: DrawOptions,
 ): SvgEffect {
   const strokes = gsap.utils.toArray<SVGGeometryElement>(targets);
-  const timeline = gsap.timeline({ delay, paused: true });
+  const timeline = gsap.timeline({ delay, paused: true, defaults: { overwrite: "auto" } });
   if (onComplete) timeline.eventCallback("onComplete", onComplete);
   const revert = own((dispose, after) => {
     after(snapshot(strokes, [], STROKE_PROPS));
@@ -212,7 +219,7 @@ export function followPath(
 }
 ```
 
-The controller pauses the follower when its surface scrolls out of view, as it does for other ambient effects.
+The controller pauses the follower when its surface scrolls out of view, as it does for other ambient effects. The loop never ends, so it needs a way for the user to stop it (WCAG 2.2.2): wire the page's pause control or motion setting to `pause()` and `play()`.
 
 ## Controller contract
 
