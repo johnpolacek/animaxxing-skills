@@ -1,12 +1,10 @@
 # Recipe: route intro and outro
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
-
-The framework skill's controller calls `buildPageIntro` during intro and `buildPageOutro` during outro; this module never decides when, never touches the router, and never listens for clicks. It reads `data-page-transition` on the page's items and returns a timeline. The controller owns phase state.
+Lifecycle: the framework controller calls `buildPageIntro` at intro and `buildPageOutro` at outro; each reads the page's `data-page-transition` items and returns a timeline. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
 Dependencies: `gsap`, `gsap/SplitText`.
 
-Setup: follow [stable typography for character animation](../text-stability.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+Setup: apply [stable typography](../text-stability.md#stable-typography-for-character-animation) before splitting; check revert with the [cleanup checks](../verification.md#splittext-cleanup-stability).
 
 ```ts
 import gsap from "gsap";
@@ -23,11 +21,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/**
- * Runs setup inside its own GSAP context. If setup throws, everything it
- * created (sets, tweens, timelines, splits) is reverted before the error is
- * rethrown, so a failed build never strands hidden or split text.
- */
+/** Runs setup in its own GSAP context; on throw, reverts what it created and rethrows. */
 function guarded<T>(setup: () => T, onFail?: () => void): T {
   const ctx = gsap.context(() => {});
   let result: T | undefined;
@@ -120,8 +114,7 @@ function pageIntro(container: HTMLElement, onComplete?: () => void): gsap.core.T
     return timeline;
   }
 
-  // Prepare the incoming DOM while the container is still behind the CSS
-  // waiting barrier. Only release the barrier after every item is hidden.
+  // Hide every item while the container is still behind the controller's waiting barrier.
   if (standard.length > 0) gsap.set(standard, { autoAlpha: 0, y: 16 });
   if (slide.length > 0) gsap.set(slide, { autoAlpha: 0, x: -SHIFT.page, transition: "none" });
   const splits = letters.map((item) => {
@@ -236,6 +229,6 @@ function pageOutro(container: HTMLElement, onComplete: () => void): gsap.core.Ti
 
 ## Controller contract
 
-Call `buildPageIntro(container, onComplete)` with prepared targets and `buildPageOutro(container, onComplete)` for the requested exit. Both return timelines; killing them reverts their character splits but does not call successful completion. The controller must settle any wait on interruption separately.
+Killing either timeline reverts its character splits without calling `onComplete`; the controller settles any wait on interruption itself.
 
-The controller owns the barrier: prepare targets before revealing the intro, and keep the outgoing end state covered through cleanup if its router needs that. It also owns focus, phase signals to surface effects, and any [resize response](../motion-vocabulary.md#resize). Do not attach another entrance to an element already marked as a page item.
+The controller owns the barrier (targets prepared before the intro reveals; the outgoing end state covered through cleanup if its router needs it), focus, phase signals to surface effects, and any [resize response](../motion-vocabulary.md#resize). Do not give a page item a second entrance.

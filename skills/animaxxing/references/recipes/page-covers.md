@@ -1,10 +1,8 @@
 # Recipe: page covers
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Full-screen covers in the persistent shell, outside any route, so they survive the swap they hide: a curtain over a route swap, and a first-visit preloader that follows real readiness.
 
-Two full-screen covers for the moments between pages. A curtain sweeps panels across the viewport to hide a route swap, then sweeps on to uncover the incoming page. A preloader holds the first visit behind a count that follows real readiness, then lifts away. Both live in the persistent shell, outside any route, so they survive the swap they hide.
-
-The framework skill's controller decides when each runs. It covers during the outro, swaps under the cover, and reveals once incoming targets are prepared. It feeds the preloader real progress and finishes it before the first intro. Its `references/transition-archetypes.md` owns that sequence, navigation locks, and recovery. This module never listens for navigation or loading.
+Lifecycle: the shell's controller runs them per its [contract](#controller-contract); the framework skill's `references/transition-archetypes.md` owns the sequence, navigation locks, and recovery. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
 Dependencies: `gsap`.
 
@@ -29,7 +27,7 @@ Dependencies: `gsap`.
 .preloader-bar { position: absolute; left: 0; bottom: 0; width: 100%; height: 2px; background: currentColor; transform: scaleX(0); transform-origin: 0 50%; }
 ```
 
-Color the panels and the preloader with existing brand tokens. Stack panels with `flex-direction: column` for a curtain that comes from the left or right. Render the preloader only on a visit that will run it; the framework's first-paint script makes that choice.
+Color panels and preloader with existing brand tokens. For a curtain from the left or right, stack panels with `flex-direction: column`. Render the preloader only on visits that run it; the framework's first-paint script decides.
 
 ```ts
 import gsap from "gsap";
@@ -47,10 +45,8 @@ export type Teardown = () => void;
 type Register = (fn: () => void) => void;
 
 /**
- * Runs setup inside a GSAP context. Everything GSAP creates during setup is
- * reverted with the context. `dispose` registers writers to stop before the
- * revert; `after` registers restores to run once it is done. Teardown runs
- * once, attempts every step, and rolls back a setup that threw.
+ * Runs setup in a GSAP context. `dispose` stops writers before the revert; `after` restores once it is done.
+ * Teardown runs once, attempts every step, and rolls back a setup that threw.
  */
 function own(setup: (dispose: Register, after: Register) => void): Teardown {
   const ctx = gsap.context(() => {});
@@ -108,7 +104,7 @@ const COVER_PROPS = ["transform", "translate", "visibility", "opacity", "pointer
 
 ## curtain
 
-Panels sweep in from one edge, staggered, until the viewport is covered, then carry on out the far edge. While covered, the panels take pointer events, so a second click cannot land on the page being swapped. A cover requested mid-reveal turns the panels back from where they are.
+Staggered panels sweep in from one edge to cover the viewport, then out the far edge. Covered panels take pointer events, so a second click cannot reach the swapping page. A cover requested mid-reveal turns back from where the panels are.
 
 ```ts
 export type CurtainOptions = {
@@ -171,7 +167,7 @@ export function curtain(
 
 ## preloader
 
-The count eases toward the readiness the controller reports and never runs backward, so honest progress still reads as smooth. `finish()` completes the count and lifts the preloader away; hidden, it leaves the accessibility tree. The controller supplies progress from fonts, critical images, and data with a deadline, never from a timer that pretends.
+The count eases toward reported readiness and never runs backward. `finish()` completes the count and lifts the preloader, which then leaves the accessibility tree. The controller reports progress from fonts, critical images, and data under a deadline, never from a fake timer.
 
 ```ts
 export type PreloaderOptions = {
@@ -251,7 +247,6 @@ export function preloader(root: HTMLElement, { catchUp = 0.5 }: PreloaderOptions
 
 ```ts
 // Example: the shell's controller, on a client navigation.
-// The shell owns this timeline; a page context reverted at unmount would reopen the curtain.
 const outro = gsap.timeline();
 outro.add(buildPageOutro(page, () => {}));             // optional item exit first
 outro.add(cover.cover(), "-=0.15");                     // then the curtain closes
@@ -264,12 +259,11 @@ cover.reveal().eventCallback("onComplete", () => markSettled());
 
 | Builder | Create | Returns | Reduced motion |
 |---|---|---|---|
-| `curtain` | Once, from the persistent shell | `{ cover, reveal, revert }` | Timelines complete on the next frame; panels never show |
+| `curtain` | Once, from the persistent shell | `{ cover, reveal, revert }` | Panels never show; timelines complete next frame. The controller uses its ordinary swap cover |
 | `preloader` | First paint of a visit that shows it | `{ progress, finish, revert }` | Count jumps to reported values; `finish` hides at once |
 
-- The controller starts `cover()` with the outro on the shell's own timeline, never inside a page's GSAP context, and swaps on its completion. It calls `reveal()` only after every incoming target has its size and start styles.
-- Under reduced motion the controller skips the curtain and uses its ordinary swap cover; the builders stay safe to call.
-- Where each page builds its own outro, run `cover()` as a sibling timeline on the shell, offset into the outro, and swap once both have completed. If the cover is nested in a page timeline for sequencing, remove it from that parent before the page's context reverts, or the revert reopens the curtain.
-- Back and forward take the intro-only path: no cover, and a `reveal()` only if the curtain is still closed.
-- A preloader is a deliberate hold under the framework's initialization contract. It counts as the prepared intro, so its deadline and recovery come from the framework, not from here.
+- Run `cover()` on the shell's own timeline, never inside a page's GSAP context, and swap when it completes. Where each page builds its own outro, run the cover as a sibling offset into it and swap once both complete. A cover nested in a page timeline must leave that parent before the page's context reverts, or the revert reopens the curtain.
+- Call `reveal()` only after every incoming target has its size and start styles.
+- Back and forward take the intro-only path: no cover, and `reveal()` only if the curtain is still closed.
+- A preloader is a deliberate hold under the framework's initialization contract; it counts as the prepared intro, so the framework owns its deadline and recovery.
 - Keep the curtain's panels out of the accessibility tree. The preloader's `role="progressbar"` reports its value while visible; the controller sets `aria-busy` on the content it covers.

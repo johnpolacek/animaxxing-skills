@@ -1,16 +1,14 @@
 # Recipe: particle field
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+A canvas bleeding past a target, stepped by the GSAP ticker only while it has something to draw and is on screen. Drive particles with emitters (run each frame), per-particle `update` hooks, or GSAP tweens on the particle objects.
 
-A canvas that bleeds out past a target element, with a list of particles stepped by the GSAP ticker. Behaviour lives in emitters (called each frame while attached) and in per-particle update hooks; GSAP tweens on the plain particle objects work too, since the ticker runs the core update before the field's own step. The field only ticks while it has something to draw and is on screen, so an idle button costs nothing.
-
-`attachParticleEffect` wires a field to a target for the life of a component and returns the controls the framework skill's controller calls. The controller decides when; this module never does.
+Lifecycle: `attachParticleEffect` binds a field to a target for a component's life; the framework controller calls its [controls](#controller-contract) per phase. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
 Dependencies: `gsap`.
 
 ## Markup
 
-The canvas sits in a wrapper with the target, offset by the effect's bleed, colored through the canvas's CSS `color`, out of the accessibility tree and pointer flow. `z-index` above the target for `layer: "over"` effects, below for `"under"`.
+The canvas shares a wrapper with the target, offset by the effect's bleed, `aria-hidden`, and `pointer-events: none`. It draws in its computed `color`, inherited by default; set an existing brand color if contrast needs it. Stack it above the target for `layer: "over"`, below for `"under"`.
 
 ```html
 <div class="relative isolate" data-particle-button>
@@ -19,7 +17,7 @@ The canvas sits in a wrapper with the target, offset by the effect's bleed, colo
 </div>
 ```
 
-Plain CSS equivalent for the positioning classes above (under-layer example):
+Plain CSS for the classes above (under layer):
 
 ```css
 [data-particle-button] { position: relative; isolation: isolate; }
@@ -28,8 +26,6 @@ Plain CSS equivalent for the positioning classes above (under-layer example):
 }
 [data-particle-button] button { position: relative; z-index: 20; }
 ```
-
-The canvas inherits the wrapper's text color by default; set its `color` to an existing brand token when needed for contrast. No palette or token name is required. The framework controller handles any pre-paint hiding and wrapper reveal.
 
 ## field.ts
 
@@ -338,7 +334,7 @@ export function perimeterPoint(box: Box, radius: number, t: number): EdgePoint {
 
 ## attach.ts
 
-Sizes the field, tracks theme changes, pauses off screen, and combines hover, keyboard focus, and touch presses. Returns phase controls and `destroy`, which also restores the target's inline styles.
+Sizes the field, follows theme changes, pauses off screen, and merges hover, keyboard focus, and touch presses into one hot state.
 
 ```ts
 import gsap from "gsap";
@@ -558,13 +554,12 @@ export function attachParticleEffect(
 
 ## Controller contract
 
-`attachParticleEffect(wrapper, canvas, target, effect)` returns `enter`, `exit`, `blast`, `idle`, `pause`, `play`, and `destroy` controls. These controls return void; they are surface effects, not navigation-completion promises. The framework controller owns their GSAP context and calls `destroy` to release observers, listeners, timelines, and the ticker. `destroy` is final, even for callbacks already scheduled, and restores the target's inline opacity, visibility, transform, and clip.
+`attachParticleEffect(wrapper, canvas, target, effect)` returns void controls: `enter`, `exit`, `blast`, `idle`, `pause`, `play`, and `destroy`. They drive a surface, not navigation completion. The framework controller owns their GSAP context.
 
-Idle loops run for as long as the page does, so they need a way for the user to stop them (WCAG 2.2.2): wire the page's pause control or motion setting to `pause` and `play`, which hold the particles still without hiding the target.
-
-`exit` or `blast` during the entrance stops it, and the particles it was steering fade out. `idle` after a blast that cut the entrance short first lands the target at the entrance's end state, without replaying its bursts.
-
-The target is prepared by `enter`; reveal a hidden wrapper separately so its canvas can show while the target assembles. Use the framework skill for first-paint readiness and lifecycle subscriptions.
+- `enter` prepares the target. Reveal a hidden wrapper separately so its canvas shows while the target assembles.
+- `exit` or `blast` mid-entrance stops it and fades the particles it steered. A later `idle` lands the entrance's end state without replaying its bursts.
+- Idle loops need a user pause (WCAG 2.2.2): wire the page's pause control or motion setting to `pause` and `play`, which freeze particles without hiding the target.
+- `destroy` releases observers, listeners, timelines, and the ticker, and restores the target's inline opacity, visibility, transform, and clip. It is final, even for callbacks already scheduled.
 
 ## Input and density
 

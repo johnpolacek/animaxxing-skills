@@ -1,12 +1,8 @@
 # Recipe: component motion
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+A full-screen menu, native `<dialog>` enter and exit, an accordion panel, and a sliding tab indicator. The app keeps its markup, styling, and state (`aria-expanded`, `inert`, the focus trap, `hidden`, `open`, `aria-selected`); builders only move inline styles between states the app has chosen, and teardown restores them.
 
-Four pieces of component motion: a full-screen menu that wipes in and staggers its links, enter and exit for a native `<dialog>`, an accordion panel that grows to its content, and a tab indicator that slides onto the active tab. The app keeps its own markup, styling, and state: `aria-expanded`, `inert`, the focus trap, `hidden`, `open`, and `aria-selected` stay where they are. These builders only move inline styles between the states the app has already chosen, and each teardown puts those styles back.
-
-The [motion vocabulary](../motion-vocabulary.md#tokens) bans tweening `width` and `height`. `disclosure` is the one sanctioned exception, and its rules are stated there. Everything else is transforms, opacity, clip, and one custom property.
-
-The framework skill's controller creates each builder once the component is mounted, calls `open`, `close`, or `moveTo` when the app's state changes, and calls `revert` on unmount; this module never decides when. Every timeline returned here completes and fires its callbacks, under reduced motion too, so the app can hang state changes on `onComplete`.
+Lifecycle: the framework controller creates each builder once the component is mounted, calls `open`, `close`, or `moveTo` when app state changes, and `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
 Dependencies: `gsap`.
 
@@ -26,10 +22,9 @@ export type Teardown = () => void;
 type Register = (fn: () => void) => void;
 
 /**
- * Runs setup inside a GSAP context. Everything GSAP creates during setup is
- * reverted with the context. `dispose` registers writers and listeners to
- * stop before the revert; `after` registers restores to run once it is done.
- * Teardown runs once, attempts every step, and rolls back a setup that threw.
+ * Runs setup in its own GSAP context. `dispose` registers stops that run before
+ * the context reverts; `after` registers restores that run after it. Teardown
+ * runs once, attempts every step, and rolls back a setup that threw.
  */
 function own(setup: (dispose: Register, after: Register) => void): Teardown {
   const ctx = gsap.context(() => {});
@@ -93,11 +88,7 @@ function listen<K extends keyof HTMLElementEventMap>(
   dispose(() => target.removeEventListener(type, handler as EventListener));
 }
 
-/**
- * One timeline in flight per component. Starting the next kills the one
- * running, and the next tweens from current values, so a close picks up an
- * open from wherever it is instead of jumping to either end.
- */
+/** One timeline in flight per component: the next kills the running one and tweens from current values. */
 function relay() {
   let current: gsap.core.Timeline | undefined;
   return {
@@ -117,9 +108,9 @@ type Edge = "top" | "bottom" | "left" | "right";
 
 ## menuOverlay
 
-A full-screen panel wipes in from one edge, then its links rise in one after another. Closing runs the links out and the wipe back from wherever the open has reached. At rest the panel is `visibility: hidden`, so its links are out of the tab order and the accessibility tree; the wipe is a `clip-path` inset, so the panel never leaves its position.
+A full-screen panel wipes in from one edge, then its links stagger in; closing reverses from wherever the open reached. At rest the panel is `visibility: hidden`, so its links leave the tab order and accessibility tree; the wipe is a `clip-path` inset, so the panel never moves.
 
-The app owns the trigger's `aria-expanded`, `inert` on the rest of the page, the focus trap, and Escape. It calls `open()` after setting that state and moves focus into the panel when the timeline completes. To close, it returns focus to the trigger first, then calls `close()`: each link turns `visibility: hidden` as its exit ends, which would otherwise drop focus to `<body>` mid-close. Do not hide the panel with `display: none` or `hidden`; the builder needs it laid out.
+The app owns the trigger's `aria-expanded`, `inert` on the rest of the page, the focus trap, and Escape. It calls `open()` after setting that state and focuses into the panel on completion. To close, it returns focus to the trigger first, then calls `close()`: each exiting link turns `visibility: hidden` and would drop focus to `<body>`. Keep the panel laid out, never `display: none` or `hidden`.
 
 ```css
 .menu { position: fixed; inset: 0; z-index: 40; visibility: hidden; }
@@ -195,13 +186,11 @@ export function menuOverlay(
 }
 ```
 
-Links become visible, and focusable, as each one arrives; a close control that should be usable at once goes outside the `links` selector. Under reduced motion the panel and links appear and vanish whole.
+Links become focusable as each arrives; put a close control that must work at once outside the `links` selector.
 
 ## dialogMotion
 
-Enter and exit for a native `<dialog>`. `open()` calls `showModal()` and fades the backdrop while the panel scales in (or slides in from an edge for a drawer or sheet). `close(returnValue)` runs the exit first and calls `dialog.close(returnValue)` when it lands, so `returnValue`, the `close` event, and the native focus return all behave as usual. Escape fires the dialog's `cancel` event; the builder prevents the instant close and runs the exit instead.
-
-Focus stays native: `showModal()` moves it into the dialog, and `dialog.close()` returns it to the element that had it. The dialog's contents stay focusable while hidden because the entrance uses `opacity`, never `visibility`. The backdrop is a pseudo-element GSAP cannot reach, so the builder tweens `--dialog-backdrop` on the dialog and the app's CSS reads it; `::backdrop` inherits from its dialog in current browsers.
+`open()` calls `showModal()`, fades the backdrop, and scales the panel in (or slides it from an edge for a drawer). `close(returnValue)` runs the exit, then `dialog.close(returnValue)`, so `returnValue`, the `close` event, and native focus return behave as usual. Escape's `cancel` runs the exit instead of closing instantly. GSAP cannot reach `::backdrop`, so the builder tweens `--dialog-backdrop` on the dialog for the CSS to read; `::backdrop` inherits it in current browsers.
 
 ```css
 dialog::backdrop { background: rgb(0 0 0 / 0.5); opacity: var(--dialog-backdrop, 1); }
@@ -285,13 +274,13 @@ export function dialogMotion(dialog: HTMLDialogElement, { placement = "center", 
 }
 ```
 
-Anything that closes the dialog directly, such as a `<form method="dialog">` submit or the app's own `dialog.close()`, closes instantly and still ends clean; route it through `close(value)` when the exit matters. `revert` never closes the dialog; the app owns its `open` state.
+A direct close (a `<form method="dialog">` submit, the app's own `dialog.close()`) is instant and still ends clean; route it through `close(value)` to animate. `revert` never closes the dialog; the app owns `open`.
 
 ## disclosure
 
-An accordion panel grows from 0 to its content height and back. This is the sanctioned exception to the layout-property ban, under these rules: one panel per builder, the end height is measured from the content at call time (`height: "auto"`), `overflow: hidden` clips it while it moves and while it is closed, and once open the inline height and overflow are cleared so the content can reflow. A pre-collapsed inline `height: 0` from the server is dropped at open rest, never restored. The tween is the panel's own box; siblings move because layout moves them.
+An accordion panel grows from 0 to its content height and back: the one sanctioned layout tween. Rules: one panel per builder; the end height is measured at call time (`height: "auto"`); `overflow: hidden` clips while moving and while closed; once open, the inline height and overflow clear so content can reflow. A server-rendered inline `height: 0` is dropped at open rest, never restored. Siblings move only because layout moves them.
 
-The app owns `aria-expanded` on the trigger and the panel's `hidden`. Show the panel, then call `open()`; call `close()`, then apply `hidden` when it completes so the closed content leaves the tab order. A panel that is not rendered at build is collapsed inline, so removing `hidden` paints nothing until `open()` runs. Padding on the panel itself stays visible at height 0; pad an inner element. Give the panel `display: flow-root` so its children's margins stay inside it at rest, as they do while `overflow: hidden` clips it; otherwise the first and last child margins jump at both ends of the tween.
+The app owns the trigger's `aria-expanded` and the panel's `hidden`: show the panel, then `open()`; `close()`, then apply `hidden` on completion so closed content leaves the tab order. A panel not rendered at build is collapsed inline, so unhiding it paints nothing until `open()`. Panel padding shows at height 0; pad an inner element. Give the panel `display: flow-root`, or first and last child margins jump at both ends of the tween.
 
 ```ts
 export type DisclosureOptions = { duration?: number; ease?: string };
@@ -340,13 +329,13 @@ export function disclosure(panel: HTMLElement, { duration = 0.3, ease = "power2.
 }
 ```
 
-With `<details>`, wrap the content after the `<summary>` in one panel element and keep the element's own `open` state: prevent the summary's default, set `open` before `open()`, and clear it when `close()` completes (see Wiring). Where the app already animates `::details-content` in CSS, do not add this on top. Under reduced motion the panel snaps between its two rest states and both timelines complete.
+With `<details>`, wrap the content after `<summary>` in one panel element and keep its own `open` state: prevent the summary's default, set `open` before `open()`, and clear it when `close()` completes (see Wiring). Skip this where CSS already animates `::details-content`.
 
 ## tabIndicator
 
-An underline or pill slides and resizes onto the selected tab using transforms only: `x` from its own resting position and `scaleX` from its own resting width, so the indicator's CSS decides its color, thickness, and radius. Positions are measured physically, so a tab list in RTL needs nothing extra. A `ResizeObserver` on the list and its tabs re-fits the indicator when widths change.
+An underline or pill slides onto the selected tab with `x` and `scaleX` from its own resting box, so its CSS keeps color, thickness, and radius. Physical measurement handles RTL. A `ResizeObserver` on the list and tabs re-fits it when widths change.
 
-The app owns `aria-selected`, the roving `tabindex`, and arrow-key handling; it calls `moveTo(tab)` when selection changes (or on focus, if it activates tabs on focus). At build the indicator sits under the tab that is `aria-selected="true"`, if any.
+The app owns `aria-selected`, the roving `tabindex`, and arrow keys, and calls `moveTo(tab)` when selection changes (or on focus, for focus-activated tabs). At build the indicator sits under the `aria-selected="true"` tab, if any.
 
 ```css
 .tablist { position: relative; }
@@ -416,7 +405,7 @@ export function tabIndicator(
 }
 ```
 
-Under reduced motion the indicator jumps onto the tab. Revert before the tabs change and rebuild after the new ones render; the observer only knows the tabs present at build.
+Revert before the tabs change and rebuild after the new ones render; the observer only knows tabs present at build.
 
 ## Wiring
 
@@ -464,10 +453,10 @@ tablist.addEventListener("click", (event) => {
 |---|---|---|---|
 | `menuOverlay` | Settled, once the panel is laid out | `{ open, close, revert }` | Panel and links appear or vanish whole; both timelines complete |
 | `dialogMotion` | Settled, once per `<dialog>` | `{ open, close, revert }` | `open()` shows at once; `close()` closes on the next tick |
-| `disclosure` | Settled, once per panel | `{ open, close, revert }` | Height snaps; the inline height is still cleared once open |
+| `disclosure` | Settled, once per panel | `{ open, close, revert }` | Height snaps; inline height still clears once open |
 | `tabIndicator` | Settled, once tab widths are final | `{ moveTo, revert }` | Jumps onto the tab |
 
-- State first, motion second, in the same task: set `aria-expanded`, `inert`, `hidden`, or `open`, then call the builder. Hang the closing state change on the returned timeline's `onComplete`.
-- `open()` and `close()` may interrupt each other at any point; the next call tweens from where things are. Nothing here navigates, changes attributes, or moves focus, except the dialog's own `showModal()` and `close()`, which `dialogMotion` calls.
+- State first, motion second, in the same task: set `aria-expanded`, `inert`, `hidden`, or `open`, then call the builder. Hang the closing state change on the returned timeline's `onComplete`; every timeline completes, under reduced motion too.
+- `open()` and `close()` may interrupt each other; the next call tweens from where things are. Nothing here navigates, changes attributes, or moves focus, except `dialogMotion`'s `showModal()` and `close()`.
 - A menu in the persistent shell belongs to the shell's controller, not a page's GSAP context; a context reverted at unmount would strip its rest styles.
 - Revert before the panel, dialog, or tabs are removed from the DOM.

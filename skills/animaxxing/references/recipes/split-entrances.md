@@ -1,12 +1,10 @@
 # Recipe: split entrances
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Lifecycle: the framework controller composes these timelines into intro and outro, and may kill or await them. Display type only. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-The framework skill's controller calls these during intro and outro; this module never decides when. Each builder returns a timeline the controller can compose, kill, or await. Display type only.
+Dependencies: `gsap`, `gsap/SplitText`; scramble also needs `gsap/ScrambleTextPlugin`. `charsWeightWave` needs a variable weight axis covering `WEIGHT` (example: 400–800); adapt those values and its 600 cutoff, or pick a transform-only runner.
 
-Dependencies: `gsap`, `gsap/SplitText` (free since 3.13). `scrambleIn`/`Out` also need `gsap/ScrambleTextPlugin`. `charsWeightWave` needs a variable face covering its configured `WEIGHT` endpoints (400–800 in the example); adjust those and the midpoint choice to the loaded axis, or select a transform-only recipe. No font family is prescribed.
-
-Setup: follow [stable typography for character animation](../text-stability.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. For confirmed clipped ink, use the optional `charMaskClass` with the [targeted mask CSS](../text-stability.md#apparent-weight-change-from-clipped-glyph-ink); verify both hidden endpoints after expanding masks. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+Setup: apply [stable typography](../text-stability.md#stable-typography-for-character-animation) before splitting; check revert with the [cleanup checks](../verification.md#splittext-cleanup-stability). For confirmed clipped ink, pass `charMaskClass` with the [targeted mask CSS](../text-stability.md#apparent-weight-change-from-clipped-glyph-ink) and recheck both hidden endpoints.
 
 ```ts
 import gsap from "gsap";
@@ -23,11 +21,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/**
- * Runs setup inside its own GSAP context. If setup throws, everything it
- * created (sets, tweens, timelines, splits) is reverted before the error is
- * rethrown, so a failed build never strands hidden or split text.
- */
+/** Runs setup in its own GSAP context; on throw, reverts what it created and rethrows. */
 function guarded<T>(setup: () => T, onFail?: () => void): T {
   const ctx = gsap.context(() => {});
   let result: T | undefined;
@@ -72,10 +66,9 @@ type ActiveRun = { timeline: gsap.core.Timeline; restore: () => void };
 const activeRuns = new WeakMap<HTMLElement, ActiveRun>();
 
 /**
- * Stops the runner animating `element` and restores its text. Killing a parent
- * timeline never reaches a nested runner's interrupt callback, so a controller
- * that composes runners calls this for each target when it kills the parent.
- * Starting another runner on the same element does this first.
+ * Stops the runner animating `element` and restores its text. Call it per target
+ * after killing a parent timeline, whose kill never reaches nested interrupt
+ * callbacks. A new runner on the same element calls it first.
  */
 export function revertText(element: HTMLElement): void {
   const run = activeRuns.get(element);
@@ -97,10 +90,8 @@ function track(element: HTMLElement, timeline: gsap.core.Timeline, restore: () =
 }
 
 /**
- * Splits, runs `choreograph`, and puts the element back together afterwards.
- * The settled state is applied first so an interrupted run cannot leave text
- * stranded mid-flight. `aria: "auto"` labels the element with the original
- * string and hides the pieces, so a screen reader hears the sentence.
+ * Splits, runs `choreograph`, and reverts on completion or interrupt.
+ * `aria: "auto"` keeps the original string for screen readers.
  */
 function withSplit(
   element: HTMLElement | null,
@@ -337,7 +328,7 @@ export const wordsSlideOut: SplitRunner = (element, options = {}) =>
     { autoAlpha: 0 },
   );
 
-/** Whole lines wiped up behind masks. The most editorial of the family. */
+/** Whole lines wiped up behind masks. */
 export const linesMaskIn: SplitRunner = (element, options = {}) =>
   withSplit(element, options, { type: "lines", mask: "lines" }, (split, tl) => {
     tl.from(split.lines, { yPercent: 110, duration: DURATION.page, ease: "power3.out", stagger: STAGGER.loose });
@@ -360,7 +351,7 @@ export const linesMaskOut: SplitRunner = (element, options = {}) =>
 
 ## Scramble
 
-This block registers `ScrambleTextPlugin`; copy it whole. Scramble replaces the element's text, so use it on plain text without nested markup. Display only: reading text must never look like it is being typed.
+Copy this block whole; it registers `ScrambleTextPlugin`. Scramble replaces the element's text: plain display text only, no nested markup.
 
 ```ts
 import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
@@ -409,22 +400,18 @@ export const scrambleOut: SplitRunner = (element, options = {}) => {
 ## Wiring
 
 ```ts
-// In the framework skill's page controller, after required fonts are ready:
-// heading has the persistent character-headline class from the typography reference.
-// Keep that CSS when withSplit calls split.revert(); smartWrap/mask do not fix kerning.
+// In the framework controller, after fonts are ready. `heading` keeps its stable-typography class.
 const intro = gsap.timeline();
-// Omit charMaskClass unless clipping is confirmed; CSS lives in the typography reference.
-// A CSS Modules caller can pass styles.titleCharMask as the class token.
+// Only when clipping is confirmed (CSS Modules: styles.titleCharMask).
 const headlineOptions = { charMaskClass: "title-char-mask" };
 intro.add(charsRiseIn(heading, headlineOptions), 0);
 intro.add(linesMaskIn(lede), 0.2);
-// Killing `intro` never reaches the runners' own interrupt callbacks. On interruption:
-// intro.kill(); revertText(heading); revertText(lede);
-// The outro is the paired exit, in reverse order:
+// On interruption: intro.kill(); revertText(heading); revertText(lede);
+// Outro: the paired exits, in reverse order.
 const outro = gsap.timeline();
 outro.add(linesMaskOut(lede), 0).add(charsFallOut(heading, headlineOptions), 0.05);
 ```
 
-Each builder's own timeline reverts its split when it completes or is killed. A parent timeline that contains it cannot: kill the parent, then call `revertText` for each target. Building inside the controller's `gsap.context()`, including async builds added with `context.add()`, also reverts the splits when that context reverts. A new runner on an element releases the previous one first.
+Building inside the controller's `gsap.context()`, including async builds added with `context.add()`, also reverts the splits when that context reverts.
 
-Give a split heading its own pre-paint hiding rule rather than marking it as a page item too, or the page's stagger and the split's rise will fight over one element.
+Give a split heading its own pre-paint hiding rule; do not also mark it as a page item, or two entrances fight over it.

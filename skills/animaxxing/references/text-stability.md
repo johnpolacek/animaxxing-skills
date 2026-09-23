@@ -1,12 +1,12 @@
 # Text stability
 
-Technical requirements for split text on the project's existing typography. No particular font, palette, or layout is required.
+Requirements for splitting text in the project's existing typography.
 
 ## Stable typography for character animation
 
-Read this before using any recipe that splits characters, especially `charsRiseIn`. [GSAP's Tips & Limitations](https://gsap.com/docs/v3/Plugins/SplitText/#tips--limitations) documents that character wrappers interrupt browser kerning. Splitting can change spacing; `split.revert()` restores natural kerning and can produce a horizontal snap even when heading height stays unchanged. `smartWrap` groups words to prevent mid-word breaks; character masks clip the reveal. Neither preserves kerning.
+Read before any recipe that splits characters, especially `charsRiseIn`. Character wrappers interrupt browser kerning ([GSAP's Tips & Limitations](https://gsap.com/docs/v3/Plugins/SplitText/#tips--limitations)), so `split.revert()` restores natural kerning and can snap text horizontally even when the heading's height holds. `smartWrap` prevents mid-word breaks and masks clip the reveal; neither preserves kerning.
 
-Make stable typography part of the target's base CSS, present before first paint and retained during splitting, after cleanup, and under reduced motion:
+Put stable typography in the target's base CSS, present before first paint and kept after cleanup and under reduced motion:
 
 ```html
 <h2 class="character-headline">Small idea. Big feeling.</h2>
@@ -20,49 +20,49 @@ Make stable typography part of the target's base CSS, present before first paint
 }
 ```
 
-Tailwind equivalent: `[font-kerning:none] [text-rendering:optimizeSpeed]` on the same target. Use the project's own selector or CSS module name. This setting is permanent typography, not a tween or an animation-state class; do not toggle it in a builder, completion callback, or reduced-motion query. For `speakIn`, scope it to the persistent emphasis elements that receive inner character splits.
+Tailwind: `[font-kerning:none] [text-rendering:optimizeSpeed]` on the same target. Use the project's own selector. This is permanent typography: never toggle it in a builder, callback, or reduced-motion query. For `speakIn`, scope it to the emphasis elements that receive character splits.
 
-Keep `split.revert()` and the framework controller's interruption/unmount cleanup. Keeping wrappers indefinitely is not the default spacing fix. If natural kerning is essential, choose whole-word or whole-line animation without character splitting (for example `wordsSlideIn` or `linesMaskIn`), then verify the result.
+Keep `split.revert()` and the controller's cleanup; retaining wrappers is not the spacing fix. If natural kerning is essential, animate whole words or lines instead (`wordsSlideIn`, `linesMaskIn`) and verify.
 
 ### Diagnose the measured change
 
-Change one cause at a time; do not apply every workaround:
+Change one cause at a time:
 
 | Evidence | Targeted response |
 |---|---|
-| Horizontal character-position changes across split/revert, with fonts ready and the same line breaks | Check computed kerning settings in both states; use the persistent CSS above. A stable heading box alone does not rule this out. |
-| Font face or metrics change after splitting | Have the framework controller wait for the required fonts (`document.fonts.ready`), or use supported `autoSplit`/`onSplit` handling. Check the installed GSAP version and docs; returning the animation from `onSplit` lets the plugin manage re-splits. |
-| Joined glyphs such as `fi`/`ffi` differ between states | Inspect ligatures separately. If confirmed, test persistent `font-variant-ligatures: none` on the affected target, or preserve shaping with words/lines. Do not disable ligatures globally or assume the rendering hint fixes every font/browser. |
-| Line membership or heading height changes | Inspect available width, white space, tracking, and word grouping. GSAP warns against `text-wrap: balance` on split targets: omit `text-wrap: balance` there and keep normal wrapping consistent across states. Use `smartWrap` for chars-only splits or words/lines grouping; re-split lines when width changes through the controller. |
-| Text appears heavier after revert, or letter edges/descenders are clipped while masked | Compare computed font properties and font readiness first, then inspect glyph ink against each mask. Stable boxes and unchanged weight do not rule out clipping. Use the targeted mask fix below when demonstrated. |
-| Weight effects jump when pinned character widths are removed | Compare pinned widths with the settled font's advances. Width pinning can stabilize the weight animation yet still change spacing on revert; verify that boundary separately. |
+| Characters shift horizontally across split/revert, with fonts ready and the same line breaks | Check computed kerning in both states; use the persistent CSS above. A stable heading box does not rule this out. |
+| Font face or metrics change after splitting | Have the controller wait for `document.fonts.ready`, or use `autoSplit`/`onSplit` per the installed GSAP docs; returning the animation from `onSplit` lets the plugin manage re-splits. |
+| Joined glyphs such as `fi`/`ffi` differ between states | Inspect ligatures separately. If confirmed, test `font-variant-ligatures: none` on the affected target only, or animate words/lines. The rendering hint does not fix every font and browser. |
+| Line membership or heading height changes | Inspect width, white space, tracking, and word grouping. Omit `text-wrap: balance` on split targets (GSAP warns against it) and keep wrapping consistent across states. Use `smartWrap` for chars-only splits; re-split lines on width changes through the controller. |
+| Text looks heavier after revert, or glyph edges/descenders clip while masked | Compare computed font properties and readiness first, then inspect glyph ink against each mask; see below. |
+| Weight effects jump when pinned widths are removed | Compare pinned widths with the settled font's advances; verify the revert boundary separately. |
 
 ### Apparent weight change from clipped glyph ink
 
-This is distinct from kerning: `mask: "chars"` with tight negative `letter-spacing` and `line-height` can clip letter edges and descenders. Removing masks exposes the complete glyph, making it look heavier without changing font weight or character positions. The kerning CSS above does not give masks extra room.
+Distinct from kerning: `mask: "chars"` with tight negative `letter-spacing` and `line-height` can clip glyph edges and descenders. Removing the masks reveals the whole glyph, which looks heavier without any change in weight or position. The kerning CSS gives masks no extra room.
 
-Before diagnosing a weight change, compare computed `font-family`, `font-weight`, `font-size`, `font-style`, `font-variation-settings`, and `font-feature-settings` on the split characters and restored text. Record tracking and line-height too. Confirm the intended font face is loaded (font readiness plus the browser's rendered-font inspection), not just that its CSS family is declared. If these are stable, compare captured glyphs and inspect mask overflow before blaming GPU compositing or trying `force3D`, layer promotion, or font-smoothing changes.
+First compare computed `font-family`, `font-weight`, `font-size`, `font-style`, `font-variation-settings`, `font-feature-settings`, tracking, and line-height on the split characters and restored text, and confirm the intended face actually rendered. If these match, compare captured glyphs and mask overflow before trying `force3D`, layer promotion, or font-smoothing changes.
 
-For confirmed mask clipping, add a class only to the affected split's masks immediately after creation, before building the reveal:
+For confirmed clipping, add a class to the affected split's masks right after creation, before building the reveal:
 
 ```ts
-// split is the affected headline's existing character-masked SplitText instance.
+// split is the affected headline's character-masked SplitText instance.
 for (const mask of split.masks) mask.classList.add("title-char-mask");
 // With CSS Modules, pass the scoped token instead: styles.titleCharMask.
 ```
 
 ```css
 .title-char-mask {
-  /* Verified for the AI Film Camp headline; tune to the actual glyph ink. */
+  /* Example value; tune to the actual glyph ink. */
   padding: 0.15em;
   margin: -0.15em;
 }
 ```
 
-Padding expands the clipping area; matching negative margins compensate for the added space to preserve the layout footprint. `0.15em` is a verified value for that typography, not a universal constant or a new design token. Use only enough room for the actual font, size, tracking, and line-height, and measure spacing, wrapping, and height again. Keep clipping enabled so the reveal still works. Do not apply this to all split wrappers, unmasked characters, or headings globally.
+Padding enlarges the clip; the negative margin keeps the layout footprint. Use only the room the font, size, tracking, and line-height need, then remeasure spacing, wrapping, and height. Apply it only to affected masks, never to all wrappers or headings.
 
-Apply the class to each new affected split (inside `onSplit` if the controller uses auto re-splitting). In [split entrances](recipes/split-entrances.md), the optional `charMaskClass` passes this class to character masks only. Preserve durations, easing, stagger, `aria`, completion callbacks, and revert/unmount cleanup: the styled mask nodes disappear with revert. Unlike the permanent kerning CSS, this class belongs to temporary mask nodes.
+Apply the class to each new split (inside `onSplit` with auto re-splitting). [Split entrances](recipes/split-entrances.md) accept it as `charMaskClass`. The class lives on temporary mask nodes and disappears with revert.
 
-Expanded masks may expose characters at the hidden endpoint. Check both forward and backward reveals, including opposite travel directions; do not assume `yPercent: 115` or `-115` still hides all ink. If a frame shows leakage, adjust only the hidden travel distance enough to clear the expanded mask, retaining animation timing, then repeat the checks.
+Expanded masks can leak ink at the hidden endpoint. Check forward and backward reveals in both travel directions; if a frame leaks, increase only the hidden travel distance, keeping timing.
 
-See [cleanup verification](verification.md#splittext-cleanup-stability) for measurements and the observed regression.
+Measure with the [cleanup checks](verification.md#splittext-cleanup-stability).

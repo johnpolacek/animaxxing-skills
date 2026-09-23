@@ -1,14 +1,12 @@
 # Recipe: blast off
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+A hero outro from a pressed call to action: headline letters fly away from the button, subhead words drop, the button flares out while the others collapse, and the page rocks. The timeline is reversible.
 
-The hero's outro when a call to action is pressed: the whole composition is thrown apart from the pressed button outward, fast. Headline letters fly away from it and tumble, the subhead's words drop off the page, the pressed button flares out while the others collapse, and the page rocks. The timeline is reversible, so the same motion played backward pulls everything back.
-
-The framework skill's controller calls `blastOff` as the outro that precedes navigation and hands off once the page is cleared; this module never decides when and never navigates. Pair it with the particle `blast()` of the pressed button.
+Lifecycle: the framework controller calls `blastOff` as the outro before navigation, paired with the pressed button's particle `blast()`. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
 Dependencies: `gsap`, `gsap/SplitText`.
 
-Setup: follow [stable typography for character animation](../text-stability.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+Setup: apply [stable typography](../text-stability.md#stable-typography-for-character-animation) before splitting; check revert with the [cleanup checks](../verification.md#splittext-cleanup-stability).
 
 ```ts
 import gsap from "gsap";
@@ -16,6 +14,7 @@ import { SplitText } from "gsap/SplitText";
 
 gsap.registerPlugin(SplitText);
 
+/* Swap for the project's helper if it has one. */
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined") return true;
   const choice = document.documentElement.dataset.motion;
@@ -24,11 +23,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/**
- * Runs setup inside its own GSAP context. If setup throws, everything it
- * created (sets, tweens, timelines, splits) is reverted before the error is
- * rethrown, so a failed build never strands hidden or split text.
- */
+/** Runs setup in its own GSAP context; on throw, reverts what it created and rethrows. */
 function guarded<T>(setup: () => T, onFail?: () => void): T {
   const ctx = gsap.context(() => {});
   let result: T | undefined;
@@ -145,4 +140,4 @@ function throwApart({ root, heading, words, pressed, others }: BlastOffOptions):
 
 ## Controller contract
 
-`blastOff({ root, heading, words, pressed, others })` returns `{ timeline, revert }`. Stop competing headline/particle effects before calling it. Keep any speak-in word handles valid while the blast uses them. The framework controller consumes timeline completion and invokes `revert` when the visual no longer needs its split; navigation and cancellation policy belong to that controller.
+`blastOff` returns `{ timeline, revert }`. Before calling it, stop the wave and particle effects on the same targets; keep speak-in's `words` unreverted until the blast is done. The controller awaits the timeline, owns navigation and cancellation, and calls `revert` once the split is no longer needed.

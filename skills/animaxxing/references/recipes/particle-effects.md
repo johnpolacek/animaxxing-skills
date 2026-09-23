@@ -1,8 +1,8 @@
 # Recipe: particle effects
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Five [particle field](particle-field.md) treatments with entrance, idle, hot, and blast states.
 
-Five [particle field](particle-field.md) treatments define entrance, idle, hot, and blast states. The framework controller calls them through `attachParticleEffect`.
+Lifecycle: attach one with `attachParticleEffect`; the framework controller calls its controls per phase ([contract](#controller-contract)). Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
 | Effect | Element | Layer | Bleed | Idle |
 |---|---|---|---|---|
@@ -12,7 +12,7 @@ Five [particle field](particle-field.md) treatments define entrance, idle, hot, 
 | `slipstream` | an onward link (Next →) | over | 160 | hairlines drift past left to right |
 | `ignite` | text on a rule: a command, a giant field | over | 200 | embers and glints off the underline |
 
-Dependencies: `gsap`, `./field`.
+Dependencies: `gsap`, `./field`, `./attach`.
 
 ```ts
 import gsap from "gsap";
@@ -25,7 +25,7 @@ export type ButtonEffect = ParticleEffectDefinition<ParticleEffectInstance> & { 
 
 ## marquee
 
-Lights gather from all around and land evenly along the outline, the button pops in, the sign ignites with a burst, and the runners set off.
+Lights converge onto the outline, the button pops in with a burst, and runners set off around it.
 
 ```ts
 const RUNNERS = 6;
@@ -148,7 +148,7 @@ export const marquee: ButtonEffect = {
 
 ## reactor
 
-Sparks spiral in from a wide ring and collapse into the button; it pops in and the collapse rebounds outward as a shockwave. Idle, it breathes embers.
+Sparks spiral into the button, which pops in as a shockwave rebounds outward.
 
 ```ts
 const EMBER_RATE = { idle: 9, hover: 70 };
@@ -275,7 +275,7 @@ export const reactor: ButtonEffect = {
 
 ## resolve
 
-Particles stream in from far off and settle into a dot grid over the card's face, row by row like a scan; the card fades up beneath them and the grid dissolves.
+Particles settle row by row into a dot grid over the card, which fades up beneath as the grid dissolves.
 
 ```ts
 /** Spacing of the dot grid the card resolves from, in px. */
@@ -392,11 +392,11 @@ export const resolve: ButtonEffect = {
 };
 ```
 
-Cards in a grid enter with `index * 0.09` stagger on `idle`, so the route's own items have landed before the grid resolves.
+In a grid, call `enter(index * 0.09)` at settled so the route's items land first.
 
 ## slipstream
 
-The link rides a slipstream: hairlines rush past it from left to right. It arrives from the left through a gust and docks with a puff of sparks off the arrow. Idle, a line or two drifts past; under the pointer the wind picks up and the link leans into it. Pressed, everything blows off to the right.
+Hairlines rush past the link left to right. It arrives through a gust, docks with sparks off the arrow, and leans into the wind when hot.
 
 ```ts
 const STREAK_RATE = { idle: 5, hover: 60 };
@@ -482,11 +482,11 @@ export const slipstream: ButtonEffect = {
 };
 ```
 
-On press, `blast()` and tween the link `x: 64, autoAlpha: 0` while the framework skill's navigation proceeds.
+On press, call `blast()` and tween the link to `x: 64, autoAlpha: 0` while navigation proceeds.
 
 ## ignite
 
-A block of text set on a rule, such as an install command or a large form field. On entrance a runner streaks along the underline and the text is revealed in its wake. Idle, glints drift up off the rule; under the pointer or focus it runs hot. `blast()` lights the whole rule at once and throws sparks skyward. It reads its baseline from the bottom of the target, so give the target the rule as a bottom border.
+A runner streaks along the rule under a text block, such as an install command or a large field, revealing the text in its wake; `blast()` lights the whole rule. The rule is the target's bottom edge: give the target a bottom border.
 
 ```ts
 import type { Particle } from "./field";
@@ -607,8 +607,7 @@ export const ignite: ParticleEffectDefinition<ParticleEffectInstance> = {
         const tl = gsap.timeline({ delay });
         gsap.set(target, { autoAlpha: 0, clipPath: "inset(-20% 100% -20% 0)" });
 
-        // A runner streaks the length of the rule and the command appears
-        // behind it, with sparks kicked up as it goes.
+        // The runner reveals the text behind it and kicks up sparks.
         const run = { x: box.x };
         let head: Particle | null = null;
         tl.set(target, { autoAlpha: 1 }, 0);
@@ -720,14 +719,17 @@ export const ignite: ParticleEffectDefinition<ParticleEffectInstance> = {
 };
 ```
 
-On copy or submit, `blast()`, kick the block with a short `x`/`y` jitter, and call `idle()` about a second later. A blast during the entrance leaves the command partly revealed until that `idle()` lands it.
-
-## Hot state and touch
-
-`attach.ts` owns [input and density](particle-field.md#input-and-density). Treatments expose `hover(on)`; transitions must tolerate short taps and interruption by `blast()`. Runner counts remain structural; reduce them explicitly when needed.
+On copy or submit, call `blast()`, jitter the block briefly in `x`/`y`, and call `idle()` about a second later. That `idle()` also lands an entrance the blast cut short.
 
 ## Controller contract
 
-Pass the selected definition to `attachParticleEffect(wrapper, canvas, target, effect)` from [particle-field.md](particle-field.md). The owner calls the returned controls for the relevant phase and reveals a hidden wrapper once its target is prepared.
+Pass the definition to `attachParticleEffect(wrapper, canvas, target, effect)`; the owner calls its [controls](particle-field.md#controller-contract) per phase.
 
-A new treatment supplies `layer`, `bleed`, and `create(field, target)` returning `enter`, `exit`, `blast`, `idle`, `hover`, and `destroy`. Its `enter` returns one timeline holding every entrance tween, so a cut-short entrance can land its end state. Particles a tween steers use `life: Infinity` until that tween completes. `destroy` kills the treatment's own tweens and delayed calls. Keep it monochrome and inexpensive at rest.
+A new treatment supplies `layer`, `bleed`, and `create(field, target)` returning `enter`, `exit`, `blast`, `idle`, `hover`, and `destroy`:
+
+- `enter` returns one timeline holding every entrance tween, so a cut-short entrance can land its end state.
+- Particles a tween steers keep `life: Infinity` until it completes.
+- `hover(on)` tolerates short taps and interruption by `blast()`. `attach.ts` owns [input and density](particle-field.md#input-and-density).
+- Runner counts are structural: density does not thin them; lower them explicitly.
+- `destroy` kills the treatment's own tweens and delayed calls.
+- Keep it monochrome and cheap at rest.

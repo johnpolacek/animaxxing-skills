@@ -1,10 +1,8 @@
 # Recipe: hover effects
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Hover treatments for controls: a label that rolls over to a copy of itself, an underline that sweeps in, and a card image that zooms inside its frame. Mouse hover (`pointerType === "mouse"`) and `:focus-visible` share one hot state; touch, pen, and click- or tap-derived focus never enter it, so nothing sticks after a tap. The check runs per event, so a hybrid device gains the effects when a mouse arrives. None changes the control's box, accessible name, colors, or font.
 
-Three hover treatments for controls: a label that rolls over to an identical copy of itself, an underline that sweeps in, and a card image that zooms inside its frame. Each answers the mouse and the keyboard alike: a pointer with `pointerType === "mouse"` enters the hot state and so does `:focus-visible`, while touch, pen, and the focus a click or tap leaves behind never do, so nothing sticks after a tap. Leaving or blurring plays the same move back, and `overwrite: "auto"` keeps rapid enter/leave from stacking tweens. None of them changes the control's box, accessible name, colors, or font.
-
-The framework skill's controller calls these once the target is mounted and its fonts are ready, and calls the teardown on unmount; this module never decides when. Each builder returns an idempotent teardown that removes injected markup and restores inline styles.
+Lifecycle: build per the [contract](#controller-contract); the framework controller calls the idempotent teardown on unmount, which removes injected markup and restores inline styles. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
 Dependencies: `gsap`.
 
@@ -29,9 +27,7 @@ export type Teardown = () => void;
 type Register = (fn: () => void) => void;
 
 /**
- * Runs setup inside a GSAP context. Everything GSAP creates during setup is
- * reverted with the context. `dispose` registers writers and listeners to
- * stop before the revert; `after` registers restores to run once it is done.
+ * Runs setup in a GSAP context. `dispose` stops writers and listeners before the revert; `after` restores once it is done.
  * Teardown runs once, attempts every step, and rolls back a setup that threw.
  */
 function own(setup: (dispose: Register, after: Register) => void): Teardown {
@@ -105,12 +101,7 @@ function listen<K extends keyof HTMLElementEventMap>(
 
 type HotHandlers = { on: () => void; off: () => void };
 
-/**
- * Mouse hover and keyboard focus share one hot state: `on` when the first
- * arrives, `off` when the last leaves. Touch and pen never enter it, and focus
- * counts only while `:focus-visible` matches, so the focus a click or tap
- * leaves behind does not stick.
- */
+/** Mouse hover and `:focus-visible` focus share one hot state: `on` when the first arrives, `off` when the last leaves. */
 function hotState(dispose: Register, control: HTMLElement, { on, off }: HotHandlers): void {
   let hovered = false;
   let focused = false;
@@ -146,7 +137,7 @@ function hotState(dispose: Register, control: HTMLElement, { on, off }: HotHandl
 
 ## textRoll
 
-A button or link label rolls: the visible label slides up and out while an identical copy rolls in from below, and back on leave. The label's original nodes move into a clipping mask with an `aria-hidden` copy, so the accessible name is unchanged and the box keeps its size: the mask sits on the same baseline with the same line height. Clipping is vertical only, and the mask pads itself by the measured overhang of the app's font so a tight `line-height` cannot crop ascenders or descenders; matching negative margins keep the footprint. No font requirement. Whole-label only: a per-character roll would split the label and take on the kerning and mask concerns in [text stability](../text-stability.md) for a hover.
+The label slides up and out while an `aria-hidden` copy rolls in from below. The original nodes move into a vertical clipping mask on the same baseline, so the accessible name and box are unchanged; the mask pads by the font's measured overhang, so a tight `line-height` cannot crop ascenders or descenders. Whole-label and single-line: a wrapping label rolls as one block, and a per-character roll would take on the [text stability](../text-stability.md) concerns.
 
 ```html
 <a class="cta" href="/start">Start</a>
@@ -212,11 +203,9 @@ export function textRoll(control: HTMLElement, { label, duration = ROLL.duration
 }
 ```
 
-Under reduced motion the builder returns a no-op and leaves the markup alone: the copy is identical to the label, so an instant swap would show nothing. Single-line labels; a label that wraps rolls as one block.
-
 ## underlineSweep
 
-An injected `aria-hidden` line under a link sweeps in from the inline start on hover or focus and out toward the inline end on leave, left to right unless the link is right-to-left: `scaleX` only, with the transform origin swapped where the swap is invisible (at no width before drawing, at full width before clearing), so a re-entry mid-exit simply reverses. The line is `currentColor` and 1px by default and reads custom properties, so the app restyles it without fighting inline values. The link's own `text-decoration` is left alone; the sweep sits at the bottom of the link's box below any static underline.
+An injected `aria-hidden` line sweeps in from the inline start and out toward the inline end, by `scaleX` only; a re-entry mid-exit reverses. It defaults to 1px `currentColor` and reads `--underline-*` custom properties. The link's own `text-decoration` stays; the sweep sits at the bottom of the link's box. Single-line links only: a wrapped inline link has no single box to span. The link becomes `position: relative` only when static, and is restored.
 
 ```html
 <a class="nav-link" href="/work">Work</a>
@@ -261,11 +250,9 @@ export function underlineSweep(link: HTMLElement): Teardown {
 }
 ```
 
-Under reduced motion the line still marks hover and focus, appearing and clearing at once without moving: an affordance, not decoration. Single-line links; the line spans the link's box, which a wrapped inline link does not have. The link is made `position: relative` only when it was static, and that is restored.
-
 ## imageZoom
 
-A card's image scales up slightly while the card or its link is hot and eases back on leave. The frame around the image does the clipping; the builder supplies `overflow: clip` inline only when the app's CSS leaves the frame unclipped, and restores it. Give the image its own frame element: clipping the card itself would also clip focus rings inside it.
+The card's image scales up slightly while the card or its link is hot. Its parent frame clips it; the builder adds inline `overflow: clip` only when the frame is unclipped, and restores it. Give the image its own frame: clipping the card would clip focus rings inside it.
 
 ```html
 <article class="card">
@@ -309,7 +296,7 @@ export function imageZoom(card: HTMLElement, { image, scale = ZOOM.scale, durati
 }
 ```
 
-Under reduced motion the builder is a no-op. Keep `scale` small: the zoom reads as attention, not as a new crop.
+Keep `scale` small: attention, not a new crop.
 
 ## Wiring
 
@@ -327,11 +314,10 @@ for (const card of page.querySelectorAll<HTMLElement>("[data-hover='zoom']")) st
 
 | Builder | Create | Returns | Reduced motion |
 |---|---|---|---|
-| `textRoll` | Settled, once the label's font is ready | teardown | No-op; markup untouched |
-| `underlineSweep` | Settled | teardown | Line appears and clears at once, without moving |
+| `textRoll` | Settled, once the label's font is ready | teardown | No-op; markup untouched (an instant swap would show nothing) |
+| `underlineSweep` | Settled | teardown | Line appears and clears at once, without moving: an affordance, kept |
 | `imageZoom` | Settled, once the frame's layout is final | teardown | No-op |
 
-- One pointer response per control: do not combine these with `magnetic`, `tilt`, or a particle effect's hot state on the same target. A card may zoom its image while its own link rolls a label, since they answer different boxes.
-- Stop these before an outro moves the same target; two owners must not write one transform. Tear down before the label's text or the card's image changes, and rebuild after the new content renders.
-- `textRoll` moves the label's nodes into its mask while active. Split entrances and other effects that need the label's original text run on the same element only after this teardown, or before it builds.
-- The device check is per event, not per build: a hybrid device gains the effects the moment a mouse arrives, and keyboard parity works on any device.
+- Do not combine these with `magnetic`, `tilt`, or a particle hot state on one target. A card may zoom its image while its link rolls a label: different boxes.
+- Tear down before an outro moves the target or its label text or image changes; rebuild after new content renders.
+- `textRoll` moves the label's nodes into its mask while active. Effects that need the original text, such as split entrances, run on that element only before it builds or after its teardown.

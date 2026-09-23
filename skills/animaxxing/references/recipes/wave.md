@@ -1,14 +1,12 @@
 # Recipe: the wave
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Ambient display-text effect: every few seconds a different small move ripples across a heading's letters, left to right, and each letter ends where it started.
 
-Splits a heading into letters and, every few seconds, ripples a small move across them left to right, one letter at a time, the way a crowd does the wave. Each pass uses a different move, and every letter ends exactly where it started, so the text never drifts. An optional ambient effect for display text.
+Lifecycle: the framework controller calls `startWave` at settled and the returned stop on outro and unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-The framework skill's controller calls `startWave` at settled (on `idle`) and the returned stop function on outro and unmount; this module never decides when.
+Dependencies: `gsap`, `gsap/SplitText`. Weight moves need a variable weight axis; the example rests at 800 and dips to 400–500. Adapt those values, or omit the three weight moves on a static face.
 
-Dependencies: `gsap`, `gsap/SplitText`. A variable font supporting the configured weight range for weight moves; no particular font family is required. The example rests at 800 and dips through 400–500. Adapt those weights to the target's actual resting weight and axis, or omit the three weight moves for a static face; keep its existing font.
-
-Setup: follow [stable typography for character animation](../text-stability.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+Setup: apply [stable typography](../text-stability.md#stable-typography-for-character-animation) before splitting; check revert with the [cleanup checks](../verification.md#splittext-cleanup-stability).
 
 ```ts
 import gsap from "gsap";
@@ -25,11 +23,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/**
- * Runs setup inside its own GSAP context. If setup throws, everything it
- * created (sets, tweens, timelines, splits) is reverted before the error is
- * rethrown, so a failed build never strands hidden or split text.
- */
+/** Runs setup in its own GSAP context; on throw, reverts what it created and rethrows. */
 function guarded<T>(setup: () => T, onFail?: () => void): T {
   const ctx = gsap.context(() => {});
   let result: T | undefined;
@@ -128,11 +122,7 @@ export type WaveStop = ((keepSplit?: boolean) => void) & {
   resume: () => void;
 };
 
-/**
- * Starts waving the heading's letters. Returns a stop function; pass
- * `keepSplit` when another animation is about to split the same element
- * and needs the current markup left in place.
- */
+/** Starts the wave; returns its stop function, which carries `pause` and `resume`. */
 export function startWave(heading: HTMLElement, { period = 4 }: WaveOptions = {}): WaveStop {
   if (prefersReducedMotion()) return Object.assign(() => {}, { pause: () => {}, resume: () => {} });
   const { split, chars } = guarded(() => {
@@ -189,6 +179,6 @@ export function startWave(heading: HTMLElement, { period = 4 }: WaveOptions = {}
 
 ## Controller contract
 
-`startWave(heading, { period: 1.5 })` returns a stop function. The owner invokes it only after other heading splits are released, and stops it before another effect takes the heading. Use the normal stop path to revert the split; `keepSplit` requires an explicit owner for the retained markup, and hands it over with every letter at rest. The controller supplies visibility and resize signals.
+Start the wave only after other splits on the heading are released, and stop it before another effect takes the heading. `stop()` reverts the split; `stop(true)` hands it, at rest, to an explicit new owner.
 
-The stop function also carries `pause()` and `resume()`, which hold and restart the ripple without re-splitting. Call them when the heading leaves and re-enters the viewport. The wave repeats for as long as the page idles, so it needs a way for the user to stop it (WCAG 2.2.2): wire the page's pause control or its motion setting to `pause()`, or stop the wave when the app switches to reduced motion.
+`pause()` and `resume()` hold and restart the ripple without re-splitting; call them as the heading leaves and re-enters the viewport. For a user pause (WCAG 2.2.2), wire the page's pause control or motion setting to `pause()`, or stop the wave when the app switches to reduced motion. The controller also supplies resize signals.

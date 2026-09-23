@@ -1,14 +1,12 @@
 # Recipe: smooth scroll
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Eased document scrolling kept in step with ScrollTrigger. Lenis smooths the window's own scroll with no markup change; ScrollSmoother moves a content wrapper and adds `data-speed` and `data-lag`. Pick one per site; both return the same controls.
 
-Eased scrolling for the whole document, kept in step with ScrollTrigger. Two engines share one set of controls. Lenis smooths the window's own scroll and needs no markup change. GSAP's ScrollSmoother moves a content wrapper and adds `data-speed` and `data-lag` effects. Pick one per site. Under reduced motion both return native controls, so callers never branch.
+Lifecycle: the persistent shell creates one scroller per document and destroys it on shell unmount; the framework skill's `references/smooth-scroll.md` owns stopping, scrolling, and resizing around navigation. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-The framework skill's controller creates the scroller once per document, from the persistent shell, and destroys it when the shell unmounts. It stops the scroller through an outro, moves it after a route swap, and resizes it once the incoming page's triggers exist. Its `references/smooth-scroll.md` owns that sequence. This module never listens for navigation.
+Dependencies: `gsap`, `gsap/ScrollTrigger`. `lenisScroll` needs `lenis` 1.3+ and `lenis/dist/lenis.css` (which holds the page while stopped), imported once from the shell's global styles. `smootherScroll` needs `gsap/ScrollSmoother`. Lenis option names change between minors; check the installed version and types.
 
-Dependencies: `gsap`, `gsap/ScrollTrigger`. `lenisScroll` needs `lenis` (1.3 or later) and its stylesheet, `lenis/dist/lenis.css`, imported once from the shell's global styles; it stops the page while the scroller is stopped. Lenis scrolls the window, so the document itself must scroll: no fixed-height app shell with its own overflow. Stopping clips the root's overflow; `scrollbar-gutter: stable` on `html` keeps a classic scrollbar's width from reflowing the page. `smootherScroll` needs `gsap/ScrollSmoother`, free since 3.13. Check the installed Lenis version and types before trusting option names; they change between minors.
-
-Keep native behavior: keyboard, scrollbar, find-in-page, and focus scrolling still work, and touch stays native unless you opt into `syncTouch`. Scroll areas inside the page that should not be smoothed take `data-lenis-prevent`. Lenis's `anchors: true` eases in-page hash links on plain pages; leave it off where a router handles hash links.
+Lenis scrolls the window, so the document itself must scroll: no fixed-height app shell with its own overflow. Stopping clips the root's overflow; `scrollbar-gutter: stable` on `html` prevents a classic scrollbar's reflow. Keyboard, scrollbar, find-in-page, focus scrolling, and touch stay native (touch unless `syncTouch` is set). Exempt inner scroll areas with `data-lenis-prevent`. Lenis's `anchors: true` eases hash links on plain pages; leave it off where a router handles them.
 
 ## scroll-controls.ts
 
@@ -36,11 +34,7 @@ export type ScrollToOptions = {
 };
 
 export type SmoothScroll = {
-  /**
-   * Holds the page still, as through an outro or under a curtain. A stopped
-   * ScrollSmoother pushes a native scroll back on the next scroll event, so
-   * sync a router's scroll with `scrollTo` in the same task it lands.
-   */
+  /** Holds the page still. A stopped ScrollSmoother undoes native scrolls; sync a router's scroll with `scrollTo` in the same task. */
   stop(): void;
   start(): void;
   /** Scrolls to a position, a selector, or an element, even while stopped. */
@@ -132,7 +126,7 @@ export function lenisScroll(options: LenisOptions = {}): SmoothScroll {
 
 ## smoother-scroll.ts
 
-ScrollSmoother needs a fixed wrapper around a content element that holds the page. Fixed and sticky UI, such as a header or a curtain, sits outside the wrapper, since the content is moved with a transform. Create it before any ScrollTrigger on the page.
+ScrollSmoother needs a fixed wrapper around a content element holding the page. Fixed and sticky UI, such as a header or curtain, sits outside the wrapper, since the content moves by transform.
 
 ```html
 <header>…</header>
@@ -206,8 +200,9 @@ export function smootherScroll(
 ```ts
 // In the persistent shell, once per document, before any page creates a ScrollTrigger:
 const scroller = lenisScroll({ lerp: 0.1 });
-// Outro:        scroller.stop();
-// After swap:   scroller.scrollTo(window.scrollY, { immediate: true });   // once the router's own scroll has landed
+// Outro or covered swap: scroller.stop();
+// After a swap or history restore, once the router or browser has scrolled:
+//               scroller.scrollTo(window.scrollY, { immediate: true });
 // Intro built:  scroller.resize(); scroller.start();
 // Shell unmount: scroller.destroy();
 ```
@@ -216,12 +211,9 @@ const scroller = lenisScroll({ lerp: 0.1 });
 
 | Builder | Create | Returns | Reduced motion |
 |---|---|---|---|
-| `lenisScroll` | Once per document, from the persistent shell | controls | Native controls; nothing created |
-| `smootherScroll` | Same, before any ScrollTrigger exists | controls | Native controls; wrapper stays plain |
+| `lenisScroll` | Once per document, from the persistent shell | controls | Native controls, same API; nothing created |
+| `smootherScroll` | Same, before any ScrollTrigger exists | controls | Native controls, same API; wrapper stays plain |
 
 - One scroller per document. Page-level effects never create or destroy it.
-- A stopped ScrollSmoother refuses native scrolls: its next scroll event puts the page back. When a router scrolls while the smoother is stopped, sync with `scrollTo(window.scrollY, { immediate: true })` in the same task, such as a microtask after its commit, never a frame later. Lenis adopts native jumps while stopped.
-- The controller stops it for an outro and a covered swap, and starts it once the incoming page settles.
-- After a swap or a history restore, once the router or browser has scrolled, call `scrollTo(window.scrollY, { immediate: true })` so the engine and the native scroll agree. Then `resize()` once the incoming triggers exist.
+- A stopped ScrollSmoother undoes native scrolls on its next scroll event. When a router scrolls while it is stopped, call `scrollTo(window.scrollY, { immediate: true })` in the same task, such as a microtask after the commit, never a frame later. Lenis adopts native jumps while stopped.
 - ScrollTrigger effects need no custom `scroller`: Lenis moves the window, and ScrollSmoother registers itself as the default.
-- Reduced motion is read when the scroller is created. When the app's motion setting changes, the controller destroys and recreates it.

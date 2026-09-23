@@ -1,10 +1,8 @@
 # Recipe: counters and marquees
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+A number that counts up to its value and a seamless looping marquee. Both start from markup that reads correctly without JavaScript.
 
-Two effects for figures and running copy: a number that counts up to its value, and a marquee that loops a row of content sideways without a seam. Both start from markup that already reads correctly without JavaScript: the counter holds its final value, and the marquee is an ordinary row.
-
-The framework skill's controller calls `countUp` during intro or when the figure scrolls into view, and `marquee` at settled; it calls each `revert` on unmount. This module never decides when.
+Lifecycle: see the [controller contract](#controller-contract); the controller calls each `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
 Dependencies: `gsap`.
 
@@ -24,11 +22,8 @@ export type Teardown = () => void;
 type Register = (fn: () => void) => void;
 
 /**
- * Runs setup inside a GSAP context. Everything GSAP creates during setup is
- * reverted with the context. `dispose` registers writers, observers, and
- * DOM additions to undo before the revert; `after` registers restores to run
- * once it is done. Teardown runs once, attempts every step, and rolls back a
- * setup that threw.
+ * Runs setup in its own GSAP context and returns a once-only teardown that also rolls back a throw.
+ * `dispose` undoes writers, observers, and DOM additions before the context reverts; `after` restores after it.
  */
 function own(setup: (dispose: Register, after: Register) => void): Teardown {
   const ctx = gsap.context(() => {});
@@ -84,7 +79,7 @@ function snapshotStyles(elements: HTMLElement[], props: string[]): () => void {
 
 ## countUp
 
-The element's text is its final value, written by the server or template. The builder parses it with the locale's decimal mark, counts up from `from`, and writes each frame with the same formatting, so `1,204`, `98.6%`, `0.125`, and `$3.2M` keep their separators, decimals, prefix, and suffix. The locale is `locale`, else the document's `lang`, else the browser's, which also covers a malformed tag; pass it when the figure's formatting differs from the page's. The element's width is reserved at the final value so neighbors never shift. The counting digits are `aria-hidden` beside a visually hidden copy of the final text, so assistive technology only ever reads the final value.
+The element's text is its final value. Each frame keeps its separators, decimals, prefix, and suffix, so `1,204`, `98.6%`, and `$3.2M` count correctly. Pass `locale` when the figure's formatting differs from the page's `lang`. Width is reserved at the final value, and assistive technology reads only the final value.
 
 ```html
 <span class="stat" data-count>12,480</span>
@@ -186,11 +181,11 @@ export function countUp(
 }
 ```
 
-When the source formatting is unusual (fractions, ranges, several numbers in one element), `countUp` leaves the text alone. Mark one number per element.
+Unusual formats (fractions, ranges, several numbers) are left alone; mark one number per element.
 
 ## marquee
 
-A row of content scrolls sideways forever. The builder clones the row enough times to fill the container with no gap, marks the clones `aria-hidden` and `inert` so screen readers and the keyboard meet each item once, and loops by exactly one row width so the seam never shows. It slows on mouse hover, stops while anything inside has keyboard focus, and pauses off screen.
+A row scrolls sideways forever. Clones fill the container and are `aria-hidden` and `inert`, so each item is announced and focused once. It slows on mouse hover and pauses on focus inside and off screen.
 
 ```html
 <div class="marquee" aria-label="Clients">
@@ -323,14 +318,14 @@ export function marquee(
 }
 ```
 
-Motion that runs longer than five seconds needs a way to stop it ([WCAG 2.2.2](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide)). Wire `pause` and `play` to a visible control, or pause on any interaction the app already offers. Under reduced motion the row stays still; let it wrap or scroll natively in CSS if it overflows.
+The endless loop needs a user pause (WCAG 2.2.2): wire `pause` and `play` to a visible control.
 
 ## Controller contract
 
 | Builder | Phase | Returns | Reduced motion |
 |---|---|---|---|
 | `countUp` | Intro, or when the figure scrolls into view | `{ timeline, revert }` | Final value shown; completion fires |
-| `marquee` | Settled, once fonts and images in the row have loaded | `{ pause, play, revert }` | No-op; row static |
+| `marquee` | Settled, once fonts and images in the row have loaded | `{ pause, play, revert }` | No-op; row static, wrapping or scrolling natively in CSS |
 
-- A counted figure needs no pre-paint hiding: the first frame writes the start value before paint when the controller builds it at initial state.
-- Rebuild the marquee after its items change; `revert` restores the original row and removes the clones.
+- A counted figure needs no pre-paint hiding when built at initial state: it writes the start value before paint.
+- Rebuild the marquee after its items change.

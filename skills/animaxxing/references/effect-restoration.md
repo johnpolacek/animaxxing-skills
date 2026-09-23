@@ -1,17 +1,17 @@
 # Effect restoration
 
-Apply this when adapting any recipe. Every recipe rolls back its own setup when construction throws (`guarded` or `own` in each module) and reverts on interruption where its return shape allows; keep that when copying. The recipes do not own the complete failure boundary. The installed `gsap-<framework>` skill owns initialization deadlines, visit tokens, navigation, and recovery timing. Its controller needs rollback registered before effect setup, not just a handle returned afterward.
+Apply when adapting any recipe. Each recipe rolls back its own setup when construction throws (`guarded` or `own`) and reverts on interruption where its return shape allows; keep that when copying. The `gsap-<framework>` skill owns initialization deadlines, visit tokens, navigation, and recovery timing; its controller needs rollback registered before setup, not only a handle returned after.
 
 ## Builder guarantees
 
 - Capture original values only for properties and DOM the effect changes. Preserve existing inline styles, accessible text, nested links, and controls.
-- Acquire resources inside a guarded setup block. Register each disposer immediately after acquisition, before the next operation can throw. A split created before a later tween fails still needs reverting.
-- On a construction exception, stop acquired work, undo partial changes, then rethrow for the framework to settle its owner. Attempt every disposer even if one fails. Do not wait for an `onComplete` that will never run.
-- Return an idempotent teardown or register one with the controller. Existing timeline-only builders need context ownership plus explicit teardown for non-GSAP resources; `timeline.kill()` alone is not DOM restoration.
-- Stop writers before restoring values: timelines, delayed calls, tickers, resize/font observers, and pointer/focus listeners. The controller invalidates async work before invoking teardown.
-- Revert nested splits inside out. Use plugin revert handles on isolated text leaves. SplitText revert reconstructs descendants from saved HTML; it does not preserve their node identity or attached listeners. Keep framework-bound children and controls outside the split target, or animate a separate visual copy while preserving accessible controls. Never restore a framework subtree with your own saved `innerHTML`. Restore ARIA changes and avoid duplicate accessible text.
-- Undo effect-owned masks, clipping, child opacity, transforms, weight, pinned widths, and suspended CSS transitions. Preserve normal hidden states and unrelated application styles. Avoid blanket `clearProps: "all"` in shared targets.
-- A disposer does not navigate, release route locks, focus another page, replay ambient effects, or decide which page becomes visible. It restores its changes; the controller applies the correct settled or end state afterward.
+- Acquire resources inside a guarded setup block and register each disposer immediately, before the next operation can throw. A split made before a later tween fails still needs reverting.
+- On a construction exception, stop acquired work, undo partial changes, and rethrow for the framework to settle. Attempt every disposer even if one fails; never wait for an `onComplete` that will not run.
+- Return an idempotent teardown or register one with the controller. Timeline-only builders need context ownership plus explicit teardown for non-GSAP resources; `timeline.kill()` alone does not restore the DOM.
+- Stop writers before restoring values: timelines, delayed calls, tickers, resize/font observers, and pointer/focus listeners. The controller invalidates async work before teardown.
+- Revert nested splits inside out; use plugin revert handles on isolated text leaves. SplitText revert rebuilds descendants from saved HTML, losing node identity and listeners, so keep framework-bound children and controls outside the split target or animate a separate visual copy. Never restore a framework subtree from your own saved `innerHTML`. Restore ARIA changes without duplicating accessible text.
+- Undo effect-owned masks, clipping, child opacity, transforms, weight, pinned widths, and suspended CSS transitions. Preserve normal hidden states and unrelated styles; avoid `clearProps: "all"` on shared targets.
+- A disposer only restores its changes. It never navigates, releases route locks, moves focus, replays ambient effects, or picks the visible page; the controller applies the settled or end state afterward.
 
 ## Recipe-specific resources
 
@@ -33,4 +33,4 @@ Apply this when adapting any recipe. Every recipe rolls back its own setup when 
 | Layout Flip | A running Flip: `revert()` jumps it to the end and clears its inline styles; `kill()` alone leaves them. |
 | Particle field/effects | Ticker callbacks, emitters, particles/tweens, delayed calls, observers, event listeners, effect-owned canvas/wrapper styles, and the target's inline opacity, visibility, transform, and clip. |
 
-Reduced motion preserves normal completion without creating unnecessary split or particle resources. Recovery teardown must also be safe when setup returned early or completed already. The controller decides whether essential completion still needs to run once.
+Reduced motion completes normally without creating split or particle resources. Teardown must be safe after an early return or a completed run. The controller decides whether essential completion still runs once.

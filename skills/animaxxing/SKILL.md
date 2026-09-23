@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build GSAP text, scroll, pointer, SVG, layout, media, component, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, smooth scrolling with Lenis or ScrollSmoother, curtain and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scroll-scrubbed video and frame sequences, menu, dialog, accordion, and tab motion, label rolls and underline sweeps, magnetic buttons, tilt cards, cursor followers, drag-and-throw tracks, SVG line drawing and icon morphs, count-up figures, marquees, particle controls, and blast-off exits. Use for Animaxxing motion or hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle timing. Not for branding, layout redesign, routing, or isolated GSAP API questions."
+description: "Build GSAP text, scroll, pointer, SVG, layout, media, component, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, smooth scrolling with Lenis or ScrollSmoother, curtain and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scroll-scrubbed video and frame sequences, menu, dialog, accordion, and tab motion, label rolls and underline sweeps, magnetic buttons, tilt cards, cursor followers, drag-and-throw tracks, SVG line drawing and icon morphs, count-up figures, marquees, particle controls, and blast-off exits. Use for Animaxxing motion, or to fix hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle timing. Not for branding, layout redesign, routing, or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text, scroll, pointer, layout, SVG, and particle motion for any brand
@@ -8,19 +8,19 @@ metadata:
 
 # Animaxxing
 
-Portable vanilla TypeScript and GSAP recipes drawn from Animaxxing. Keep the project's fonts, colors, layout, and component styling. No style skill, design tokens, or particular font family is required.
+Portable vanilla TypeScript and GSAP effect recipes. Keep the project's fonts, colors, layout, and component styling; no style skill, token, or font is required.
 
-Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for plain sites). It owns **mount → initial state → intro → settled → outro → end state → unmount**, initialization, navigation, recovery, interruption, and cleanup timing. This skill supplies effect builders its controller calls. Install the matching framework skill if unavailable; do not invent framework lifecycle guidance here.
+Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites), installing it if missing. It owns **mount → initial state → intro → settled → outro → end state → unmount**, initialization, navigation, recovery, interruption, and cleanup timing. This skill supplies builders its controller calls; do not invent lifecycle guidance here.
 
 ## Setup and adaptation
 
-- Check installed GSAP docs/types. SplitText recipes require 3.13+ (`SplitText.create`, `smartWrap`, `mask`, `aria`); scroll recipes need ScrollTrigger; drag tracks need Draggable and InertiaPlugin; SVG recipes need DrawSVG, MorphSVG, or MotionPath; layout morphs need Flip; smooth scrolling needs ScrollSmoother or the `lenis` package. Register only the plugins used. Use the official GSAP skills for API details as needed.
-- Recipes register their plugins at module scope, which GSAP tolerates on a server. In server-rendered frameworks, still import recipe modules only from client code. Copies may import the project's own `gsap` module and drop their registration when the project registers plugins in one place.
-- Select only effects the request calls for. A particle button does not imply a page transition, a font change, or a complete hero sequence.
-- Recipe constants are editable defaults, not brand rules. Adapt timing, stagger, spread, and intensity to the surface. Use each recipe's documented options; expose additional constants in the copied module if the app needs runtime configuration.
-- Weight effects require a loaded variable weight axis, not Rethink Sans. Match endpoints and resting weight to the existing face; the examples use 400–800. Choose transform-only effects or omit weight moves when that capability is absent.
-- Particle canvases use their computed CSS `color`; inherit or assign an existing brand color with suitable contrast. Keep existing control geometry and focus styling.
-- Use `style-animaxxing` only when its visual design is requested. It selects and configures these recipes for the full Animaxxing look.
+- Read the installed GSAP version and types. Every plugin used is free since 3.13; SplitText recipes need 3.13+ (`SplitText.create`, `smartWrap`, `mask`, `aria`). Each recipe lists its dependencies; register only those used. Use the official GSAP skills for API details.
+- Recipes register plugins at module scope, which is server-safe, but import them only from client code. Drop a copy's registration when the project registers plugins centrally.
+- Add only requested effects. A particle button does not imply a page transition, font change, or hero sequence.
+- Recipe constants are editable defaults, not brand rules. Tune timing, stagger, spread, and intensity to the surface; expose more constants only if the app needs runtime configuration.
+- Weight effects need a loaded variable weight axis, not a specific font. Match endpoints and resting weight to the face (examples use 400–800), or use transform-only effects.
+- Particle canvases take their CSS `color`; use an existing brand color with enough contrast. Keep control geometry and focus styling.
+- Use `style-animaxxing` only when its look is requested; it selects and configures these recipes.
 
 ## Read only what you need
 
@@ -51,7 +51,7 @@ Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for p
 
 ## Recipe contract
 
-Copy only the selected recipe and its named local helpers. Return shapes differ: timelines, `{ timeline, revert }`, stop functions, and particle controls are documented per recipe; do not assume one universal interface.
+Copy only the selected recipe and its named local helpers. Return shapes differ per recipe (timelines, `{ timeline, revert }`, stop functions, particle controls); assume no universal interface.
 
 | Framework phase | Effect responsibility |
 |---|---|
@@ -62,13 +62,14 @@ Copy only the selected recipe and its named local helpers. Return shapes differ:
 | end state | Notify completion; controller decides the next action |
 | unmount | Controller calls the recipe's stop, `destroy`, or `revert` handle |
 
-- Apply the [effect restoration contract](references/effect-restoration.md) when copying a recipe, including failure before a handle returns.
-- Builders do not navigate, mount, remount, or subscribe to page lifecycle changes. The framework controller calls them and owns phase state.
-- An effect's invisible start does not make incomplete application data ready. The framework controller supplies resolved targets or reserved independent regions; do not use an entrance to disguise temporary guest/empty content.
-- Retain required split markup only while an effect needs it (speak-in finishes and an active wave are exceptions to immediate revert). Revert on the controller's cleanup boundary; preserve accessible text and nested controls.
+- Apply [effect restoration](references/effect-restoration.md) when copying a recipe, including failure before a handle returns.
+- Builders never navigate, mount, subscribe to page lifecycle, or decide when they run. The controller calls them and owns phase state.
+- An invisible start does not make incomplete data ready. The controller supplies resolved targets or reserved regions; never use an entrance to disguise guest or empty content.
+- Keep split markup only while an effect needs it (speak-in finishes and an active wave persist). Revert at the controller's cleanup boundary; preserve accessible text and nested controls.
 - Use `overwrite: "auto"`; clear temporary styles and `will-change` when their phase ends.
-- Reduced motion reaches the documented settled or exit state and preserves completion callbacks. Use the project's preference helper, including any app override; no ambient motion under reduced motion.
-- Killing a parent timeline never reaches a nested builder's interrupt callback. When the controller composes builders into one timeline, it kills the parent and then calls each builder's revert, such as `revertText` for split runners.
-- Avoid competing effects on a target. Expose controls so the owner can pause ambient motion off screen and stop it on exit. Loops that run past five seconds also need a user-facing pause (WCAG 2.2.2).
-- Particle input and density follow the [field contract](references/recipes/particle-field.md#input-and-density). Controls must work without hover.
-- Width changes can invalidate split measurements; report those requirements to the framework controller. Recipes do not prescribe page remounts.
+- Reduced motion reaches the documented settled or exit state and still fires completion callbacks; no ambient motion. Use the project's preference helper, including any app override. Builders read it when they build; on a change, the controller tears down and rebuilds.
+- Killing a parent timeline never reaches a nested builder's interrupt callback. Kill the parent, then call each builder's revert, such as `revertText` for split runners.
+- One effect per target: two owners must never write one element's transform. Stop pointer and ambient effects before an outro moves their target.
+- Ambient effects expose controls so the owner can pause them off screen and stop them on exit. Loops past five seconds need a user-facing pause ([WCAG 2.2.2](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide)).
+- Particle input and density follow the [field contract](references/recipes/particle-field.md#input-and-density). Controls work without hover.
+- Width changes can invalidate split measurements ([resize](references/motion-vocabulary.md#resize)). The controller decides whether to rebuild; recipes never remount pages.

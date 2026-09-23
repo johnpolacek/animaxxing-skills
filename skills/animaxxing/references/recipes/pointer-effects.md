@@ -1,12 +1,10 @@
 # Recipe: pointer effects
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Four pointer effects: magnetic pull, 3D tilt, a cursor follower, and a drag-and-throw track. The first three are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The drag track works with mouse, touch, and keyboard.
 
-Four effects that answer the pointer: a magnetic pull toward the cursor, a card that tilts under it, a cursor follower, and a track you can drag and throw. The first three are mouse-only decoration: they ignore touch and pen events, so controls keep their normal behavior on every device and nothing sticks after a tap. The drag track works with mouse and touch, keeps native vertical page scrolling, and moves focused items into view for keyboard users.
+Lifecycle: the framework controller builds these once the target is mounted and visible and calls the idempotent teardown on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-The framework skill's controller calls these once the target is mounted and visible, and calls the teardown on unmount; this module never decides when. Each builder returns an idempotent teardown (the drag track also returns its `Draggable`).
-
-Dependencies: `gsap`. `dragTrack` also needs `gsap/Draggable` and `gsap/InertiaPlugin`, both free since 3.13.
+Dependencies: `gsap`. `dragTrack` also needs `gsap/Draggable` and `gsap/InertiaPlugin`.
 
 ```ts
 import gsap from "gsap";
@@ -37,10 +35,8 @@ export type Teardown = () => void;
 type Register = (fn: () => void) => void;
 
 /**
- * Runs setup inside a GSAP context. Everything GSAP creates during setup is
- * reverted with the context. `dispose` registers writers and listeners to
- * stop before the revert; `after` registers restores to run once it is done.
- * Teardown runs once, attempts every step, and rolls back a setup that threw.
+ * Runs setup in its own GSAP context and returns a once-only teardown that also rolls back a throw.
+ * `dispose` stops writers and listeners before the context reverts; `after` restores after it.
  */
 function own(setup: (dispose: Register, after: Register) => void): Teardown {
   const ctx = gsap.context(() => {});
@@ -83,9 +79,8 @@ function own(setup: (dispose: Register, after: Register) => void): Teardown {
 const MOTION_PROPS = ["transform", "translate", "rotate", "scale", "opacity", "visibility"];
 
 /**
- * Records inline properties and returns a restore. `quickTo` retargets its
- * tween on every call, so reverting it can leave the last value inline;
- * restore after the context reverts. `clearProps` also resets GSAP's cache.
+ * Records inline properties and returns a restore. Reverting `quickTo` can leave its last
+ * value inline, so restore after the context reverts. `clearProps` also resets GSAP's cache.
  */
 function snapshotStyles(elements: HTMLElement[], props = MOTION_PROPS): () => void {
   const saved = elements.map((element) => props.map((prop) => element.style.getPropertyValue(prop)));
@@ -114,7 +109,7 @@ function listen<K extends keyof HTMLElementEventMap>(
 
 ## magnetic
 
-The target leans toward the mouse while it is over it and settles back when it leaves. An optional `[data-magnetic-inner]` child, such as the label, travels further for depth.
+The target leans toward the mouse and settles back on leave. An optional `[data-magnetic-inner]` child travels further for depth.
 
 ```html
 <a class="cta" href="/start"><span data-magnetic-inner>Start</span></a>
@@ -167,11 +162,11 @@ export function magnetic(target: HTMLElement, { strength = 0.3, inner = 0.5 }: M
 }
 ```
 
-Keep `strength` low enough that the target never leaves its hit area; the pointer must stay over it while it moves.
+Keep `strength` low enough that the target stays under the pointer.
 
 ## tilt
 
-A card tilts toward the mouse in 3D and exposes the pointer's position as `--pointer-x` and `--pointer-y` (0% to 100%), so the app can draw its own highlight in its own colors.
+A card tilts toward the mouse in 3D and exposes the pointer position as `--pointer-x` and `--pointer-y` (0% to 100%) for an app-drawn highlight.
 
 ```css
 /* Optional highlight; the app picks the color. */
@@ -212,11 +207,11 @@ export function tilt(card: HTMLElement, { max = 8, perspective = 800 }: TiltOpti
 }
 ```
 
-Keep `max` small on cards with reading text; tilted text is harder to read.
+Keep `max` small on cards with reading text.
 
 ## cursorFollower
 
-An accent that trails the mouse. It grows over `[data-cursor="grow"]`, disappears over `[data-cursor="hide"]` (such as text fields), and squashes on press. The native cursor stays visible; the follower accompanies it, never replaces it. The current state is mirrored to `data-cursor-state` on the follower so CSS can recolor it.
+An accent that trails the mouse beside the native cursor, never replacing it. It grows over `[data-cursor="grow"]`, disappears over `[data-cursor="hide"]` (such as text fields), and squashes on press. `data-cursor-state` on the follower mirrors the state for CSS.
 
 ```html
 <div class="cursor" aria-hidden="true"></div>
@@ -288,11 +283,9 @@ export function cursorFollower(cursor: HTMLElement): Teardown {
 }
 ```
 
-Create one follower per document, not one per page; a persistent shell usually owns it.
-
 ## dragTrack
 
-A row of items you can drag sideways and throw, snapping to the nearest item. The static CSS is a native horizontal scroller, so the row works without JavaScript. Dragging a link does not follow it; a plain click still does. Tabbing to an item slides it into view.
+A row to drag sideways and throw, snapping to the nearest item. The static CSS is a native horizontal scroller, the fallback without JavaScript. Dragging a link does not follow it; a click does. Touch drags claim only horizontal movement, so vertical swipes still scroll. Keyboard focus slides an item into view.
 
 ```html
 <div class="drag-viewport"><div class="drag-track">…items…</div></div>
@@ -376,8 +369,6 @@ export function dragTrack(viewport: HTMLElement, track: HTMLElement, { snap = tr
 }
 ```
 
-Under reduced motion the row still drags and snaps, without the throw. A drag on touch only claims horizontal movement; vertical swipes keep scrolling the page.
-
 ## Controller contract
 
 | Builder | Create | Returns | Coarse pointer or reduced motion |
@@ -386,7 +377,7 @@ Under reduced motion the row still drags and snaps, without the throw. A drag on
 | `cursorFollower` | Once per document, from the persistent shell | teardown | No-op; follower stays hidden |
 | `dragTrack` | Settled, once item widths are final | `{ revert, draggable }` | Drag and snap still work; reduced motion drops the throw |
 
-- Stop magnetic and tilt before an outro moves the same target; two owners must not write one transform.
-- Do not combine `magnetic` or `tilt` with a particle effect's hot state on the same control; pick one pointer response.
-- The fine-pointer check runs at build time. A hybrid device that switches input mid-session is covered by the per-event `pointerType` filter.
-- Revert the drag track before its items change; rebuild after the new items render.
+- Stop magnetic and tilt before an outro moves the same target.
+- One pointer response per control: not `magnetic` or `tilt` plus a particle hot state.
+- The fine-pointer check runs at build; per-event `pointerType` filtering covers hybrid devices.
+- Revert the drag track before its items change; rebuild after they render.

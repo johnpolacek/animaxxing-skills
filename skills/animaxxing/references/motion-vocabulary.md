@@ -1,12 +1,14 @@
 # Motion vocabulary
 
-Read this to select and adapt reusable effects. The framework skill decides when each phase runs. Existing design or an explicitly selected style determines which surfaces receive them; none of the recipes requires the Animaxxing layout or palette.
+Select and adapt effects. Recipes hold the code; existing design or a selected style decides which surfaces receive them.
 
 ## Tokens
 
-The examples use three durations, three eases, and three distances. These are editable starting points: micro 0.14s / 4px, component 0.2s / 8px, page 0.28s / 16px; entrance `power2.out`, exit `power2.in`, shift `power2.inOut`. Reuse the consuming app's motion values where appropriate. Recipe-specific display sequences can run longer. No token file is required. Transforms, `autoAlpha`, `clip-path`, blur, and `fontWeight` only; never `width`, `height`, `top`, `left`, `color`, or `display`. The one exception is `disclosure` in [component-motion.md](recipes/component-motion.md): a single panel's `height` between 0 and its measured `auto`, `overflow: hidden` only while it moves, and the inline height cleared once open. Timeline defaults are `{ overwrite: "auto" }`.
+Editable starting points; reuse the app's motion values where they exist. Durations and distances: micro 0.14s / 4px, component 0.2s / 8px, page 0.28s / 16px. Eases: entrance `power2.out`, exit `power2.in`, shift `power2.inOut`. Display sequences may run longer. Timeline defaults: `{ overwrite: "auto" }`.
 
-Reduced motion uses a `set()` to reach the documented entrance or exit state, so the timeline still completes and every callback still fires.
+Animate only transforms, `autoAlpha`, `clip-path`, blur, and `fontWeight`; never `width`, `height`, `top`, `left`, `color`, or `display`. The sole exception is [`disclosure`](recipes/component-motion.md#disclosure), which tweens one panel's `height`.
+
+Reduced motion `set()`s the documented entrance or exit state, so timelines complete and callbacks fire.
 
 ```ts
 export function prefersReducedMotion(): boolean {
@@ -18,11 +20,11 @@ export function prefersReducedMotion(): boolean {
 }
 ```
 
-`data-motion` on `<html>` is an optional app-level override (`full` or `reduced`) so reduced motion can be reviewed without changing system settings. Every builder reads the helper when it builds, so an override applies to the next animation at once. If the project already has a helper, use it everywhere instead. A boot marker that also uses `data-motion`, such as `js`, falls through to the media query; rename one of the two when the app needs both.
+`data-motion="full"` or `"reduced"` on `<html>` is an optional app override for reviewing reduced motion; builders read it at build time. Use the project's existing helper if it has one. Another `data-motion` value, such as a `js` boot marker, falls through to the media query; rename one if the app needs both.
 
 ## The shelf: paired entrances and exits
 
-Named in/out pairs, each built the same way. Pick from the shelf by watching them, then promote the one a screen uses under a name that says what it is for.
+In/out pairs from one factory. Try them, then promote the one a screen uses under a name for its purpose.
 
 ```ts
 import gsap from "gsap";
@@ -69,11 +71,11 @@ const SETTLED = { x: 0, y: 0, scale: 1, rotationX: 0, filter: "blur(0px)" };
 | `focusIn` / `focusOut` | `{ autoAlpha: 0, filter: "blur(8px)" }` | `{ filter: "blur(0px)", 0.28, power2.out }` | `{ filter: "blur(6px)", 0.2, power2.in }` | Costly to paint; one element at a time. |
 | `weightIn` / `weightOut` | `{ autoAlpha: 0, fontWeight: 400, y: 4 }` | `{ fontWeight: 800, y: 0, 0.28, power2.inOut }` | `{ fontWeight: 400, 0.2, power2.inOut }` | Type that gains its weight as it arrives. Settled: `{ fontWeight: 800, y: 0 }`. |
 
-Table entries abbreviate `duration` and `ease`; they are not copyable object literals. Every entrance merges `autoAlpha: 1` into its destination and every exit merges `autoAlpha: 0`. Wipes keep `autoAlpha: 1` at both ends and animate only the clip. Pass the matching settled vars to `pair`.
+Cells abbreviate `duration` and `ease`; they are not copyable literals. Entrances merge `autoAlpha: 1` into the destination and exits merge `autoAlpha: 0`, except wipes, which hold `autoAlpha: 1` and animate only the clip. Pass the matching settled vars to `pair`.
 
 ## Split families
 
-Use character effects on display type such as headings. Keep ordinary reading text immediately readable; use speak-in only for selected short display copy. Keep the existing type scale and font family.
+Character effects are for display type. Keep reading text immediately readable; speak-in is for short display copy only.
 
 | Family | Split | Move | Role |
 |---|---|---|---|
@@ -87,13 +89,11 @@ Use character effects on display type such as headings. Keep ordinary reading te
 | `linesMaskIn` / `Out` | lines, masked | `yPercent: 110 → 0`, 0.28s, `power3.out`, stagger 0.05 | Whole lines wiped up behind masks. |
 | `scrambleIn` / `Out` | none | ScrambleText over `01{}/<>()=;` | Text resolving out of noise. Display only; needs ScrambleTextPlugin. |
 
-Split entrances use `aria: "auto"` and revert when their timeline completes. Under reduced motion nothing is split; the text is simply already there. Code is in [split-entrances.md](recipes/split-entrances.md).
-
-Weight moves require a variable face. The table and recipe examples use 400–800; adapt endpoints and the resting weight to the loaded axis, or choose effects without weight motion. Do not change the font to enable an effect. Weight moves pin each character to its width at the heaviest weight it will reach, `display: inline-block; text-align: center`, so the axis can move without letters shoving each other along the line.
+Split runners use `aria: "auto"`, revert on completion, and never split under reduced motion. Weight moves pin each character to its width at the heaviest weight it reaches (`inline-block`, centered) so the axis moves without reflow. Code: [split-entrances.md](recipes/split-entrances.md).
 
 ## Route grammar
 
-When a page transition is requested, its selected elements opt in with a `data-page-transition` attribute. These markers belong to the route recipe and do not require a particular page layout. The outro orders items in reverse document order; the intro uses document order. The framework controller determines the swap timing. A page with no marked elements is treated as one whole-page item.
+Page-transition items opt in with `data-page-transition`; no particular layout is required. The intro runs in document order, the outro in reverse. A page with no marked items animates as one item. The controller sets swap timing.
 
 | Value | Entrance | Exit |
 |---|---|---|
@@ -102,11 +102,11 @@ When a page transition is requested, its selected elements opt in with a `data-p
 | `letters-sides` | Chars alternate from `x ∓60vw`, no vertical spread. 0.6s `power4.out`, stagger 0.012 from center, starting 0.14s after the letters. | Same sides, 0.24s, stagger 0.008 from center. |
 | `slide-horizontal` | `autoAlpha 0, x -16 → 0`, 0.2s, `power2.out`, 0.09s after the standard items. Its own CSS transition is suspended for the tween. | `x 8`, 0.14s, `power2.in`. |
 
-Reduced motion: `set(items, { autoAlpha: 1 })` on enter, `set(items, { autoAlpha: 0 })` on exit. Code is in [route-letters.md](recipes/route-letters.md).
+Reduced motion sets items to `autoAlpha: 1` on enter and `0` on exit. Code: [route-letters.md](recipes/route-letters.md).
 
 ### Transition state
 
-The page container reports its phase on `data-transition-state`:
+The page container can report its phase on `data-transition-state`:
 
 | Value | Framework phase | Meaning |
 |---|---|---|
@@ -115,19 +115,17 @@ The page container reports its phase on `data-transition-state`:
 | `exiting` | outro | The outro is running. Every effect winds down. |
 | `waiting` | end state | The outro finished. The page is sealed until the framework swaps it. |
 
-These are optional labels for the framework controller's existing phase state. It invokes surface controls directly; recipes do not observe the document or own phase transitions.
+The labels are optional mirrors of the controller's phase state. The controller calls surface controls directly; recipes never observe them.
 
 ### Pre-paint hiding
 
-The framework controller applies its pre-paint/no-script mechanism to the recipe's targets: `data-page-transition`, `data-speak-intro`, `data-hero-actions`, `data-particle-card`, and any shell/logo/footer intro hooks used. Keep them hidden only until their initial values are ready; `autoAlpha: 1` reveals them. A hidden particle wrapper also needs an explicit reveal because revealing its child cannot reveal the wrapper.
+The controller's pre-paint/no-script mechanism hides recipe targets (`data-page-transition`, `data-speak-intro`, `data-hero-actions`, `data-particle-card`, and any shell/logo/footer intro hooks) only until their initial values are set; `autoAlpha: 1` reveals them. A hidden particle wrapper needs its own reveal.
 
-Register recipe rollback before hiding or splitting. Restore partial DOM/style changes through [effect restoration](effect-restoration.md); removing a CSS marker alone is insufficient. The matching installed framework skill’s `references/initialization.md` owns deadlines and late-work guards.
-
-If the controller uses `waiting` for its swap barrier, it owns that rule and its release. Do not add unconditional hiding CSS or a separate readiness mechanism here.
+Register rollback before hiding or splitting; removing a CSS marker does not undo partial changes ([effect restoration](effect-restoration.md)). The framework skill's `references/initialization.md` owns deadlines, late-work guards, and any `waiting` swap barrier. Add no unconditional hiding CSS or readiness mechanism here.
 
 ## Scroll grammar
 
-Scroll effects tie motion to the reader's position instead of a page phase. Pick at most one scrubbed treatment per viewport; reading text never moves with the scroll. Code is in [scroll-effects.md](recipes/scroll-effects.md).
+Scroll effects follow reading position, not page phase. Use at most one scrubbed treatment per viewport; reading text never moves with scroll. Code: [scroll-effects.md](recipes/scroll-effects.md).
 
 | Effect | Move | Role |
 |---|---|---|
@@ -139,7 +137,7 @@ Scroll effects tie motion to the reader's position instead of a page phase. Pick
 | `scrollProgress` | `scaleX 0 → 1` from the left edge | A hairline reporting position. Runs under reduced motion. |
 | `velocitySkew` | `skewY` up to ±8°, springs back in 0.8s | Ambient energy on media columns. Never on reading text. |
 
-Scrubbed effects smooth with `scrub: 0.6` by default; parallax locks to the scrollbar. Reveals hide at initial state and the rest build at settled, as in the [controller contract](recipes/scroll-effects.md#controller-contract).
+Scrubs smooth with `scrub: 0.6`; parallax locks to the scrollbar. Build phases: [controller contract](recipes/scroll-effects.md#controller-contract).
 
 ## Figures, marquees, and SVG
 
@@ -151,7 +149,7 @@ Scrubbed effects smooth with `scrub: 0.6` by default; parallax locks to the scro
 | `countUp` | 0 to the element's own value, 1.6s, `power3.out` | Statistics landing on their figure. Width reserved. |
 | `marquee` | Row loops by its own width at 60px/s | Logos, tags, or a running headline. Needs a pause control. |
 
-Code is in [svg-effects.md](recipes/svg-effects.md) and [counters-and-marquees.md](recipes/counters-and-marquees.md).
+Code: [svg-effects.md](recipes/svg-effects.md), [counters-and-marquees.md](recipes/counters-and-marquees.md).
 
 ## Covers, layout, and scroll feel
 
@@ -163,7 +161,7 @@ Code is in [svg-effects.md](recipes/svg-effects.md) and [counters-and-marquees.m
 | `captureShared` / `playShared` | Flip from one element's box onto its counterpart, 0.7s, `power3.inOut` | A thumbnail becoming the next page's hero. One per navigation. |
 | `lenisScroll` / `smootherScroll` | Eased document scrolling | The whole site's feel. Once per document, never per page. |
 
-A curtain and a shared-element morph never share a navigation: the curtain would hide the element the morph needs. The framework skill's `references/transition-archetypes.md` and `references/smooth-scroll.md` own their timing. Code is in [page-covers.md](recipes/page-covers.md), [layout-flip.md](recipes/layout-flip.md), and [smooth-scroll.md](recipes/smooth-scroll.md).
+A curtain and a shared-element morph never share a navigation: the curtain would hide the morph's element. The framework skill's `references/transition-archetypes.md` and `references/smooth-scroll.md` own their timing. Code: [page-covers.md](recipes/page-covers.md), [layout-flip.md](recipes/layout-flip.md), [smooth-scroll.md](recipes/smooth-scroll.md).
 
 ## Media, components, and hover
 
@@ -181,33 +179,29 @@ A curtain and a shared-element morph never share a navigation: the curtain would
 | `underlineSweep` | `scaleX 0 → 1` from the inline start, `1 → 0` toward the inline end, 0.3s, `power2.out` | An injected hairline under a link; `--underline-*` custom properties restyle it. Instant under reduced motion. |
 | `imageZoom` | `scale 1 → 1.05`, 0.6s, `power2.out`, inside a clipped frame | A card's image answering the card or its link; never clip the card itself. |
 
-Code is in [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), and [hover-effects.md](recipes/hover-effects.md).
+Code: [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), [hover-effects.md](recipes/hover-effects.md).
 
 ## Resize
 
-Width changes can invalidate split positions and the wave's pinned character widths; height-only changes from mobile browser chrome do not. Keep text readable during a resize. Particle fields remeasure through their own observers.
-
-The framework controller decides whether to rebuild an affected effect or replay an entrance. Supply fresh measurements when called; no recipe remounts the page or resets page state. Reduced motion stays settled.
+Width changes can invalidate split positions and the wave's pinned widths; height-only changes from mobile browser chrome do not. The controller decides whether to rebuild an effect or replay an entrance; recipes supply fresh measurements when called and never reset page state. Particle fields remeasure themselves. Text stays readable throughout, and reduced motion stays settled.
 
 ## Input and devices
 
-Particle treatments and pointer effects use pointer states; text and scroll effects are input-independent.
+Particle and pointer effects respond to input; text and scroll effects do not.
 
 - [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
-- Tune `COARSE_POINTER_DENSITY` for transient particles; preserve outlines and owned particles.
 - [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, and `cursorFollower` answer the mouse only and never gate a control. `dragTrack` works with mouse, touch, and keyboard.
-- One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state.
 - Hover effects share one hot state for mouse hover and `:focus-visible`; touch, pen, and click-derived focus never enter it.
-- The installed framework skill's `references/devices.md` owns viewport tiers, orientation handling, and CPU budgets.
+- One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state.
+- The framework skill's `references/devices.md` owns viewport tiers, orientation, and CPU budgets.
 
 ## Ambient motion
 
-Loops that run while a surface idles: the letter wave on a headline, embers off a button, a runner on a card outline. Rules:
+Loops that run while a surface idles, such as the wave, button embers, or an outline runner.
 
-- Avoid competing ambient effects on the same target. A style can select a wave for a headline or particles for a button, but neither is required.
-- Expose controls for the framework controller to call at settled, outro, and unmount; it owns those signals.
-- Pause off screen. The particle field does this through an `IntersectionObserver`; the wave's `pause()` and the follower's `pause()` answer the same signal when their surface can scroll away.
-- Let the user stop any loop that runs past five seconds ([WCAG 2.2.2](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide)). The wave, particle controls, follower, and marquee expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
+- One ambient effect per target; none is required.
+- Pause off screen. Particle fields use an `IntersectionObserver`; the wave and follower expose `pause()` for the controller.
+- The wave, particle controls, follower, and marquee expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
 - On small screens, lower particle density and limit wave character counts.
-- Every cycle ends exactly where it started. The wave clears its transforms; embers die.
-- Never under reduced motion. The helper returns before anything is split or spawned.
+- Every cycle ends where it started; embers die.
+- None under reduced motion: nothing is split or spawned.

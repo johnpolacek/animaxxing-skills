@@ -1,14 +1,12 @@
 # Recipe: scroll effects
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Seven scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, a horizontal run, a progress rule, and a velocity skew.
 
-Seven scroll-linked effects: reveals as content arrives, a scrubbed statement that fills in as it is read, parallax layers, a pinned scene, a horizontal run, a progress rule, and a velocity skew. Each builder returns an idempotent teardown (the horizontal run also returns its animation). Use the official `gsap-scrolltrigger` skill for API details; this module covers the effects and their restoration.
+Lifecycle: the framework controller builds these once the owner is measurable, refreshes ScrollTrigger when fonts, media, data, or scroll restoration change layout, and calls each idempotent teardown on unmount. Builders never kill triggers they did not create. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-The framework skill's controller creates these once the owner is visible and measurable, refreshes ScrollTrigger after fonts, media, data, or scroll restoration change layout, and calls teardown on unmount; this module never decides when, never listens for navigation, and never kills triggers it did not create.
+Dependencies: `gsap`, `gsap/ScrollTrigger`. `scrubStatement` also needs `gsap/SplitText`.
 
-Dependencies: `gsap`, `gsap/ScrollTrigger`. `scrubStatement` also needs `gsap/SplitText` (3.13+, which registers with the active context).
-
-Setup: `scrubStatement` with `by: "chars"` follows [stable typography for character animation](../text-stability.md#stable-typography-for-character-animation); the default word split keeps natural kerning. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+Setup: `scrubStatement` with `by: "chars"` needs [stable typography](../text-stability.md#stable-typography-for-character-animation); words keep natural kerning. Verify the revert with the [cleanup checks](../verification.md#splittext-cleanup-stability).
 
 ```ts
 import gsap from "gsap";
@@ -43,11 +41,8 @@ export type Scroller = Element | string | undefined;
 type Register = (fn: () => void) => void;
 
 /**
- * Runs setup inside a GSAP context. Everything GSAP creates during setup
- * (sets, tweens, triggers, pins, splits) is reverted with the context.
- * `dispose` registers writers to stop before the revert; `after` registers
- * restores to run once it is done. Teardown runs once, attempts every step,
- * and also rolls back a setup that threw.
+ * Runs setup in its own GSAP context, which reverts its tweens, triggers, pins, and splits (SplitText 3.13+).
+ * Returns a once-only teardown that also rolls back a throw. `dispose` stops writers before the revert; `after` restores after it.
  */
 function own(setup: (dispose: Register, after: Register) => void): Teardown {
   const ctx = gsap.context(() => {});
@@ -90,10 +85,8 @@ function own(setup: (dispose: Register, after: Register) => void): Teardown {
 const SCENE_PROPS = ["transform", "translate", "rotate", "scale", "opacity", "visibility", "filter", "clip-path"];
 
 /**
- * Records these inline properties on each element and returns a restore.
- * Reverting a scrubbed, pinned timeline can leave start values inline
- * (always with `invalidateOnRefresh`), so scenes restore explicitly after
- * the context reverts. `clearProps` also resets GSAP's cached transform.
+ * Records these inline properties and returns a restore. Reverting a scrubbed, pinned
+ * timeline can leave start values inline; `clearProps` also resets GSAP's cached transform.
  */
 function snapshotStyles(elements: HTMLElement[], props = SCENE_PROPS): () => void {
   const saved = elements.map((element) => props.map((prop) => element.style.getPropertyValue(prop)));
@@ -111,7 +104,7 @@ function snapshotStyles(elements: HTMLElement[], props = SCENE_PROPS): () => voi
 
 ## revealOnScroll
 
-Items rise into place in small batches as they cross into view, once. Items already past the line when the builder runs (a reload or restored scroll position) reveal at once, so nothing above the fold stays hidden. Waiting items are transparent, not `visibility: hidden`, so screen readers and the tab order still reach them; focus moving into one reveals it at once.
+Items rise in batches as they cross into view, once. Items already past `start` (reload, restored scroll) reveal at once. Waiting items are transparent, not hidden, so they stay in the accessibility tree and tab order; focus reveals one at once.
 
 ```ts
 export type RevealOptions = {
@@ -170,7 +163,7 @@ export function revealOnScroll(
 
 ## scrubStatement
 
-A display statement fills in word by word as it scrolls through the reading zone, and empties again on the way back. Display copy only: every word stays legible at `UNREAD`, but ordinary reading text must not depend on scroll position.
+A display statement fills in word by word through the reading zone and empties on the way back. Display copy only; reading text must not depend on scroll position.
 
 ```ts
 export type StatementOptions = { by?: "words" | "chars"; scrub?: number | boolean; scroller?: Scroller };
@@ -199,7 +192,7 @@ export function scrubStatement(
 
 ## parallax
 
-Layers drift at different rates while their section crosses the viewport. Each target reads its travel in px from `data-parallax` (negative moves against the scroll); the section, not the moving layer, is the trigger.
+Layers drift at different rates while their section crosses the viewport. `data-parallax` sets each layer's travel in px (negative moves against the scroll); the section is the trigger.
 
 ```html
 <section class="hero-media">
@@ -231,11 +224,11 @@ export function parallax(section: HTMLElement, { scrub = true, scroller }: Paral
 }
 ```
 
-Give the section `overflow: clip` (or `hidden`) when a layer's travel would show past its edge. Keep travel small enough that no reading text leaves its box.
+Clip the section's overflow when travel would show past its edge. Keep reading text inside its box.
 
 ## pinnedScene
 
-Pins a section for a stretch of scroll and scrubs a timeline the caller builds, such as steps that swap, an image that scales to fill, or a diagram that assembles. `length` is the pinned distance in section heights.
+Pins a section and scrubs a timeline the caller builds, such as swapping steps or an assembling diagram. `length` is the pinned distance in section heights.
 
 ```ts
 export type SceneOptions = { length?: number; scrub?: number | boolean; scroller?: Scroller };
@@ -279,11 +272,11 @@ pinnedScene(section, (tl, root) => {
 }, { length: 2 });
 ```
 
-Write the static CSS as the readable fallback (all steps stacked and visible); the build positions them for the scene with `set`/`from` tweens, which the context reverts. Build with transforms, opacity, filter, and clip-path; teardown restores those inline properties on the descendants the scene's tweens target, so the scene owns them while it runs. Other effects inside the section, such as a magnetic button, keep their own inline values.
+Write the static CSS as the readable fallback, all steps stacked and visible; `build` positions them with tweens the context reverts. Animate transforms, opacity, filter, and clip-path only: teardown restores those on the scene's tween targets and leaves other effects' inline values alone.
 
 ## horizontalRun
 
-Pins a section and translates its track sideways as the page scrolls down. The static CSS is a native horizontal scroller, so the run works without JavaScript and under reduced motion. Keyboard focus inside the track scrolls the page to that item instead of letting the clipped section scroll itself.
+Pins a section and translates its track sideways as the page scrolls. The static CSS is a native horizontal scroller, the fallback without JavaScript. Keyboard focus in the track scrolls the page to that item.
 
 ```html
 <section class="run"><div class="run-track">…cards…</div></section>
@@ -347,11 +340,11 @@ export function horizontalRun(
 }
 ```
 
-Nested effects inside the track pass `animation` as their trigger's `containerAnimation`; the controller creates them after the run and reverts them first. On narrow or coarse-pointer tiers the controller may skip the run and keep the native scroller.
+Nested effects pass `animation` as their `containerAnimation`; create them after the run and revert them first. Narrow or coarse-pointer tiers may keep the native scroller.
 
 ## scrollProgress
 
-A rule that grows with reading progress through the whole page, or through one `section`. It reports state rather than decorating, so it also runs under reduced motion, locked to the scrollbar without smoothing.
+A rule that grows with reading progress through the page or one `section`. It reports state, so it runs under reduced motion too.
 
 ```ts
 export type ProgressOptions = { section?: HTMLElement; scroller?: Scroller };
@@ -379,7 +372,7 @@ Mark the bar `aria-hidden="true"`; it duplicates the scrollbar.
 
 ## velocitySkew
 
-Targets lean with the speed of the scroll and spring back upright when it stops. Ambient: one surface per page, such as an image column or a card grid.
+Targets lean with scroll speed and spring back when it stops. Ambient: one surface per page, never reading text.
 
 ```ts
 export type SkewOptions = { max?: number; scroller?: Scroller };
@@ -424,8 +417,7 @@ export function velocitySkew(targets: gsap.DOMTarget, { max = MAX_SKEW, scroller
 | `horizontalRun` | Settled, same as a scene | `{ revert, animation }` | No-op; native scroller |
 | `scrollProgress` | Settled | teardown | Runs, unsmoothed |
 
-- Create triggers in document order, including pins, so later start positions account for earlier pin spacing. Build them on a fresh visit; on a re-shown preserved page, refresh instead.
+- Create triggers in document order, pins included, so later starts account for earlier pin spacing. Build on a fresh visit; refresh a re-shown preserved page instead.
 - Keep scenes and runs alive through outro and end state; reverting a pin mid-outro jumps the page. Revert on unmount, inner `containerAnimation` effects first.
-- Reveal targets may use the framework's pre-paint mechanism under the `data-scroll-reveal` marker. Keep them out of route intro targets so two owners never animate one element.
-- A custom scroller or smooth-scroll library supplies `scroller` and its own `scrollerProxy`; the app owns that setup.
-- Reduced motion is read at build time. When the preference changes, the controller tears down and rebuilds.
+- Reveal targets may use the pre-paint mechanism under a `data-scroll-reveal` marker. Keep them out of route intro targets.
+- A custom scroller passes `scroller`; the app owns its `scrollerProxy`.

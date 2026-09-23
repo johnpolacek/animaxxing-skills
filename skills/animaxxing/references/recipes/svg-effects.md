@@ -1,12 +1,10 @@
 # Recipe: SVG effects
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Three SVG effects on the project's own SVG, keeping its strokes and fills: strokes that draw in and out, an icon morph, and a mark that follows a path.
 
-Three SVG effects: strokes that draw themselves in and out, an icon that morphs between two shapes, and a mark that travels along a path. They work on the project's own SVG and keep its stroke colors, widths, and fills.
+Lifecycle: see the [controller contract](#controller-contract); the controller calls each `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-The framework skill's controller calls the draw builders during intro or outro, the morph toggle on user input, and the path follower at settled; it calls each `revert` on unmount. This module never decides when.
-
-Dependencies: `gsap`, `gsap/DrawSVGPlugin`, `gsap/MorphSVGPlugin`, `gsap/MotionPathPlugin`, all free since 3.13. Register only the ones used.
+Dependencies: `gsap`, `gsap/DrawSVGPlugin`, `gsap/MorphSVGPlugin`, `gsap/MotionPathPlugin`. Register only the ones used.
 
 ```ts
 import gsap from "gsap";
@@ -30,10 +28,8 @@ export type SvgEffect = { timeline: gsap.core.Timeline; revert: Teardown };
 type Register = (fn: () => void) => void;
 
 /**
- * Runs setup inside a GSAP context. Everything GSAP creates during setup is
- * reverted with the context. `dispose` registers writers to stop before the
- * revert; `after` registers restores to run once it is done. Teardown runs
- * once, attempts every step, and rolls back a setup that threw.
+ * Runs setup in its own GSAP context and returns a once-only teardown that also rolls back a throw.
+ * `dispose` stops writers before the context reverts; `after` restores after it.
  */
 function own(setup: (dispose: Register, after: Register) => void): Teardown {
   const ctx = gsap.context(() => {});
@@ -101,7 +97,7 @@ const STROKE_PROPS = ["stroke-dasharray", "stroke-dashoffset", "visibility", "op
 
 ## drawIn and drawOut
 
-Strokes draw along their length, in document order. Works on `path`, `line`, `polyline`, `polygon`, `rect`, `circle`, and `ellipse` with a visible stroke. Filled shapes need a stroke or a separate outline to draw.
+Strokes draw along their length in document order. Needs a visible stroke on `path`, `line`, `polyline`, `polygon`, `rect`, `circle`, or `ellipse`; filled shapes need a stroke or outline.
 
 ```ts
 export type DrawOptions = { duration?: number; stagger?: number; delay?: number; onComplete?: () => void };
@@ -141,11 +137,9 @@ export function drawOut(targets: gsap.DOMTarget, options: DrawOptions = {}): Svg
 }
 ```
 
-A drawn stroke's settled state is the SVG's own; `revert` returns it there once the controller is done with the effect.
-
 ## morphToggle
 
-An icon path morphs between its own shape and an alternate, such as menu to close or play to pause. The toggle follows the control's state; the control keeps its own label and `aria-pressed` or `aria-expanded`.
+An icon path morphs between its own shape and an alternate, such as menu to close. `set()` follows the control's state; the control keeps its label and `aria-pressed` or `aria-expanded`.
 
 ```html
 <button aria-expanded="false" aria-label="Menu">
@@ -184,11 +178,11 @@ export function morphToggle(
 }
 ```
 
-Paths with very different point counts morph cleanly but can twist; draw both shapes with the same number of segments and starting corner for the tidiest move.
+To avoid twisting, draw both shapes with the same segment count and starting corner.
 
 ## followPath
 
-A small mark travels along a path on a loop, such as a dot along a route or a spark along a circuit trace. Ambient: one per surface, never under reduced motion.
+A small mark loops along a path, such as a dot along a route. Ambient: one per surface.
 
 ```ts
 export type FollowOptions = {
@@ -219,7 +213,7 @@ export function followPath(
 }
 ```
 
-The controller pauses the follower when its surface scrolls out of view, as it does for other ambient effects. The loop never ends, so it needs a way for the user to stop it (WCAG 2.2.2): wire the page's pause control or motion setting to `pause()` and `play()`.
+The controller pauses it off screen. The endless loop needs a user pause (WCAG 2.2.2): wire the page's control to `pause()` and `play()`.
 
 ## Controller contract
 
@@ -231,4 +225,4 @@ The controller pauses the follower when its surface scrolls out of view, as it d
 | `followPath` | Settled | `{ pause, play, revert }` | No-op |
 
 - SVG markers for pre-paint hiding use `data-draw`; `drawIn` renders its start before the controller releases them.
-- Call `revert` on unmount or before another effect animates the same element. `morphToggle` restores the original `d`.
+- Call `revert` before another effect animates the same element. It restores the SVG's own strokes and `d`.

@@ -1,14 +1,12 @@
 # Recipe: speak in
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Short display copy, such as a hero subhead, arrives word by word at speaking pace: longer words take longer and sentences end in a pause. Emphasis words enter letter by letter and may keep a finish: `broken` (letters at random weights and widths) or `tilt`.
 
-A paragraph arrives one word at a time at roughly the pace you would say it: short words quickly, long words a beat longer, a full stop earns a pause. Ordinary words each get one of a handful of small entrances; words marked for emphasis are split further into letters and given a bigger one, and may be left with a finish: `broken` (each letter at its own weight and width on the variable axis) or `tilt`.
+Lifecycle: the framework controller calls `speakIn` at intro, keeps the returned `revert` while finishes should persist, and calls it on outro or unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-The framework skill's controller calls `speakIn` during intro at the chosen position in its sequence; this module never decides when. Keep the returned `revert` for as long as the finishes should persist, and call it on outro or unmount. Use for short display copy such as a hero subhead; leave ordinary reading text immediately readable.
+Dependencies: `gsap`, `gsap/SplitText`. `broken` needs a variable weight axis (example: 400–800); adapt it, or use `tilt` on a static face.
 
-Dependencies: `gsap`, `gsap/SplitText`. A variable font supporting the configured weight range for the `broken` finish (400–800 in the example). Adapt that range to the loaded face, or omit `broken` / use `tilt` for a static face; keep its existing font.
-
-Setup: follow [stable typography for character animation](../text-stability.md#stable-typography-for-character-animation) before creating splits; keep that target CSS after revert and under reduced motion. Apply it only to persistent emphasis elements receiving inner character splits, not the entire paragraph. Verify the split-to-unsplit boundary with the [cleanup checks](../verification.md#splittext-cleanup-stability).
+Setup: apply [stable typography](../text-stability.md#stable-typography-for-character-animation) to the emphasis elements only, before splitting; check revert with the [cleanup checks](../verification.md#splittext-cleanup-stability).
 
 ```ts
 import gsap from "gsap";
@@ -25,11 +23,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/**
- * Runs setup inside its own GSAP context. If setup throws, everything it
- * created (sets, tweens, timelines, splits) is reverted before the error is
- * rethrown, so a failed build never strands hidden or split text.
- */
+/** Runs setup in its own GSAP context; on throw, reverts what it created and rethrows. */
 function guarded<T>(setup: () => T, onFail?: () => void): T {
   const ctx = gsap.context(() => {});
   let result: T | undefined;
@@ -202,9 +196,8 @@ function speak(el: HTMLElement, emphasis: Emphasis[], delay: number) {
 // Hero subhead, marked data-speak-intro and hidden by the pre-paint rule:
 const EMPHASIS = ["low", "rizz", { word: "cooked", finish: "broken" }, "negative", "aura", "agents", "animate"];
 const spoken = speakIn(subhead, { emphasis: EMPHASIS, delay: 0.3 }); // starts after the letters land
-// Keep `spoken` alive while the page idles so the finishes persist.
-// On outro: blastOff({ ..., words: spoken.words, ... }) then spoken.revert() once the outro is done with.
+// On outro: blastOff({ ..., words: spoken.words, ... }), then spoken.revert() after it.
 // On unmount: spoken.timeline.kill(); spoken.revert();
 ```
 
-A `set(el, { autoAlpha: 0 })` before calling `speakIn` is the initial state when the pre-paint CSS rule is not in use.
+Without the pre-paint rule, `set(el, { autoAlpha: 0 })` before `speakIn` provides the initial state.

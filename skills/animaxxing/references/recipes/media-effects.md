@@ -1,10 +1,8 @@
 # Recipe: media effects
 
-Failure contract: apply [effect restoration](../effect-restoration.md) when adapting this module. The framework controller chooses recovery timing; this effect must undo even partial setup.
+Image wipe reveals, a mouse-following hover preview, scroll-scrubbed video, and canvas frame sequences, on the app's own markup and styling.
 
-Four effects for images and video: a framed image revealed by a wipe while it settles from a slight zoom, a floating preview that follows the mouse over a list, a muted video whose playhead follows the scroll, and an image sequence drawn to a canvas and scrubbed by scroll. Every effect keeps the app's markup, sizing, and styling: frames clip with `clip-path`, never `visibility: hidden`, so waiting images stay in the accessibility tree; the preview is mouse-only decoration that never gates a link; the media builders bound their network and memory use and document the budget.
-
-The framework skill's controller creates these once the target is mounted and measurable and calls the teardown on unmount; this module never decides when. `imageReveal` returns `{ timeline, revert }` so the controller can compose the timeline; the other builders return an idempotent teardown.
+Lifecycle: the framework controller creates these once the target is measurable, composes `imageReveal`'s timeline, and calls teardown on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
 Dependencies: `gsap`, `gsap/ScrollTrigger`.
 
@@ -49,10 +47,9 @@ export type Scroller = Element | string | undefined;
 type Register = (fn: () => void) => void;
 
 /**
- * Runs setup inside a GSAP context. Everything GSAP creates during setup is
- * reverted with the context. `dispose` registers writers and listeners to
- * stop before the revert; `after` registers restores to run once it is done.
- * Teardown runs once, attempts every step, and rolls back a setup that threw.
+ * Runs setup in its own GSAP context. `dispose` registers stops that run before
+ * the context reverts; `after` registers restores that run after it. Teardown
+ * runs once, attempts every step, and rolls back a setup that threw.
  */
 function own(setup: (dispose: Register, after: Register) => void): Teardown {
   const ctx = gsap.context(() => {});
@@ -126,7 +123,7 @@ function listen<K extends keyof HTMLElementEventMap>(
 
 ## imageReveal
 
-A wipe opens across the frame while the image inside settles from a slight zoom to rest. The frame is any element that wraps the image; the wipe is a `clip-path` on the frame, so the frame's own radius and layout box stay as the app styled them. `direction` is the way the wipe's edge travels. By default the timeline plays at once, for the controller to compose into an intro; `onScroll` instead holds it closed and plays it once when the frame enters the viewport. A waiting frame is clipped, never hidden, so its image keeps its place in the accessibility tree; focus inside the frame (a linked image) opens it at once.
+A wipe opens the frame while the image settles from a slight zoom. The wipe is a `clip-path` on the frame (any element wrapping the image), so its radius and layout box stay as styled. `direction` is the way the wipe's edge travels. The timeline plays at once for the controller to compose; `onScroll` holds it closed until the frame enters the viewport. A waiting frame is clipped, never hidden, so its image stays in the accessibility tree; focus inside it opens it at once.
 
 ```html
 <figure class="frame"><img src="…" alt="…" /></figure>
@@ -207,11 +204,9 @@ export function imageReveal(
 }
 ```
 
-Under reduced motion nothing is clipped or scaled; the timeline still completes (on entry for the scroll variant), so `onComplete` fires. Killing a parent that contains the timeline does not restore the frame; the controller calls `revert` afterward.
-
 ## hoverPreview
 
-A list whose items carry a preview image URL in `data-preview`. One floating image follows the mouse while it is over the list, crossfades to the next image when the pointer moves to another item, and hides when it leaves. The app supplies the empty floating element and styles its size, radius, and shadow; the builder adds two stacked `<img>` layers for the crossfade and removes them at teardown. Mouse only: touch and pen never show it, the items stay ordinary links, and nothing else pauses while it shows.
+List items carry an image URL in `data-preview`. One floating image follows the mouse over the list, crossfades between items, and hides on leave. The app supplies the empty floating element and styles its size, radius, and shadow; the builder adds and removes two `<img>` crossfade layers. Mouse only: touch and pen never show it, and items stay ordinary links.
 
 ```html
 <ul class="works">
@@ -315,11 +310,11 @@ export function hoverPreview(list: HTMLElement, preview: HTMLElement, { offset =
 }
 ```
 
-Images load on first hover; preload the few the page expects (`<link rel="preload" as="image">`) when the first swap must be instant. Keep the preview small enough to sit beside the pointer; the recipe does not flip it at the viewport edge. Reduced motion and coarse pointers build nothing: the link itself leads to the work.
+Images load on first hover; `<link rel="preload" as="image">` the few whose first swap must be instant. The preview never flips at the viewport edge, so keep it small.
 
 ## scrubVideo
 
-A muted inline video whose `currentTime` follows the scroll through its section, so a product turn or a process plays at reading speed in both directions. The section is tall and the video sticks inside it; the recipe waits for metadata before it scrubs. Encode with a keyframe on every frame (or at least every half second) so seeks land without a stall, keep clips short, and give the element a `poster`: under reduced motion nothing seeks and the poster or first frame stays.
+A muted inline video whose `currentTime` follows the scroll through its tall section, in both directions. Scrubbing waits for metadata. Encode a keyframe on every frame (or at least every half second) so seeks never stall, keep clips short, and give the element a `poster`.
 
 ```html
 <section class="scrub"><video muted playsinline preload="metadata" poster="…" src="…"></video></section>
@@ -373,13 +368,13 @@ export function scrubVideo(
 }
 ```
 
-The video's poster and static layout are the no-script and reduced-motion state; the recipe never plays it. A live stream (infinite duration) builds nothing.
+The poster and static layout are the no-script state; the recipe never plays the video. A live stream (infinite duration) builds nothing.
 
 ## frameSequence
 
-An image sequence drawn to a canvas and scrubbed by scroll: the product-turn treatment, with the sharpness of stills and no decoder stalls. Frames load coarse to fine, so a half-loaded sequence already scrubs from end to end, and the canvas always draws the nearest loaded frame to the one the scroll asks for. Sizing follows the canvas's CSS box and `devicePixelRatio`.
+An image sequence drawn to a canvas and scrubbed by scroll: the sharpness of stills without decoder stalls. Frames load coarse to fine, so a partly loaded sequence scrubs end to end; the canvas draws the nearest loaded frame, skipping failures. It sizes to its CSS box and `devicePixelRatio`.
 
-Budget: `concurrency` requests in flight, starting only once the section is within a viewport of the fold. Loaded frames are kept as encoded images for the section's life (the browser decodes on draw), so memory is about the total file size: keep to 100–200 frames at 1600 px or less in WebP or AVIF, a few MB in all. Teardown aborts requests still in flight. The canvas should carry `role="img"` and an `aria-label` describing the sequence, or `aria-hidden="true"` beside text that does.
+Budget: `concurrency` requests in flight, starting one viewport before the section arrives. Loaded frames stay encoded for the section's life (the browser decodes on draw), so memory tracks total file size: 100–200 frames, 1600 px or less, WebP or AVIF, a few MB in all. Teardown aborts in-flight requests. Give the canvas `role="img"` and an `aria-label`, or `aria-hidden="true"` beside text that describes it.
 
 ```html
 <section class="sequence"><canvas role="img" aria-label="…"></canvas></section>
@@ -531,8 +526,6 @@ export function frameSequence(
 }
 ```
 
-Under reduced motion the canvas draws the `still` frame once, loads nothing else, and creates no trigger. A frame that fails to load is skipped; its neighbors cover it.
-
 ## Wiring
 
 ```ts
@@ -549,12 +542,12 @@ const sequence = frameSequence(canvas, Array.from({ length: 120 }, (_, i) => `/t
 
 | Builder | Create | Returns | Reduced motion |
 |---|---|---|---|
-| `imageReveal` | Intro frames at initial state, composed into the intro; `onScroll` frames at settled | `{ timeline, revert }` | Nothing clipped; timeline completes and `onComplete` fires |
-| `hoverPreview` | Settled | teardown | No-op; links behave as usual |
+| `imageReveal` | Intro frames at initial state, composed into the intro; `onScroll` frames at settled | `{ timeline, revert }` | Nothing clipped or scaled; timeline completes (on entry for `onScroll`) and fires `onComplete` |
+| `hoverPreview` | Settled | teardown | No-op, as on coarse pointers |
 | `scrubVideo` | Settled, once the section is measurable | teardown | No-op; poster stays |
-| `frameSequence` | Settled, once the canvas has its CSS size | teardown | Draws the `still` frame, no trigger |
+| `frameSequence` | Settled, once the canvas has its CSS size | teardown | Draws only the `still` frame; no trigger |
 
-- A frame belongs to one owner: keep `imageReveal` frames out of route intro targets, and stop a magnetic or tilt effect on the same element before the reveal runs.
-- Killing a composed parent never reaches the reveal's callbacks; call `revert` after the kill, then rebuild for a new visit.
-- Video and sequence sections follow the scroll-effects rules for pins and refresh: create in document order and refresh ScrollTrigger after fonts or media change layout above them.
-- Reduced motion and the fine-pointer check are read at build time. When the preference changes, the controller tears down and rebuilds.
+- Keep `imageReveal` frames out of route intro targets; stop magnetic or tilt on the same element before the reveal runs.
+- After killing a composed parent, call the reveal's `revert`, then rebuild for a new visit.
+- Create video and sequence triggers in document order; refresh ScrollTrigger after fonts or media above them change layout.
+- `hoverPreview` reads the fine-pointer check at build; rebuild when input changes.
