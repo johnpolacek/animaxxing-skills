@@ -27,6 +27,9 @@ Apply this when adapting any recipe. Every recipe rolls back its own setup when 
 | Blast-off | Tweens and splits across the composition, including container transforms and button changes. |
 | Smooth scroll | The engine's ticker callback and scroll listener, its classes and inline styles on the document or wrapper, and a stopped state. |
 | Page covers | The running sweep, panel transforms and visibility, pointer blocking, and the preloader's count, bar, `aria-valuenow`, and position. |
+| Media effects | Reveal timelines and their inline clip and transform, preview layers and `aria-hidden`, `quickTo` values, the video's `muted` and `playsInline` and its deferred tween and trigger, the sequence's observer, in-flight image requests, and canvas width and height attributes. |
+| Component motion | The timeline in flight; the menu panel's `visibility` and `clip-path` and its links' opacity and transforms; the dialog's `cancel` and `close` listeners, opacity, transform, and `--dialog-backdrop`; the disclosure's inline `height` and `overflow`; the indicator's transform, origin, and observer. Never the dialog's `open`, `hidden`, or ARIA. |
+| Hover effects | Listeners, tweens started from them, the roll's mask and copy with the label's original nodes moved back, the underline span and the link's position, the image's transform and the frame's overflow. |
 | Layout Flip | A running Flip: `revert()` jumps it to the end and clears its inline styles; `kill()` alone leaves them. |
 | Particle field/effects | Ticker callbacks, emitters, particles/tweens, delayed calls, observers, event listeners, effect-owned canvas/wrapper styles, and the target's inline opacity, visibility, transform, and clip. |
 

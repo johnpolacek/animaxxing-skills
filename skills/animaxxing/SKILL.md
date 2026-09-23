@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build GSAP text, scroll, pointer, SVG, layout, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, smooth scrolling with Lenis or ScrollSmoother, curtain and preloader covers, Flip layout and shared-element morphs, magnetic buttons, tilt cards, cursor followers, drag-and-throw tracks, SVG line drawing and icon morphs, count-up figures, marquees, particle controls, and blast-off exits. Use for Animaxxing motion or hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle timing. Not for branding, layout redesign, routing, or isolated GSAP API questions."
+description: "Build GSAP text, scroll, pointer, SVG, layout, media, component, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, smooth scrolling with Lenis or ScrollSmoother, curtain and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scroll-scrubbed video and frame sequences, menu, dialog, accordion, and tab motion, label rolls and underline sweeps, magnetic buttons, tilt cards, cursor followers, drag-and-throw tracks, SVG line drawing and icon morphs, count-up figures, marquees, particle controls, and blast-off exits. Use for Animaxxing motion or hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle timing. Not for branding, layout redesign, routing, or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text, scroll, pointer, layout, SVG, and particle motion for any brand
@@ -40,6 +40,9 @@ Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for p
 | Eased page scrolling with Lenis or ScrollSmoother | [Smooth scroll](references/recipes/smooth-scroll.md) |
 | Curtain page transitions, first-visit preloaders | [Page covers](references/recipes/page-covers.md) |
 | Filter, reorder, and expand layouts; shared-element morphs across pages | [Layout Flip](references/recipes/layout-flip.md) |
+| Image wipe reveals, hover image previews, scroll-scrubbed video, canvas frame sequences | [Media effects](references/recipes/media-effects.md) |
+| Label rolls, underline sweeps, image zoom on hover and focus | [Hover effects](references/recipes/hover-effects.md) |
+| Menu overlays, dialog enter and exit, accordion height, sliding tab indicators | [Component motion](references/recipes/component-motion.md) |
 | Dispersal on a call to action | [Blast-off](references/recipes/blast-off.md) |
 | Particle buttons, cards, links, or command fields | [Particle effects](references/recipes/particle-effects.md) plus [field/attach helpers](references/recipes/particle-field.md) |
 | Touch, focus, stuck hover, mobile particle budgets | [Input and devices](references/motion-vocabulary.md#input-and-devices) |
