@@ -78,12 +78,32 @@ A new item that the framework renders after the capture is not in `items`. Pass 
 
 ## captureShared and playShared
 
-A morph between two elements that stand for the same thing, such as a thumbnail and the hero it opens into. Give both the same `data-flip-id`. Capture the old one's box while it is still laid out, then play from that state onto the new one once it has rendered at its final size.
+A morph between two elements that stand for the same thing, such as a thumbnail and the hero it opens into. Give both the same `data-flip-id`. Capture the old one's box while it is still laid out, then play from that state onto the new one once it has rendered at its final size. The state remembers the scroll position, so a router that resets scroll between the two still starts the morph where the element was on screen.
 
 ```ts
+/** A captured box, with the scroll position it was seen at. */
+export type SharedState = { flip: Flip.FlipState; scrollX: number; scrollY: number };
+
 /** Records the element's box and props for a morph into its counterpart. */
-export function captureShared(element: HTMLElement, props?: string): Flip.FlipState {
-  return Flip.getState(element, props ? { props } : undefined);
+export function captureShared(element: HTMLElement, props?: string): SharedState {
+  return { flip: Flip.getState(element, props ? { props } : undefined), scrollX: window.scrollX, scrollY: window.scrollY };
+}
+
+/**
+ * Flip records boxes in document coordinates. When the router scrolls between
+ * capture and play, shift the recorded boxes so the morph starts where the
+ * element was on screen. Idempotent, so a development double read is safe.
+ */
+function followScroll(state: SharedState): void {
+  const dx = window.scrollX - state.scrollX;
+  const dy = window.scrollY - state.scrollY;
+  if (!dx && !dy) return;
+  for (const recorded of state.flip.elementStates) {
+    recorded.matrix.e += dx;
+    recorded.matrix.f += dy;
+  }
+  state.scrollX = window.scrollX;
+  state.scrollY = window.scrollY;
 }
 
 export type SharedOptions = FlipOptions & {
@@ -98,7 +118,7 @@ export type SharedOptions = FlipOptions & {
  * element even when the original is still in the DOM, hidden by the router.
  */
 export function playShared(
-  state: Flip.FlipState,
+  state: SharedState,
   target: HTMLElement,
   { duration = 0.7, ease = "power3.inOut", absolute = false, zIndex = 10, onComplete }: SharedOptions = {},
 ): gsap.core.Timeline {
@@ -108,7 +128,8 @@ export function playShared(
     if (onComplete) tl.eventCallback("onComplete", onComplete);
     return tl.set(target, {});
   }
-  return Flip.from(state, { targets: target, duration, ease, scale: true, absolute, zIndex, onComplete });
+  followScroll(state);
+  return Flip.from(state.flip, { targets: target, duration, ease, scale: true, absolute, zIndex, onComplete });
 }
 ```
 

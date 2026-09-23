@@ -251,6 +251,7 @@ export function preloader(root: HTMLElement, { catchUp = 0.5 }: PreloaderOptions
 
 ```ts
 // Example: the shell's controller, on a client navigation.
+// The shell owns this timeline; a page context reverted at unmount would reopen the curtain.
 const outro = gsap.timeline();
 outro.add(buildPageOutro(page, () => {}));             // optional item exit first
 outro.add(cover.cover(), "-=0.15");                     // then the curtain closes
@@ -263,10 +264,12 @@ cover.reveal().eventCallback("onComplete", () => markSettled());
 
 | Builder | Create | Returns | Reduced motion |
 |---|---|---|---|
-| `curtain` | Once, from the persistent shell | `{ cover, reveal, revert }` | Timelines complete at once; panels never show |
+| `curtain` | Once, from the persistent shell | `{ cover, reveal, revert }` | Timelines complete on the next frame; panels never show |
 | `preloader` | First paint of a visit that shows it | `{ progress, finish, revert }` | Count jumps to reported values; `finish` hides at once |
 
-- The controller composes `cover()` into the outro and swaps on its completion. It calls `reveal()` only after every incoming target has its size and start styles.
+- The controller starts `cover()` with the outro on the shell's own timeline, never inside a page's GSAP context, and swaps on its completion. It calls `reveal()` only after every incoming target has its size and start styles.
+- Under reduced motion the controller skips the curtain and uses its ordinary swap cover; the builders stay safe to call.
+- Where each page builds its own outro, run `cover()` as a sibling timeline on the shell, offset into the outro, and swap once both have completed. If the cover is nested in a page timeline for sequencing, remove it from that parent before the page's context reverts, or the revert reopens the curtain.
 - Back and forward take the intro-only path: no cover, and a `reveal()` only if the curtain is still closed.
 - A preloader is a deliberate hold under the framework's initialization contract. It counts as the prepared intro, so its deadline and recovery come from the framework, not from here.
 - Keep the curtain's panels out of the accessibility tree. The preloader's `role="progressbar"` reports its value while visible; the controller sets `aria-busy` on the content it covers.

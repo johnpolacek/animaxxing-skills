@@ -18,7 +18,7 @@ export function prefersReducedMotion(): boolean {
 }
 ```
 
-`data-motion` on `<html>` is an optional app-level override (`full` or `reduced`) so reduced motion can be reviewed without changing system settings. Every builder reads the helper when it builds, so an override applies to the next animation at once. If the project already has a helper, use it everywhere instead.
+`data-motion` on `<html>` is an optional app-level override (`full` or `reduced`) so reduced motion can be reviewed without changing system settings. Every builder reads the helper when it builds, so an override applies to the next animation at once. If the project already has a helper, use it everywhere instead. A boot marker that also uses `data-motion`, such as `js`, falls through to the media query; rename one of the two when the app needs both.
 
 ## The shelf: paired entrances and exits
 

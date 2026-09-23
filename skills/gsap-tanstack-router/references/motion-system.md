@@ -20,7 +20,7 @@ Store the current phase in state, a ref, or a data attribute. Do not infer it fr
 
 ## Setup and React lifecycle
 
-Create one client-only module that imports GSAP, `useGSAP`, and only the plugins the project uses, and registers them once. Other modules import from it.
+Create one client-only module that imports GSAP, `useGSAP`, and only the plugins the project uses, and registers them once. Other modules import from it. The Start starter's `package.json` sets `"sideEffects": false`, and a production build then drops a bare `gsap.registerPlugin(...)` statement: make registration the initializer of the exported binding, or list the module in `sideEffects`. Recipe copies import this module instead of registering their own plugins.
 
 Use `useGSAP` in components:
 
