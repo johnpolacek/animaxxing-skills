@@ -132,6 +132,8 @@ On intro completion, mark settled once, clear temporary transforms, visibility, 
 - Refresh ScrollTrigger after scroll restoration, and after the intro if anything above a trigger changed height.
 - SvelteKit's live region announces the new `title`. Give every page a title in `svelte:head` so an animated navigation is still announced.
 
+With a smooth scroller, follow [Smooth scrolling](smooth-scroll.md). Create it in the root `+layout.svelte`'s `onMount`, destroy it in that cleanup, and never in a page. A page's own `onMount` may run before the layout's, so build page triggers from `afterNavigate`, which fires after the whole tree has mounted, including on `enter`. Map the table onto the hooks: `stop()` where the outro starts, in `beforeNavigate` before `cancel()` or at the top of the `onNavigate` promise; the router scrolls in step 6, after the DOM update and before `afterNavigate`, so `if (to?.scroll) scrollTo(to.scroll.y, { immediate: true })` in `afterNavigate` (2.51, where `to.scroll` is `{ x, y }` or `null`; read `window.scrollY` before that), then `resize()` once the incoming page's triggers exist, then `start()` at settled. `noScroll` and `data-sveltekit-noscroll` keep the position, and `to.scroll` reports whatever was applied. The router keeps `history.scrollRestoration` on `manual` and resets it to `auto` on `beforeunload`; leave both alone. A rejected `goto` and a cancelled second click call `start()` where the lock is released. Hash-only links stay with the browser, so Lenis's `anchors` option eases them without help. `disableScrollHandling()` hands the position to the scroller; call it only when `scrollTo` is then the only scroll for that navigation.
+
 ## Combining with View Transitions
 
 The documented recipe wraps the update: `onNavigate` returns a promise that `document.startViewTransition`'s callback resolves, and the callback then awaits `navigation.complete`, so the old snapshot is taken before the DOM updates and the new one after. GSAP runs before it, outro on live DOM awaited before the transition starts, and after it, intro on the new tree after `finished` for elements the transition touched. Keep their jobs separate:
@@ -143,6 +145,14 @@ The documented recipe wraps the update: `onNavigate` returns a promise that `doc
 - Add `::view-transition { pointer-events: none }` so a running transition does not swallow clicks.
 - Feature-detect `document.startViewTransition`. Every GSAP path must run when it is missing.
 - Reduced motion covers both: zero view transition durations in CSS and take the GSAP reduced path.
+
+## Curtains, preloaders, and shared elements
+
+Follow [Transition archetypes](transition-archetypes.md). The root layout owns all three; pages only register builders.
+
+- **Curtain.** Render it in the root `+layout.svelte` outside the route container, fixed, and let it replace the route cover for that navigation. On the `beforeNavigate` path `cover()` composes into the outro before `goto`, and it covers the swap gap; on the `onNavigate` path it composes into the awaited promise, and the new page renders when that resolves. Either way `reveal()` runs from `afterNavigate` after `tick()` and start values, overlapping the intro. `popstate` never covers; reveal only if still closed. A rejected `goto` or a superseded navigation reveals, or covers again, where the lock is released; register that with the owner's rollback.
+- **Preloader.** The inline script in `src/app.html` decides before paint: on a first visit it sets a root mark beside the pre-paint mark and records the visit in `sessionStorage`; the root layout renders the preloader markup on every request and CSS shows it only under that mark. `finish()` runs from the layout's `afterNavigate` with `type: 'enter'` once the deadline-bounded fonts and hero media report, and the registered page intro starts as it lifts. A page must not play its first intro from its own `afterNavigate` while the preloader is up.
+- **Shared element.** `captureShared` where the outro starts, in the layout's hook, before the outro dims the rest. Keep the state in the layout controller keyed by `to.url.pathname`, clear it in `afterNavigate` after playing and when a navigation is cancelled or superseded, and never put it in a `snapshot`. `playShared(state, target)` from the incoming page's `afterNavigate` after `tick()`, with the target from `bind:this`: a `{#key}` wrapper with an `out:` directive keeps the old page in the DOM during the morph, which is why the target is explicit. `popstate` has no capture.
 
 ## Cases to design for
 

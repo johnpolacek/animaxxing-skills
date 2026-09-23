@@ -37,6 +37,15 @@ For conditional components and modal routes, test show, hide, one interruption, 
 
 Use visibility-aware selectors in browser tests, such as role queries or an explicit visible filter, since a covered or `inert` route is still in the DOM.
 
+## Smooth scrolling and transition archetypes
+
+Run the checks in [Smooth scrolling](smooth-scroll.md#verify) and [Transition archetypes](transition-archetypes.md#verify) when the change touches them. Under React Router also confirm:
+
+- After `proceed()` the page starts where `<ScrollRestoration>` put it: the top, the hash target, or unchanged with `preventScrollReset`. After a `POP`, the saved position, keyed by `getKey` when one is set, with no eased travel from the old page and no jump when `start()` runs. In declarative mode, the top after a push and the browser's position after a pop.
+- Fast Refresh on the root module and StrictMode leave one scroller and one ticker callback.
+- No blocker stays `blocked` under a closed curtain; a `POP` during a covered swap ends uncovered and unblocked.
+- A navigation that morphs a shared element sets no `viewTransition`, and the pop back replays nothing.
+
 ## Builds and wider checks
 
 Run a production build for changes to routes, `react-router.config.ts`, dependencies, server and client boundaries, `.client` modules, or anything release-facing. In framework mode the server build evaluates route modules; a GSAP call outside an effect fails there, not in dev. Run wider browser, accessibility, responsive, streaming, and performance checks only when the change touches them or the user asks for a full audit.

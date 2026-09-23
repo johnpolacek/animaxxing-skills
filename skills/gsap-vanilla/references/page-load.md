@@ -70,6 +70,10 @@ When the user leaves, the browser may freeze the document in the back-forward ca
 - An outro end state that leaves the page faded or covered is a bug the user sees only when pressing back. Clear it in `pagehide`.
 - Never add `unload` listeners. A `beforeunload` listener blocks the bfcache in some browsers unless removed after use. Use `pagehide`, which fires in both cases and reports `persisted`.
 
+## Smooth scrolling
+
+Follow [Smooth scrolling](smooth-scroll.md). Every document creates its own scroller: build it with the controller on `DOMContentLoaded`, before any page ScrollTrigger, and leave `history.scrollRestoration` to the browser. A `back_forward` or `reload` document is restored natively, sometimes after `load`, so sync with `scrollTo(window.scrollY, { immediate: true })` when the controller builds and again on `load`, `resize()` once the page's triggers exist, and `start()` at settled. The outro calls `stop()`; the navigation ends the document, so nothing is destroyed. On `pagehide`, `start()` it again along with the readable end state, or a bfcache return arrives clipped. On `pageshow` with `persisted`, the scroller is still alive: sync to `window.scrollY` and `resize()`, with no intro.
+
 ## Leaving a page with an outro
 
 There is no router to intercept. Intercept the click.
@@ -82,6 +86,12 @@ There is no router to intercept. Intercept the click.
 - Under reduced motion, run the end-state callback immediately.
 
 Prefetch the destination during the outro with `<link rel="prefetch">` or Speculation Rules so the new document is ready when the outro ends. The outro's length is the only budget the network gets.
+
+## Curtains and preloaders
+
+Follow [Transition archetypes](transition-archetypes.md). Nothing survives a document load, so a full-document curtain is two halves. The outgoing document composes `cover()` into the outro, writes a `sessionStorage` flag, and follows the link from its completion. The incoming document's inline head script consumes that flag and marks `<html>` so CSS paints the panels covering the page from the first frame; the intro then starts with `reveal()` once start values are written. Reload, back, and forward find no flag and paint uncovered. On `pagehide`, revert the curtain along with the outro so a bfcache return is not covered.
+
+The preloader is the same script's decision: on a visit the session has not seen, it sets a root mark and records the visit; CSS shows the preloader markup only under that mark, so a visit without JavaScript never sees it. The deadline that script arms already bounds the hold. The controller feeds `progress()` from `document.fonts.ready` and the hero image's `decode()`, bounded by that deadline, and starts the page intro as `finish()` lifts. A same-document router never shows it again.
 
 ## Shell chrome
 

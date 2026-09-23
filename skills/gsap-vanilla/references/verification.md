@@ -34,6 +34,8 @@ With cross-document View Transitions, confirm no element is animated by both eng
 
 For same-document navigation, also test a failed fetch, a slow fetch, and a page that changed body classes or scroll lock.
 
+With a smooth scroller, run the [scroll checks](smooth-scroll.md#verify) on a fresh load, a `back_forward` load, and a bfcache return; a page left mid-outro must not come back clipped, and a same-page hash link eases once rather than jumping and then easing. With a curtain, preloader, or shared element, run the [archetype checks](transition-archetypes.md#verify); on a full-document site also confirm a covered first frame follows only an outro, never a reload or history load, and that a shared element morphs through the browser's view transition, not Flip.
+
 For conditional components, test show, hide, and one interruption. Confirm removal happens after the outro.
 
 ## Builds and wider checks

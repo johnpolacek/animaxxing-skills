@@ -32,6 +32,8 @@ Use React `<ViewTransition>` for shared-element morphs, page crossfades, and Sus
 - Loading/auth flashes and shifting async sections: [Data readiness](references/initialization.md#data-readiness-and-layout-stability), plus [React data integration](references/motion-system.md#data-ready-entrances).
 - Page intros and outros, transition-aware links, back and forward, focus, route swaps: [App Router navigation](references/app-router-navigation.md).
 - The five phases, GSAP setup, React lifecycle, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Lenis, ScrollSmoother, or eased page scrolling across routes: [Smooth scrolling](references/smooth-scroll.md), plus the [App Router integration](references/app-router-navigation.md#smooth-scrolling).
+- Curtains, first-visit preloaders, and shared-element morphs: [Transition archetypes](references/transition-archetypes.md), plus [where they live in the App Router](references/app-router-navigation.md#curtains-and-preloaders).
 - Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 

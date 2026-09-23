@@ -36,6 +36,15 @@ When both `viewTransition` and GSAP are involved, confirm no element is animated
 
 For conditional components, test show, hide, and one interruption. Confirm unmount happens after the outro.
 
+## Smooth scrolling and transition archetypes
+
+Run the checks in [Smooth scrolling](smooth-scroll.md#verify) and [Transition archetypes](transition-archetypes.md#verify) when the change touches them. Under TanStack Router also confirm:
+
+- After a push the page starts where `onRendered` put it: the top, the hash target, or unchanged with `resetScroll: false`. After `BACK` with `scrollRestoration` on, the saved position, with no eased travel from the old page and no jump when `start()` runs. With `scrollRestorationBehavior: 'instant'`, nothing eases under the intro.
+- Fast Refresh on the root module and StrictMode leave one scroller and one ticker callback.
+- No blocker promise stays pending under a closed curtain; a `BACK` during a covered swap ends uncovered, and a slow loader that shows the pending component under the curtain still reveals.
+- Under Start, the preloader attribute and the pre-paint mark both come from `ScriptOnce`; with hydration blocked, the deadline hides the preloader and the page reads.
+
 ## Builds and wider checks
 
 Run a production build, and `vite preview` or the Start server, for changes to routes, the router options, the Vite or Start config, dependencies, the root document shell, or anything release-facing; the dev server hydrates differently from the built output and React development runs effects twice. Run wider browser, accessibility, responsive, streaming, and performance checks only when the change touches them or the user asks for a full audit.

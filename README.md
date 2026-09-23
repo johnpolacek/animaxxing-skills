@@ -53,11 +53,11 @@ Copy the folders under `skills/` into your agent's skill directory:
 
 | Skill | Description |
 |-------|-------------|
-| **animaxxing** | Reusable vanilla TypeScript and GSAP recipes: split-text entrances, scattering headlines, speak-in copy, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, magnetic buttons, tilt cards, cursor followers, drag tracks, SVG drawing and morphs, count-up figures, marquees, particle buttons/cards/links/fields, and blast-off exits. Includes text stability and effect verification. Preserves existing fonts, colors, and layout; the framework skill owns lifecycle timing |
+| **animaxxing** | Reusable vanilla TypeScript and GSAP recipes: split-text entrances, scattering headlines, speak-in copy, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, smooth scrolling with Lenis or ScrollSmoother, curtain and preloader covers, Flip layout and shared-element morphs, magnetic buttons, tilt cards, cursor followers, drag tracks, SVG drawing and morphs, count-up figures, marquees, particle buttons/cards/links/fields, and blast-off exits. Includes text stability and effect verification. Preserves existing fonts, colors, and layout; the framework skill owns lifecycle timing |
 
 ### Framework skills
 
-Every framework packages two shared references: initialization and recovery for reliable reveals, and device guidance for touch, viewport changes, and performance budgets.
+Every framework packages four shared references: initialization and recovery for reliable reveals; device guidance for touch, viewport changes, and performance budgets; smooth scrolling across navigation; and transition archetypes for curtains, first-visit preloaders, and shared-element morphs.
 
 | Skill | Description |
 |-------|-------------|
@@ -120,6 +120,8 @@ animaxxing-skills/
   shared/
     initialization.md    # Canonical recovery and first-load guidance
     devices.md           # Canonical device tiers, touch, viewport, and budgets
+    smooth-scroll.md     # Canonical scroller lifecycle through navigation
+    transition-archetypes.md # Canonical curtain, preloader, and shared-element rules
   scripts/
     sync_initialization.py # Packages every shared reference; validation checks drift
   skills/
@@ -142,6 +144,9 @@ animaxxing-skills/
           pointer-effects.md
           svg-effects.md
           counters-and-marquees.md
+          smooth-scroll.md
+          page-covers.md
+          layout-flip.md
           particle-field.md
           particle-effects.md
     gsap-vanilla/
@@ -154,6 +159,8 @@ animaxxing-skills/
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
         devices.md        # Packaged device and input tiers
+        smooth-scroll.md  # Packaged scroller lifecycle
+        transition-archetypes.md # Packaged curtains, preloaders, shared elements
         verification.md
     gsap-astro/
       SKILL.md
@@ -164,6 +171,8 @@ animaxxing-skills/
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
         devices.md        # Packaged device and input tiers
+        smooth-scroll.md  # Packaged scroller lifecycle
+        transition-archetypes.md # Packaged curtains, preloaders, shared elements
         verification.md
     gsap-sveltekit/
       SKILL.md
@@ -174,6 +183,8 @@ animaxxing-skills/
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
         devices.md        # Packaged device and input tiers
+        smooth-scroll.md  # Packaged scroller lifecycle
+        transition-archetypes.md # Packaged curtains, preloaders, shared elements
         verification.md
     gsap-nuxt/
       SKILL.md
@@ -184,6 +195,8 @@ animaxxing-skills/
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
         devices.md        # Packaged device and input tiers
+        smooth-scroll.md  # Packaged scroller lifecycle
+        transition-archetypes.md # Packaged curtains, preloaders, shared elements
         verification.md
     gsap-react-router/
       SKILL.md
@@ -194,6 +207,8 @@ animaxxing-skills/
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
         devices.md        # Packaged device and input tiers
+        smooth-scroll.md  # Packaged scroller lifecycle
+        transition-archetypes.md # Packaged curtains, preloaders, shared elements
         verification.md
     gsap-tanstack-router/
       SKILL.md
@@ -204,6 +219,8 @@ animaxxing-skills/
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
         devices.md        # Packaged device and input tiers
+        smooth-scroll.md  # Packaged scroller lifecycle
+        transition-archetypes.md # Packaged curtains, preloaders, shared elements
         verification.md
     gsap-nextjs/
       SKILL.md
@@ -213,6 +230,8 @@ animaxxing-skills/
         motion-system.md
         initialization.md # Packaged recovery and first-load contract
         devices.md        # Packaged device and input tiers
+        smooth-scroll.md  # Packaged scroller lifecycle
+        transition-archetypes.md # Packaged curtains, preloaders, shared elements
         verification.md
     style-animaxxing/
       SKILL.md

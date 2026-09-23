@@ -2,17 +2,17 @@
 
 Compose one framework skill for lifecycle timing, a motion skill for effects, and a style when requested. Static restyles need only the style. Install alongside https://github.com/greensock/gsap-skills for API/plugin guidance. Each skill installs independently.
 
-Framework skills include local references/initialization.md for readiness, recovery, and first-load performance, plus references/devices.md for touch, viewport changes, and device budgets.
+Framework skills include local references/initialization.md for readiness, recovery, and first-load performance, references/devices.md for touch, viewport changes, and device budgets, references/smooth-scroll.md for a scroller that survives navigation, and references/transition-archetypes.md for curtains, first-visit preloaders, and shared-element morphs.
 
 ## Motion skills
 
 [animaxxing](animaxxing/SKILL.md)
-  Reusable vanilla TypeScript and GSAP text, scroll, pointer, SVG, and particle effects with text stability and technical checks. Preserve existing fonts, colors, and layout; no style skill required. The framework skill owns lifecycle timing.
-  Triggers: animate without restyling, preserve branding, Animaxxing motion, split-text entrance, scattering headline, speak-in, letter wave, scroll reveal, scrub text, parallax, pinned section, horizontal scroll, scroll progress, magnetic button, tilt card, custom cursor, drag carousel, SVG line draw, icon morph, motion path, count-up number, marquee ticker, particle buttons, blast-off, hover stuck on touch, particle density on phones.
+  Reusable vanilla TypeScript and GSAP text, scroll, pointer, layout, SVG, and particle effects with text stability and technical checks. Preserve existing fonts, colors, and layout; no style skill required. The framework skill owns lifecycle timing.
+  Triggers: animate without restyling, preserve branding, Animaxxing motion, split-text entrance, scattering headline, speak-in, letter wave, scroll reveal, scrub text, parallax, pinned section, horizontal scroll, scroll progress, magnetic button, tilt card, custom cursor, drag carousel, SVG line draw, icon morph, motion path, count-up number, marquee ticker, particle buttons, blast-off, smooth scroll, Lenis, ScrollSmoother, curtain transition, page wipe, preloader, loading counter, Flip, filter grid animation, reorder list, shared element, hover stuck on touch, particle density on phones.
 
 ## Framework skills
 
-Shared triggers: initially hidden content, invisible intro, failed entrance, stalled fonts/media, late hydration, no-JavaScript fallback, first-load performance, loading flashes, auth-dependent content, layout shifts, mobile, touch, phone width, orientation change, low-end devices.
+Shared triggers: initially hidden content, invisible intro, failed entrance, stalled fonts/media, late hydration, no-JavaScript fallback, first-load performance, loading flashes, auth-dependent content, layout shifts, mobile, touch, phone width, orientation change, low-end devices, smooth scroll across routes, scroll position after navigation, curtain transition, preloader, shared element across pages.
 
 [gsap-vanilla](gsap-vanilla/SKILL.md)
   Plain HTML/CSS/JS: first paint, full-document or fetch/swap navigation, View Transitions, bfcache and prerendering.

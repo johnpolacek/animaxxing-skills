@@ -32,6 +32,8 @@ Use Svelte `transition:` / `in:` / `out:` for simple block motion and `{#key}` s
 - Navigation hooks and their order, outro before navigation, the lock, back and forward, scroll, focus, links, preloading, View Transitions: [SvelteKit navigation](references/sveltekit-navigation.md).
 - Page reuse versus remount, layouts, `{#key}` versus `afterNavigate`, the Svelte 5 lifecycle, Svelte transitions beside GSAP, shallow-routed modals, SSR: [Page lifetime](references/page-lifetime.md).
 - The five phases, GSAP setup, contexts, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Lenis, ScrollSmoother, or eased page scrolling across routes: [Smooth scrolling](references/smooth-scroll.md), plus the [hook mapping](references/sveltekit-navigation.md#settled-state-focus-and-scroll).
+- Curtains, first-visit preloaders, and shared-element morphs: [Transition archetypes](references/transition-archetypes.md), plus the [layout integration](references/sveltekit-navigation.md#curtains-preloaders-and-shared-elements).
 - Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 

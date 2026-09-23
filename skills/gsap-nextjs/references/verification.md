@@ -37,6 +37,15 @@ When both `<ViewTransition>` and GSAP are involved, confirm no element is animat
 
 For conditional components, test show, hide, and one interruption. Confirm unmount happens after the outro.
 
+## Smooth scrolling and transition archetypes
+
+Run the checks in [Smooth scrolling](smooth-scroll.md#verify) and [Transition archetypes](transition-archetypes.md#verify) when the change touches them. In the App Router also confirm:
+
+- After a link the page starts where Next.js put it: the top of the first page element, the hash target, or unchanged with `scroll={false}`. After back and forward, the browser's restored position, with no eased travel from the old page and no jump when `start()` runs.
+- Fast Refresh on the boundary's file and StrictMode leave one scroller and one ticker callback.
+- A ready timeout under a closed curtain reveals the page, and a `POP` during a covered swap ends uncovered.
+- With `cacheComponents`, the shared-element morph moves the visible target rather than the Activity-hidden copy, and a re-shown route never shows the preloader.
+
 ## Builds and wider checks
 
 Run a production build for changes to routes, Next config, dependencies, server and client boundaries, or anything release-facing. Run wider browser, accessibility, responsive, streaming, and performance checks only when the change touches them or the user asks for a full audit.

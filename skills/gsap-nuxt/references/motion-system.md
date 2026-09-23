@@ -49,7 +49,7 @@ If the effect changes width, height, or position:
 
 - Animate a transform on an inner element while an outer wrapper holds the settled size.
 - For a real expand or collapse, measure start and end sizes first, animate the wrapper, and decide how surrounding content moves.
-- For layout-to-layout changes, use Flip: capture the old state, apply the new layout, `await nextTick()`, animate.
+- For layout-to-layout changes, use Flip: `captureLayout` from the `animaxxing` skill's `references/recipes/layout-flip.md`, change the state, `await nextTick()`, `play()`. A `v-for` item Vue removes cannot animate out; hide it with a class or `v-show` if it must.
 - When old and new content share one region, reserve the parent and overlap the children so only the parent affects layout.
 
 Content must stay readable without JavaScript. The pre-paint rule in [SSR and first paint](navigation.md#ssr-and-first-paint) is the only sanctioned way to hide before the intro.
@@ -97,7 +97,7 @@ Choose the toggle by what re-show during an outro should do. With `v-show`, the 
 
 `appear` is safe only on content that is not server-rendered. On SSR output it wraps the child in `<template>` and hides it until hydration.
 
-Use `<TransitionGroup>` for lists. The same hooks run once per item with that item's `el`; read a `data-index` attribute for stagger, give every item a key, and set `:css="false"`. Its move animation is CSS-only, so use Flip when moves must be sequenced with GSAP.
+Use `<TransitionGroup>` for lists. The same hooks run once per item with that item's `el`; read a `data-index` attribute for stagger, give every item a key, and set `:css="false"`. Its move animation is CSS-only, so use Flip when moves must be sequenced with GSAP. Pick one per list; a `move-class` and a Flip on the same items fight.
 
 When content in a shared region changes size, decide who owns the region's geometry before showing either child. Overlap old and new inside a reserved wrapper, or animate a measured wrapper between known sizes. Do not let hide then show push surrounding content twice.
 

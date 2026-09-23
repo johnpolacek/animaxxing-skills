@@ -34,6 +34,8 @@ Use `defaultViewTransition` or Link/`navigate` `viewTransition` for snapshot mor
 - Router APIs and the order of one navigation, outro before navigation with `useBlocker` or an intercepted Link, the lock, back and forward, pending UI, the swap gap, scroll, focus, View Transitions: [TanStack navigation](references/tanstack-navigation.md).
 - Route reuse versus `remountDeps`, layouts and `Outlet`, the React lifecycle for GSAP, conditional content, TanStack Start SSR and hydration, deferred data: [Route lifetime](references/route-lifetime.md).
 - The five phases, GSAP setup, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Lenis, ScrollSmoother, or eased page scrolling across routes: [Smooth scrolling](references/smooth-scroll.md), plus the [TanStack integration](references/tanstack-navigation.md#smooth-scrolling).
+- Curtains, first-visit preloaders, and shared-element morphs: [Transition archetypes](references/transition-archetypes.md), plus [where they live under TanStack Router](references/tanstack-navigation.md#curtains-preloaders-and-shared-elements).
 - Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 
