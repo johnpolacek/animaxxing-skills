@@ -230,7 +230,7 @@ animaxxing-skills/
 
 The test repository also checks disabled-JavaScript routes and bundle failure after the early marker across all seven HTML-rendering references. An isolated GSAP/SplitText fixture tests partial setup, stalled preparation, late work, and owner isolation. It does not certify recovery inside every framework controller.
 
-The [Animaxxing](https://github.com/johnpolacek/animaxxing) demo is the reference for `style-animaxxing` and `animaxxing`. Each has its own `references/verification.md`: the style checks design and effect selection; the motion skill checks effect behavior, text stability, and reuse with the consuming app's fonts and colors. Dedicated style and motion suites in the test repository are planned.
+The [Animaxxing](https://github.com/johnpolacek/animaxxing) demo is the reference for `style-animaxxing` and `animaxxing`. Each has its own `references/verification.md`: the style checks design and effect selection; the motion skill checks effect behavior, text stability, and reuse with the consuming app's fonts and colors. The test repository's `motion/` suite type-checks and runs the scroll, pointer, SVG, and counter and marquee recipes in Chromium; suites for the text and particle recipes and for styles are planned.
 
 ## Demo
 

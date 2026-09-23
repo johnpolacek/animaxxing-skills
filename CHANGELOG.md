@@ -13,6 +13,7 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ### Changed
 
+- Motion verification points at the new `motion/` suite in animaxxing-skills-test for the scroll, pointer, SVG, and counter and marquee recipes.
 - Framework scroll guidance warns that reverting scrubbed triggers can leave inline start values, notably with `invalidateOnRefresh`, and shows how to restore them.
 
 ## [0.3.4] - 2026-09-15

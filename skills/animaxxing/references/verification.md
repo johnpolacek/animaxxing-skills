@@ -1,6 +1,8 @@
 # Verification
 
-Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exercises these recipes with `style-animaxxing`; it is not a required design. Until a motion suite exists in animaxxing-skills-test, verify changed recipes there or in the consuming app, alongside the framework skill's relevant checks.
+Automated suite: `motion/` in [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test) type-checks the scroll, pointer, SVG, and counter and marquee recipes straight from this skill and runs their checks in Chromium (`pnpm test:motion`). Run it after changing those recipes.
+
+Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exercises the text and particle recipes with `style-animaxxing`; it is not a required design. Verify changes to those recipes there or in the consuming app, alongside the framework skill's relevant checks.
 
 ## Portability
 
