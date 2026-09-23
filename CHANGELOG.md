@@ -4,6 +4,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-23
+
 ### Added
 
 - SVG effects recipe in `animaxxing`: stroke drawing in and out, icon morph toggles, and a path follower.
