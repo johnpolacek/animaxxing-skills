@@ -35,6 +35,17 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 - Reduced motion: no pins, splits, or scrubbing; static fallbacks readable; progress rule still tracks.
 - With a custom scroller, every trigger receives it and cleanup leaves the app's proxy intact.
 
+## Pointer
+
+- Magnetic, tilt, and follower respond to the mouse and ignore touch and pen; nothing sticks after a tap.
+- Leaving the target returns it exactly to rest; teardown leaves no inline transform or `--pointer-*`.
+- The follower appears at the pointer, never sliding in from the corner, and hides when the mouse leaves the window.
+- Drag a track of links: it moves and snaps, the drag does not follow the link, and a plain click does.
+- On touch, horizontal drags move the track and vertical swipes still scroll the page.
+- Keyboard focus slides the focused item into view; a mouse press on an item does not.
+- Revert during a throw: the track stops and its inline styles and the viewport's `overflow` restore.
+- Reduced motion: no magnetic, tilt, or follower; the track drags and snaps without a throw.
+
 ## Effect failure and restoration
 
 - Throw before writes, after initial styles, and after a split or particle resource is created. Confirm partial setup rolls back even without a returned handle.

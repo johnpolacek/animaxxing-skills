@@ -21,6 +21,7 @@ Apply this when adapting any recipe. The examples show effects, not a complete f
 | Speak-in | Nested word/character splits, persistent tilt/weight finishes, widths, and timeline callbacks. |
 | Wave | Scheduled next cycles, active tweens, splits, pinned glyph widths, and inline weight. |
 | Scroll effects | Triggers, pin spacers, splits, scrubbed and reveal tweens, the settle tween, focus listeners, the run's `overflow`, and inline motion values a pinned revert leaves behind. Inner `containerAnimation` triggers first. |
+| Pointer effects | Listeners, `quickTo` values left inline, `--pointer-*` properties, the `Draggable` and any throw in flight, its inline touch and selection styles, observers, and the viewport's `overflow`. |
 | Blast-off | Tweens and splits across the composition, including container transforms and button changes. |
 | Particle field/effects | Ticker callbacks, emitters, particles/tweens, observers, event listeners, and effect-owned canvas/wrapper styles. |
 

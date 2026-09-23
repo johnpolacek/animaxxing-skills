@@ -1,7 +1,7 @@
 interface:
   display_name: "Animaxxing"
-  short_description: "Reusable GSAP text, scroll, and particle motion for any brand"
-  default_prompt: "Use $animaxxing with the matching GSAP framework skill to add text, scroll, and particle effects while preserving this site's design."
+  short_description: "Reusable GSAP text, scroll, pointer, and particle motion for any brand"
+  default_prompt: "Use $animaxxing with the matching GSAP framework skill to add text, scroll, pointer, and particle effects while preserving this site's design."
 
 policy:
   allow_implicit_invocation: true

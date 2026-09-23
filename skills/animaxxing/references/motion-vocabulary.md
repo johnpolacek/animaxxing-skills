@@ -149,10 +149,12 @@ The framework controller decides whether to rebuild an affected effect or replay
 
 ## Input and devices
 
-Only particle treatments use pointer states; text effects are input-independent.
+Particle treatments and pointer effects use pointer states; text and scroll effects are input-independent.
 
 - [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
 - Tune `COARSE_POINTER_DENSITY` for transient particles; preserve outlines and owned particles.
+- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, and `cursorFollower` answer the mouse only and never gate a control. `dragTrack` works with mouse, touch, and keyboard.
+- One pointer response per control: magnetic, tilt, or a particle hot state.
 - The installed framework skill's `references/devices.md` owns viewport tiers, orientation handling, and CPU budgets.
 
 ## Ambient motion
