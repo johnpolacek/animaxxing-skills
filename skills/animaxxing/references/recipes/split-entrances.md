@@ -23,6 +23,26 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/**
+ * Runs setup inside its own GSAP context. If setup throws, everything it
+ * created (sets, tweens, timelines, splits) is reverted before the error is
+ * rethrown, so a failed build never strands hidden or split text.
+ */
+function guarded<T>(setup: () => T, onFail?: () => void): T {
+  const ctx = gsap.context(() => {});
+  let result: T | undefined;
+  try {
+    ctx.add(() => {
+      result = setup();
+    });
+  } catch (error) {
+    onFail?.();
+    ctx.revert();
+    throw error;
+  }
+  return result as T;
+}
+
 const DURATION = { micro: 0.14, component: 0.2, page: 0.28 } as const;
 const EASE = { entrance: "power2.out", exit: "power2.in", shift: "power2.inOut" } as const;
 const STAGGER = { tight: 0.03, loose: 0.05 } as const;
@@ -55,22 +75,26 @@ function withSplit(
   choreograph: (split: SplitText, tl: gsap.core.Timeline) => void,
   settled: gsap.TweenVars = { autoAlpha: 1 },
 ): gsap.core.Timeline {
-  const tl = build(options);
-  if (!element) return tl;
-  if (prefersReducedMotion()) return tl.set(element, settled);
+  if (!element) return build(options);
+  if (prefersReducedMotion()) return build(options).set(element, settled);
 
-  const split = SplitText.create(element, { aria: "auto", ...config });
-  if (config.mask === "chars" && options.charMaskClass) {
-    for (const mask of split.masks) mask.classList.add(options.charMaskClass);
-  }
-  tl.set(element, { autoAlpha: 1 });
-  choreograph(split, tl);
-  tl.eventCallback("onComplete", () => {
-    const previous = options.onComplete;
-    split.revert();
-    previous?.();
+  return guarded(() => {
+    const tl = build(options);
+    const split = SplitText.create(element, { aria: "auto", ...config });
+    if (config.mask === "chars" && options.charMaskClass) {
+      for (const mask of split.masks) mask.classList.add(options.charMaskClass);
+    }
+    tl.set(element, { autoAlpha: 1 });
+    choreograph(split, tl);
+    tl.eventCallback("onComplete", () => {
+      const previous = options.onComplete;
+      split.revert();
+      previous?.();
+    });
+    // A run killed mid-way puts the text back too; the controller applies the settled or end state.
+    tl.eventCallback("onInterrupt", () => split.revert());
+    return tl;
   });
-  return tl;
 }
 
 /** Pins each character to the width it needs at its heaviest, so the weight axis can move without reflow. */
@@ -306,6 +330,8 @@ export const scrambleIn: SplitRunner = (element, options = {}) => {
   if (!element) return tl;
   const text = element.textContent ?? "";
   if (prefersReducedMotion()) return tl.set(element, { autoAlpha: 1 });
+  // Killed mid-scramble, the text goes back to the real words.
+  tl.eventCallback("onInterrupt", () => { element.textContent = text; });
   return tl.set(element, { autoAlpha: 1 }).to(element, {
     duration: 0.9,
     ease: "none",
@@ -318,6 +344,7 @@ export const scrambleOut: SplitRunner = (element, options = {}) => {
   if (!element) return tl;
   if (prefersReducedMotion()) return tl.set(element, { autoAlpha: 0 });
   const text = element.textContent ?? "";
+  tl.eventCallback("onInterrupt", () => { element.textContent = text; });
   return tl
     .to(element, { duration: 0.5, ease: "none", scrambleText: { text: text.replace(/\S/g, "0"), chars: "01{}/<>()=;", speed: 0.8 } })
     .to(element, { autoAlpha: 0, duration: DURATION.micro, ease: EASE.exit })

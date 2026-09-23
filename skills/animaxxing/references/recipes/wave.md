@@ -25,6 +25,26 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/**
+ * Runs setup inside its own GSAP context. If setup throws, everything it
+ * created (sets, tweens, timelines, splits) is reverted before the error is
+ * rethrown, so a failed build never strands hidden or split text.
+ */
+function guarded<T>(setup: () => T, onFail?: () => void): T {
+  const ctx = gsap.context(() => {});
+  let result: T | undefined;
+  try {
+    ctx.add(() => {
+      result = setup();
+    });
+  } catch (error) {
+    onFail?.();
+    ctx.revert();
+    throw error;
+  }
+  return result as T;
+}
+
 /** Delay between neighbouring letters starting their move. */
 const RIPPLE = 0.03;
 /** Each letter is back at rest this many seconds after it starts. */
@@ -103,11 +123,14 @@ export type WaveOptions = {
  */
 export function startWave(heading: HTMLElement, { period = 4 }: WaveOptions = {}): (keepSplit?: boolean) => void {
   if (prefersReducedMotion()) return () => {};
-  const split = SplitText.create(heading, { type: "chars,words" });
-  const chars = split.chars as HTMLElement[];
-  chars.sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
-  pinWidths(chars);
-  gsap.set(chars, { willChange: "transform, opacity" });
+  const { split, chars } = guarded(() => {
+    const split = SplitText.create(heading, { type: "chars,words" });
+    const chars = split.chars as HTMLElement[];
+    chars.sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+    pinWidths(chars);
+    gsap.set(chars, { willChange: "transform, opacity" });
+    return { split, chars };
+  });
 
   // Shuffle so each cycle plays in a fresh order, never repeating one across the seam.
   let deck = gsap.utils.shuffle([...MOVES]);

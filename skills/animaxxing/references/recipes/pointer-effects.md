@@ -324,8 +324,11 @@ export function dragTrack(viewport: HTMLElement, track: HTMLElement, { snap = tr
     });
     const drag = draggable;
     dispose(() => drag.kill());
-    // Stops a throw still in flight, which kill() leaves running.
-    dispose(() => gsap.killTweensOf(track));
+    // Stops a throw still in flight and the velocity tracker, both of which kill() leaves running.
+    dispose(() => {
+      gsap.killTweensOf(track);
+      InertiaPlugin.untrack(track);
+    });
     // Links and images start a native drag that swallows the gesture.
     listen(dispose, track, "dragstart", (event) => event.preventDefault());
     // Focus scrolls the clipped viewport natively; the track's transform does that job.

@@ -24,6 +24,26 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/**
+ * Runs setup inside its own GSAP context. If setup throws, everything it
+ * created (sets, tweens, timelines, splits) is reverted before the error is
+ * rethrown, so a failed build never strands hidden or split text.
+ */
+function guarded<T>(setup: () => T, onFail?: () => void): T {
+  const ctx = gsap.context(() => {});
+  let result: T | undefined;
+  try {
+    ctx.add(() => {
+      result = setup();
+    });
+  } catch (error) {
+    onFail?.();
+    ctx.revert();
+    throw error;
+  }
+  return result as T;
+}
+
 const rnd = gsap.utils.random;
 /** Fast is the point. */
 const LETTER_TIME: [number, number] = [0.4, 0.6];
@@ -55,6 +75,10 @@ export function blastOff({ root, heading, words, pressed, others }: BlastOffOpti
     const timeline = gsap.timeline().set([heading, ...words, pressed, ...others], { autoAlpha: 0 });
     return { timeline, revert: () => { timeline.revert(); } };
   }
+  return guarded(() => throwApart({ root, heading, words, pressed, others }));
+}
+
+function throwApart({ root, heading, words, pressed, others }: BlastOffOptions): BlastOff {
   const origin = centre(pressed);
   const split = SplitText.create(heading, { type: "chars,words" });
   const chars = split.chars as HTMLElement[];

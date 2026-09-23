@@ -13,6 +13,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ### Fixed
 
+- Text and particle recipes roll back their own setup when construction throws: split entrances, route letters, speak-in, wave, blast-off, and particle attachment. Killing a split entrance or scramble mid-run restores the text.
+- `dragTrack` stops InertiaPlugin's velocity tracker on revert, which otherwise wrote inline transform properties after restore.
 - `particle-effects` compiles as one module: `ignite` declared a second `EMBER_RATE`, now `RULE_EMBER_RATE`.
 
 ### Changed

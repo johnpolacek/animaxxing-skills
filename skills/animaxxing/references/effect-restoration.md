@@ -1,6 +1,6 @@
 # Effect restoration
 
-Apply this when adapting any recipe. The examples show effects, not a complete failure boundary. The installed `gsap-<framework>` skill owns initialization deadlines, visit tokens, navigation, and recovery timing. Its controller needs rollback registered before effect setup, not just a handle returned afterward.
+Apply this when adapting any recipe. Every recipe rolls back its own setup when construction throws (`guarded` or `own` in each module) and reverts on interruption where its return shape allows; keep that when copying. The recipes do not own the complete failure boundary. The installed `gsap-<framework>` skill owns initialization deadlines, visit tokens, navigation, and recovery timing. Its controller needs rollback registered before effect setup, not just a handle returned afterward.
 
 ## Builder guarantees
 

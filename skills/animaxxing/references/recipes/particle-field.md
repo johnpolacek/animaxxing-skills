@@ -369,7 +369,14 @@ export function attachParticleEffect(
   effect: ParticleEffectDefinition,
 ): ParticleEffectControls {
   const field = new ParticleField(canvas, target, effect.bleed);
-  const instance = effect.create(field, target);
+  let instance: ParticleEffectInstance;
+  try {
+    instance = effect.create(field, target);
+  } catch (error) {
+    // Nothing else is attached yet; stop the field and clear anything it drew.
+    field.destroy();
+    throw error;
+  }
   let entrance: gsap.core.Timeline | null = null;
   let ready = false;
 

@@ -25,6 +25,26 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/**
+ * Runs setup inside its own GSAP context. If setup throws, everything it
+ * created (sets, tweens, timelines, splits) is reverted before the error is
+ * rethrown, so a failed build never strands hidden or split text.
+ */
+function guarded<T>(setup: () => T, onFail?: () => void): T {
+  const ctx = gsap.context(() => {});
+  let result: T | undefined;
+  try {
+    ctx.add(() => {
+      result = setup();
+    });
+  } catch (error) {
+    onFail?.();
+    ctx.revert();
+    throw error;
+  }
+  return result as T;
+}
+
 /** Seconds a word takes to arrive, before adding time per letter. */
 const WORD_BASE = 0.06;
 /** Extra seconds per letter, so long words take longer to say. */
@@ -103,11 +123,15 @@ export function speakIn(
   el: HTMLElement,
   { emphasis = [], delay = 0 }: SpeakOptions = {},
 ): { timeline: gsap.core.Timeline; words: HTMLElement[]; revert: () => void } {
-  const timeline = gsap.timeline();
   if (prefersReducedMotion()) {
-    timeline.set(el, { autoAlpha: 1 });
+    const timeline = gsap.timeline().set(el, { autoAlpha: 1 });
     return { timeline, words: [], revert: () => {} };
   }
+  return guarded(() => speak(el, emphasis, delay));
+}
+
+function speak(el: HTMLElement, emphasis: Emphasis[], delay: number) {
+  const timeline = gsap.timeline();
 
   const wanted = new Map<string, { finish?: Finish; angle?: number }>(
     emphasis.map((e) =>

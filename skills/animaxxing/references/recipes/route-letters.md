@@ -23,6 +23,26 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/**
+ * Runs setup inside its own GSAP context. If setup throws, everything it
+ * created (sets, tweens, timelines, splits) is reverted before the error is
+ * rethrown, so a failed build never strands hidden or split text.
+ */
+function guarded<T>(setup: () => T, onFail?: () => void): T {
+  const ctx = gsap.context(() => {});
+  let result: T | undefined;
+  try {
+    ctx.add(() => {
+      result = setup();
+    });
+  } catch (error) {
+    onFail?.();
+    ctx.revert();
+    throw error;
+  }
+  return result as T;
+}
+
 const ITEM_SELECTOR = "[data-page-transition]";
 const LETTERS = "letters";
 const SIDE_LETTERS = "letters-sides";
@@ -60,7 +80,18 @@ function revertLetters(item: HTMLElement): void {
   activeSplits.delete(item);
 }
 
+/** Forgets splits a failed build created; its context has already reverted them. */
+const forgetSplits = (container: HTMLElement) => () => pageItems(container).forEach((item) => activeSplits.delete(item));
+
 export function buildPageIntro(container: HTMLElement, onComplete?: () => void): gsap.core.Timeline {
+  return guarded(() => pageIntro(container, onComplete), forgetSplits(container));
+}
+
+export function buildPageOutro(container: HTMLElement, onComplete: () => void): gsap.core.Timeline {
+  return guarded(() => pageOutro(container, onComplete), forgetSplits(container));
+}
+
+function pageIntro(container: HTMLElement, onComplete?: () => void): gsap.core.Timeline {
   const items = pageItems(container);
   const letters = ofKind(items, LETTERS);
   const sideLetters = ofKind(items, SIDE_LETTERS);
@@ -139,7 +170,7 @@ export function buildPageIntro(container: HTMLElement, onComplete?: () => void):
   return timeline.set(items, { clearProps: "transform,transition,willChange" }, timeline.duration());
 }
 
-export function buildPageOutro(container: HTMLElement, onComplete: () => void): gsap.core.Timeline {
+function pageOutro(container: HTMLElement, onComplete: () => void): gsap.core.Timeline {
   const items = pageItems(container).reverse();
   const letters = ofKind(items, LETTERS);
   const sideLetters = ofKind(items, SIDE_LETTERS);
