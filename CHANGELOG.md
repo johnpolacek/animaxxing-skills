@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+### Added
+
+- Media effects recipe in `animaxxing`: clip-path image reveals, a mouse-only hover preview, scroll-scrubbed video, and a canvas frame sequence with bounded loading.
+- Component motion recipe in `animaxxing`: a full-screen menu overlay, native `<dialog>` enter and exit with Escape, an accordion `disclosure` (the one sanctioned height tween), and a sliding tab indicator.
+- Hover effects recipe in `animaxxing`: label rolls, underline sweeps, and image zoom, shared between mouse hover and keyboard focus, never stuck after a tap.
+
 ### Fixed
 
 - `gsap-nuxt`: a shared-element morph moves the scroller to the router's destination before playing, since Nuxt's own scroll lands mid-morph from a scrolled page.

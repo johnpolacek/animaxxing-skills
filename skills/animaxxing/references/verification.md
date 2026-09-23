@@ -76,6 +76,20 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 - Layout Flip: survivors slide, entering items grow in, leaving items shrink out while still displayed, and every target ends with no inline transform. The app's own inline styles survive. A shared element morphs from the old box onto the new element, never onto a hidden original.
 - Use the framework skill's `references/smooth-scroll.md` and `references/transition-archetypes.md` checks for navigation, history, and recovery.
 
+## Media, components, and hover
+
+- Menu: links are out of the tab order at rest; `close()` mid-open turns the wipe back from where it is; no inline style remains after revert.
+- Dialog: focus lands inside through `showModal()` and returns to the trigger natively; Escape runs the exit while `open` stays true, then closes; `close(value)` sets `returnValue`.
+- Disclosure: hidden or closed-`<details>` panels are collapsed at build; `open()` ends at the exact content height with no inline `height` or `overflow`; an interrupted open shrinks from its current height.
+- Tab indicator: its own box never changes; it lands within half a pixel of the tab, in RTL and after a sibling tab resizes.
+
+- A waiting scroll reveal is clipped yet visible and in the accessibility tree; focus inside it opens it without scrolling.
+- The hover preview appears at the pointer, crossfades between items, hides on leave, ignores touch and pen, and a tap still follows the link.
+- Scrub video builds nothing before metadata; scrolled back to the top, `currentTime` returns to 0. The frame sequence loads nothing until its section nears, draws the nearest loaded frame when others fail, and teardown aborts loads.
+- Roll, sweep, and zoom answer the mouse and `:focus-visible`, ignore touch and pen; a tap or click that leaves focus behind does not hold them.
+- `textRoll` keeps the control's box and accessible name, its copy is `aria-hidden` with no duplicated ids, and tight `line-height` crops no ascenders or descenders.
+- Reduced motion: reveals complete unclipped with callbacks, preview and video build nothing, the sequence draws one still, no roll or zoom, and the underline appears without moving.
+
 ## Effect failure and restoration
 
 - Throw before writes, after initial styles, and after a split or particle resource is created. Confirm partial setup rolls back even without a returned handle.

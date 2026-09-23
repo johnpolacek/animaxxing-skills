@@ -4,7 +4,7 @@ Read this to select and adapt reusable effects. The framework skill decides when
 
 ## Tokens
 
-The examples use three durations, three eases, and three distances. These are editable starting points: micro 0.14s / 4px, component 0.2s / 8px, page 0.28s / 16px; entrance `power2.out`, exit `power2.in`, shift `power2.inOut`. Reuse the consuming app's motion values where appropriate. Recipe-specific display sequences can run longer. No token file is required. Transforms, `autoAlpha`, `clip-path`, blur, and `fontWeight` only; never `width`, `height`, `top`, `left`, `color`, or `display`. Timeline defaults are `{ overwrite: "auto" }`.
+The examples use three durations, three eases, and three distances. These are editable starting points: micro 0.14s / 4px, component 0.2s / 8px, page 0.28s / 16px; entrance `power2.out`, exit `power2.in`, shift `power2.inOut`. Reuse the consuming app's motion values where appropriate. Recipe-specific display sequences can run longer. No token file is required. Transforms, `autoAlpha`, `clip-path`, blur, and `fontWeight` only; never `width`, `height`, `top`, `left`, `color`, or `display`. The one exception is `disclosure` in [component-motion.md](recipes/component-motion.md): a single panel's `height` between 0 and its measured `auto`, `overflow: hidden` only while it moves, and the inline height cleared once open. Timeline defaults are `{ overwrite: "auto" }`.
 
 Reduced motion uses a `set()` to reach the documented entrance or exit state, so the timeline still completes and every callback still fires.
 
@@ -165,6 +165,24 @@ Code is in [svg-effects.md](recipes/svg-effects.md) and [counters-and-marquees.m
 
 A curtain and a shared-element morph never share a navigation: the curtain would hide the element the morph needs. The framework skill's `references/transition-archetypes.md` and `references/smooth-scroll.md` own their timing. Code is in [page-covers.md](recipes/page-covers.md), [layout-flip.md](recipes/layout-flip.md), and [smooth-scroll.md](recipes/smooth-scroll.md).
 
+## Media, components, and hover
+
+| Effect | Move | Role |
+|---|---|---|
+| `menuOverlay` | panel clip inset 100 → 0 from an edge, 0.5s, `power3.inOut`; links `autoAlpha 0, y 16 → 0`, 0.4s, stagger 0.05 | A full-screen menu. Close runs back from wherever the open is. |
+| `dialogMotion` | `--dialog-backdrop 0 → 1`, panel `opacity 0 → 1` with `scale 0.96`, or `xPercent`/`yPercent ±100` for a drawer, 0.3s, `power3.out`; exit 0.21s `power2.in`, then `dialog.close()` | Native `<dialog>` enter and exit. Escape runs the exit. |
+| `disclosure` | `height 0 ↔ auto`, 0.3s, `power2.inOut`, `overflow: hidden` only while moving | An accordion panel. The one sanctioned layout tween. |
+| `tabIndicator` | `x` and `scaleX` from its own resting box onto the tab, 0.3s, `power3.out` | The selected tab's underline or pill. Re-fits on resize. |
+| `imageReveal` | frame `clip-path inset` closed → open, 1s `power3.inOut`; image `scale 1.15 → 1`, `power2.out` | Editorial image entrance; `onScroll` variant for galleries. Clip only, never hidden. |
+| `hoverPreview` | one image follows the mouse (`quickTo` 0.35s), 0.25s crossfade on item change | Work lists and indexes. Mouse-only decoration; the link stays the way in. |
+| `scrubVideo` | `currentTime 0 → duration`, scrubbed across a section | A product turn or process read at scroll speed. Poster under reduced motion. |
+| `frameSequence` | canvas frame `0 → n-1`, nearest loaded frame, scrubbed | An image sequence with bounded loading; one per page. |
+| `textRoll` | label `yPercent 0 → -travel`, copy `travel → 0`, 0.35s, `power3.out` | A button or link label rolling over to itself on hover and focus. Whole label, no split. |
+| `underlineSweep` | `scaleX 0 → 1` from the left, `1 → 0` to the right, 0.3s, `power2.out` | An injected hairline under a link; `--underline-*` custom properties restyle it. Instant under reduced motion. |
+| `imageZoom` | `scale 1 → 1.05`, 0.6s, `power2.out`, inside a clipped frame | A card's image answering the card or its link; never clip the card itself. |
+
+Code is in [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), and [hover-effects.md](recipes/hover-effects.md).
+
 ## Resize
 
 Width changes can invalidate split positions and the wave's pinned character widths; height-only changes from mobile browser chrome do not. Keep text readable during a resize. Particle fields remeasure through their own observers.
@@ -178,7 +196,8 @@ Particle treatments and pointer effects use pointer states; text and scroll effe
 - [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
 - Tune `COARSE_POINTER_DENSITY` for transient particles; preserve outlines and owned particles.
 - [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, and `cursorFollower` answer the mouse only and never gate a control. `dragTrack` works with mouse, touch, and keyboard.
-- One pointer response per control: magnetic, tilt, or a particle hot state.
+- One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state.
+- Hover effects share one hot state for mouse hover and `:focus-visible`; touch, pen, and click-derived focus never enter it.
 - The installed framework skill's `references/devices.md` owns viewport tiers, orientation handling, and CPU budgets.
 
 ## Ambient motion
