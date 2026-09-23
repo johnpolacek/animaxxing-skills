@@ -4,6 +4,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-23
+
 ### Added
 
 - Media effects recipe in `animaxxing`: clip-path image reveals, a mouse-only hover preview, scroll-scrubbed video, and a canvas frame sequence with bounded loading.
