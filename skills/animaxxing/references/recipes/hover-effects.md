@@ -216,7 +216,7 @@ Under reduced motion the builder returns a no-op and leaves the markup alone: th
 
 ## underlineSweep
 
-An injected `aria-hidden` line under a link sweeps in from the left on hover or focus and out to the right on leave: `scaleX` only, with the transform origin swapped where the swap is invisible (at no width before drawing, at full width before clearing), so a re-entry mid-exit simply reverses. The line is `currentColor` and 1px by default and reads custom properties, so the app restyles it without fighting inline values. The link's own `text-decoration` is left alone; the sweep sits at the bottom of the link's box below any static underline.
+An injected `aria-hidden` line under a link sweeps in from the inline start on hover or focus and out toward the inline end on leave, left to right unless the link is right-to-left: `scaleX` only, with the transform origin swapped where the swap is invisible (at no width before drawing, at full width before clearing), so a re-entry mid-exit simply reverses. The line is `currentColor` and 1px by default and reads custom properties, so the app restyles it without fighting inline values. The link's own `text-decoration` is left alone; the sweep sits at the bottom of the link's box below any static underline.
 
 ```html
 <a class="nav-link" href="/work">Work</a>
@@ -244,11 +244,15 @@ export function underlineSweep(link: HTMLElement): Teardown {
     link.append(line);
     after(() => line.remove());
     dispose(() => gsap.killTweensOf(line));
-    gsap.set(line, { scaleX: 0, transformOrigin: "0% 50%" });
+    // Draw from the inline start and clear toward the inline end, so right-to-left text sweeps the other way.
+    const rtl = getComputedStyle(link).direction === "rtl";
+    const start = rtl ? "100% 50%" : "0% 50%";
+    const end = rtl ? "0% 50%" : "100% 50%";
+    gsap.set(line, { scaleX: 0, transformOrigin: start });
 
     const sweep = (hot: boolean) => {
       if (Number(gsap.getProperty(line, "scaleX")) === (hot ? 0 : 1)) {
-        gsap.set(line, { transformOrigin: hot ? "0% 50%" : "100% 50%" });
+        gsap.set(line, { transformOrigin: hot ? start : end });
       }
       gsap.to(line, { scaleX: hot ? 1 : 0, duration: reduced ? 0 : SWEEP.duration, ease: SWEEP.ease, overwrite: "auto" });
     };

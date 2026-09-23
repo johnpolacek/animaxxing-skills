@@ -164,7 +164,8 @@ export function imageReveal(
   frame: HTMLElement,
   { direction = "up", duration = REVEAL, from = SETTLE_FROM, delay = 0, onComplete, onScroll = false }: ImageRevealOptions = {},
 ): ImageReveal {
-  const inner = frame.querySelector<HTMLElement>("img, video, picture, [data-reveal-inner]");
+  // An <img> inside <picture>, not the <picture>: transforms do not apply to its inline box.
+  const inner = frame.querySelector<HTMLElement>("[data-reveal-inner], img, video");
   const scroll = onScroll ? (onScroll === true ? {} : onScroll) : undefined;
   const reduced = prefersReducedMotion();
   let timeline!: gsap.core.Timeline;
@@ -272,9 +273,18 @@ export function hoverPreview(list: HTMLElement, preview: HTMLElement, { offset =
         gsap.to(incoming, { opacity: 1, duration: SWAP, overwrite: "auto" });
         gsap.to(outgoing, { opacity: 0, duration: SWAP, overwrite: "auto" });
       };
+      // A source that fails to load hides the preview rather than showing the last item's image, and can be retried.
+      const fail = () => {
+        if (!live || current !== src) return;
+        current = undefined;
+        gsap.to(layers, { opacity: 0, duration: SWAP, overwrite: "auto" });
+      };
       incoming.src = src;
       if (incoming.complete && incoming.naturalWidth) swap();
-      else incoming.addEventListener("load", swap, { once: true });
+      else {
+        incoming.addEventListener("load", swap, { once: true });
+        incoming.addEventListener("error", fail, { once: true });
+      }
     };
 
     listen(dispose, list, "pointerover", (event) => {
@@ -285,7 +295,9 @@ export function hoverPreview(list: HTMLElement, preview: HTMLElement, { offset =
       if (!shown) {
         // Appear at the pointer, not sliding in from where it last hid.
         shown = true;
-        gsap.set(preview, { x: event.clientX + offset.x, y: event.clientY + offset.y });
+        // quickTo's second argument also moves its start, so the next move does not fly in from the old spot.
+        xTo(event.clientX + offset.x, event.clientX + offset.x);
+        yTo(event.clientY + offset.y, event.clientY + offset.y);
         gsap.to(preview, { autoAlpha: 1, duration: SWAP, overwrite: "auto" });
       }
       show(src);

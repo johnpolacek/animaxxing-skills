@@ -119,7 +119,7 @@ type Edge = "top" | "bottom" | "left" | "right";
 
 A full-screen panel wipes in from one edge, then its links rise in one after another. Closing runs the links out and the wipe back from wherever the open has reached. At rest the panel is `visibility: hidden`, so its links are out of the tab order and the accessibility tree; the wipe is a `clip-path` inset, so the panel never leaves its position.
 
-The app owns the trigger's `aria-expanded`, `inert` on the rest of the page, the focus trap, and Escape. It calls `open()` after setting that state and moves focus into the panel when the timeline completes; it calls `close()` on Escape or the close control and returns focus to the trigger when that completes. Do not hide the panel with `display: none` or `hidden`; the builder needs it laid out.
+The app owns the trigger's `aria-expanded`, `inert` on the rest of the page, the focus trap, and Escape. It calls `open()` after setting that state and moves focus into the panel when the timeline completes. To close, it returns focus to the trigger first, then calls `close()`: each link turns `visibility: hidden` as its exit ends, which would otherwise drop focus to `<body>` mid-close. Do not hide the panel with `display: none` or `hidden`; the builder needs it laid out.
 
 ```css
 .menu { position: fixed; inset: 0; z-index: 40; visibility: hidden; }
@@ -289,9 +289,9 @@ Anything that closes the dialog directly, such as a `<form method="dialog">` sub
 
 ## disclosure
 
-An accordion panel grows from 0 to its content height and back. This is the sanctioned exception to the layout-property ban, under these rules: one panel per builder, the end height is measured from the content at call time (`height: "auto"`), `overflow: hidden` is applied only while the height moves, and the inline height is cleared once open so the content can reflow. The tween is the panel's own box; siblings move because layout moves them.
+An accordion panel grows from 0 to its content height and back. This is the sanctioned exception to the layout-property ban, under these rules: one panel per builder, the end height is measured from the content at call time (`height: "auto"`), `overflow: hidden` clips it while it moves and while it is closed, and once open the inline height and overflow are cleared so the content can reflow. A pre-collapsed inline `height: 0` from the server is dropped at open rest, never restored. The tween is the panel's own box; siblings move because layout moves them.
 
-The app owns `aria-expanded` on the trigger and the panel's `hidden`. Show the panel, then call `open()`; call `close()`, then apply `hidden` when it completes so the closed content leaves the tab order. A panel that is not rendered at build is collapsed inline, so removing `hidden` paints nothing until `open()` runs. Padding on the panel itself stays visible at height 0; pad an inner element.
+The app owns `aria-expanded` on the trigger and the panel's `hidden`. Show the panel, then call `open()`; call `close()`, then apply `hidden` when it completes so the closed content leaves the tab order. A panel that is not rendered at build is collapsed inline, so removing `hidden` paints nothing until `open()` runs. Padding on the panel itself stays visible at height 0; pad an inner element. Give the panel `display: flow-root` so its children's margins stay inside it at rest, as they do while `overflow: hidden` clips it; otherwise the first and last child margins jump at both ends of the tween.
 
 ```ts
 export type DisclosureOptions = { duration?: number; ease?: string };
@@ -308,10 +308,16 @@ const COLLAPSED = { height: 0, overflow: "hidden" };
 
 export function disclosure(panel: HTMLElement, { duration = 0.3, ease = "power2.inOut" }: DisclosureOptions = {}): Disclosure {
   const run = relay();
-  let rest = () => {};
+  const saved = { height: panel.style.height, overflow: panel.style.overflow };
+  /** Open rest: content-sized. The app's own values come back, except a pre-collapsed pair from the server. */
+  const settleOpen = () => {
+    const collapsed = saved.height !== "" && parseFloat(saved.height) === 0;
+    gsap.set(panel, { clearProps: "height,overflow" });
+    if (saved.height && !collapsed) panel.style.height = saved.height;
+    if (saved.overflow && !collapsed) panel.style.overflow = saved.overflow;
+  };
   const revert = own((dispose, after) => {
-    rest = snapshotStyles([panel], ["height", "overflow"]);
-    after(rest);
+    after(snapshotStyles([panel], ["height", "overflow"]));
     dispose(run.kill);
     // Hidden, or inside a closed <details>: collapse now so showing it reveals nothing early.
     const rendered = panel.checkVisibility ? panel.checkVisibility() : panel.getClientRects().length > 0;
@@ -320,9 +326,9 @@ export function disclosure(panel: HTMLElement, { duration = 0.3, ease = "power2.
   return {
     open() {
       const tl = run.next();
-      if (prefersReducedMotion()) return tl.call(rest);
+      if (prefersReducedMotion()) return tl.call(settleOpen);
       // The sanctioned layout tween: "auto" measures the content when the tween starts.
-      return tl.set(panel, { overflow: "hidden" }).to(panel, { height: "auto", duration, ease }).call(rest);
+      return tl.set(panel, { overflow: "hidden" }).to(panel, { height: "auto", duration, ease }).call(settleOpen);
     },
     close() {
       const tl = run.next();
@@ -363,6 +369,7 @@ export function tabIndicator(
 ): TabIndicator {
   const run = relay();
   let active: HTMLElement | undefined;
+  let sliding = false;
   /** Transforms from the indicator's resting box onto the tab's, in viewport coordinates. */
   const fit = (tab: HTMLElement) => {
     const box = indicator.getBoundingClientRect();
@@ -385,19 +392,25 @@ export function tabIndicator(
         primed = true;
         return;
       }
-      if (active) run.next().set(indicator, fit(active));
+      if (!active) return;
+      // A tab that changes size as it becomes selected, such as a bolder label, must not cut the slide short: retarget it.
+      if (sliding) slide(active);
+      else run.next().set(indicator, fit(active));
     });
     resize.observe(tablist);
     tablist.querySelectorAll<HTMLElement>('[role="tab"]').forEach((tab) => resize.observe(tab));
     dispose(() => resize.disconnect());
   });
+  /** Tweens from wherever the indicator is onto `tab`. */
+  function slide(tab: HTMLElement): gsap.core.Timeline {
+    active = tab;
+    const tl = run.next();
+    if (prefersReducedMotion()) return tl.set(indicator, fit(tab));
+    sliding = true;
+    return tl.to(indicator, { ...fit(tab), duration, ease, onComplete: () => void (sliding = false) });
+  }
   return {
-    moveTo(tab) {
-      active = tab;
-      const tl = run.next();
-      if (prefersReducedMotion()) return tl.set(indicator, fit(tab));
-      return tl.to(indicator, { ...fit(tab), duration, ease });
-    },
+    moveTo: slide,
     revert,
   };
 }
@@ -455,6 +468,6 @@ tablist.addEventListener("click", (event) => {
 | `tabIndicator` | Settled, once tab widths are final | `{ moveTo, revert }` | Jumps onto the tab |
 
 - State first, motion second, in the same task: set `aria-expanded`, `inert`, `hidden`, or `open`, then call the builder. Hang the closing state change on the returned timeline's `onComplete`.
-- `open()` and `close()` may interrupt each other at any point; the next call tweens from where things are. Nothing here navigates, changes attributes, or moves focus; `dialog.close()` is the one exception and it is the dialog's own.
+- `open()` and `close()` may interrupt each other at any point; the next call tweens from where things are. Nothing here navigates, changes attributes, or moves focus, except the dialog's own `showModal()` and `close()`, which `dialogMotion` calls.
 - A menu in the persistent shell belongs to the shell's controller, not a page's GSAP context; a context reverted at unmount would strip its rest styles.
 - Revert before the panel, dialog, or tabs are removed from the DOM.
