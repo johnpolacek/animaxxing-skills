@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-23
+
+### Changed
+
+- `animaxxing` is shorter and says each rule once. Every recipe opens with one lifecycle line. Rules shared by all recipes live only in SKILL.md: plugin versions, reduced-motion rebuilds, one owner per target, parent-timeline kills, and loop pauses. Reduced-motion notes that repeated the contract tables now sit in those tables. The layout Flip wiring is framework-neutral. No recipe code changed.
+
 ## [0.6.0] - 2026-09-23
 
 ### Added
