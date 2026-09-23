@@ -11,9 +11,13 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 - Pointer effects recipe in `animaxxing`: magnetic pull, tilt with pointer position variables, a cursor follower, and a drag-and-throw track, mouse-only where decorative and keyboard- and touch-safe for the track.
 - Scroll effects recipe in `animaxxing`: reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, a progress rule, and velocity skew, with rollback, reduced-motion fallbacks, and keyboard support for horizontal runs.
 
+### Fixed
+
+- `particle-effects` compiles as one module: `ignite` declared a second `EMBER_RATE`, now `RULE_EMBER_RATE`.
+
 ### Changed
 
-- Motion verification points at the new `motion/` suite in animaxxing-skills-test for the scroll, pointer, SVG, and counter and marquee recipes.
+- Motion verification points at the `motion/` suite in animaxxing-skills-test, which now type-checks and runs every recipe.
 - Framework scroll guidance warns that reverting scrubbed triggers can leave inline start values, notably with `invalidateOnRefresh`, and shows how to restore them.
 
 ## [0.3.4] - 2026-09-15

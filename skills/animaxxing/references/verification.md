@@ -1,8 +1,8 @@
 # Verification
 
-Automated suite: `motion/` in [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test) type-checks the scroll, pointer, SVG, and counter and marquee recipes straight from this skill and runs their checks in Chromium (`pnpm test:motion`). Run it after changing those recipes.
+Automated suite: `motion/` in [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test) type-checks every recipe straight from this skill and runs its checks in Chromium (`pnpm test:motion`). Run it after changing any recipe. Keep usage snippets under a `## Wiring` heading or starting with `// Example` so the suite skips them, and head each separate module's section with its file name, such as `## field.ts`.
 
-Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exercises the text and particle recipes with `style-animaxxing`; it is not a required design. Verify changes to those recipes there or in the consuming app, alongside the framework skill's relevant checks.
+Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exercises the recipes with `style-animaxxing`; it is not a required design. Check visual quality there or in the consuming app, alongside the framework skill's relevant checks.
 
 ## Portability
 

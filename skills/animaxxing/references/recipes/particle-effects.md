@@ -481,14 +481,14 @@ A block of text set on a rule, such as an install command or a large form field.
 import type { Particle } from "./field";
 
 /** Embers per second off the underline, idle and hot. */
-const EMBER_RATE = { idle: 4, hot: 26 };
+const RULE_EMBER_RATE = { idle: 4, hot: 26 };
 /** Seconds between idle glints. */
 const GLINT_EVERY: [number, number] = [0.5, 1.4];
 
 export const ignite: ParticleEffectDefinition<ParticleEffectInstance> = {
   bleed: 200,
   create(field: ParticleField, target: HTMLElement) {
-    const state = { rate: EMBER_RATE.idle, hot: false };
+    const state = { rate: RULE_EMBER_RATE.idle, hot: false };
     let emberAcc = 0;
     let glintIn = 0.6;
 
@@ -692,7 +692,7 @@ export const ignite: ParticleEffectDefinition<ParticleEffectInstance> = {
       hover(on) {
         state.hot = on;
         gsap.to(state, {
-          rate: on ? EMBER_RATE.hot : EMBER_RATE.idle,
+          rate: on ? RULE_EMBER_RATE.hot : RULE_EMBER_RATE.idle,
           duration: on ? 0.3 : 0.8,
           overwrite: true,
         });
