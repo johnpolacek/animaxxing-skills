@@ -28,3 +28,6 @@ build/
 tmp/
 temp/
 *.tmp
+
+# Python
+__pycache__/
