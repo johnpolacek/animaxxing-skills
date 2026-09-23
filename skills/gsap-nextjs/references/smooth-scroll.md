@@ -14,6 +14,7 @@ Smoothing is optional. Add it only when requested; it changes how every page fee
 - Destroy it when the shell itself unmounts: a full reload, hot module replacement, or a test harness teardown. In development, React StrictMode and HMR run setup twice; the second create must follow a completed destroy.
 - Skip smoothing under reduced motion, including the app's own motion setting. The recipe returns native controls, so the controller calls the same methods either way. Recreate the scroller when the motion setting changes.
 - Keep native scroll semantics: keyboard, scrollbar, find-in-page, focus, and touch. Mark nested scroll areas, such as menus and code blocks, so the engine leaves them alone.
+- Lenis scrolls the window: the document must be the scroll container, not a fixed-height shell with its own `overflow`. Import its stylesheet once from the shell's global styles. A stopped Lenis clips the root's overflow, which hides a classic scrollbar and reflows the page on every outro; give `html` `scrollbar-gutter: stable`.
 
 ## Through a navigation
 
@@ -21,16 +22,17 @@ Scroll position is part of the swap. The router, the engine, and ScrollTrigger m
 
 | Phase | Scroller |
 |---|---|
+| First load | Create it before the first intro. If the intro hides content, keep it stopped and `start()` at that intro's settled, as after any navigation. The page's controller exposes that settled moment. |
 | Outro | `stop()`, so the user cannot scroll the outgoing page out from under its exit or a closing curtain. |
 | End state and swap | Stays stopped. Let the router, or the browser, reset or restore the native position. A stopped ScrollSmoother pushes that native scroll back on its next scroll event, so with ScrollSmoother the sync below must run in the same task, such as a microtask after the router's commit. |
 | Router scroll landed | `scrollTo(window.scrollY, { immediate: true })` so the engine's target matches the native position: the top for a new visit, the saved position on back and forward, the anchor for a hash. Most routers scroll as the page mounts; some only during the intro, so sync whenever it lands. When nothing scrolls for you, move to that position here instead. |
-| Intro built | Once the incoming page's triggers exist and the scroll has landed, `resize()` re-measures the page and refreshes ScrollTrigger. Refresh once, after the last trigger, not per component. |
+| Intro built | Once the incoming page's triggers exist and the scroll has landed, `resize()` refreshes ScrollTrigger. The recipe's immediate `scrollTo` already re-measures the engine, so this call is for the triggers. Refresh once, after the last trigger, not per component. |
 | Settled | `start()`. |
 
 - Back and forward take the intro-only path. Restore the saved position immediately, never with an eased scroll from the previous page's position.
 - The sync matters most for ScrollSmoother, which would otherwise ease its content from the old position to the new one. Lenis 1.3 follows native jumps on its own, even while stopped; the sync is harmless there.
 - In-page hash links: many router links treat them as navigations and scroll to the anchor themselves. To ease them, follow the framework skill's interception path, then `scrollTo(hash)`. Lenis's own `anchors` option suits pages where the browser handles hash clicks; where a router intercepts them, it double-handles the click. Either way, move focus to the target for keyboard and screen reader users.
-- A navigation that fails or is cancelled must `start()` the scroller again. Put `start()` in the same place that releases the navigation lock.
+- Every path that ends a navigation without reaching settled, such as a failure, a cancellation, or a ready timeout, also calls `start()`. A stopped scroller left behind freezes the page.
 - Interrupting an intro mid-way still leaves the scroller in a known state: stopped until the replacement settles.
 - If the router or the browser restores scroll, leave it on and sync the engine afterwards. If you take restoration over (`history.scrollRestoration = "manual"`), save and restore positions per history entry yourself; never leave both fighting.
 

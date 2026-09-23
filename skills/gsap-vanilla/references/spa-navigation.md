@@ -40,7 +40,7 @@ Where the Navigation API exists, one `navigate` listener with `event.intercept({
 
 ## History, scroll, and focus
 
-- Set `history.scrollRestoration` to `manual` and own it. On push, scroll to top or to the hash target after the swap. Save the scroll position in the history state before leaving so `popstate` can restore it after the swap, then refresh ScrollTrigger.
+- Set `history.scrollRestoration` to `manual` and own it. On push, scroll to top or to the hash target after the swap. Save the scroll position in the history state before leaving so `popstate` can restore it after the swap, then refresh ScrollTrigger. `manual` also turns off the browser's restore for a reload or a back and forward into a fresh document, so restore from the saved state at boot too.
 - Back and forward never run an outro. On `popstate` the URL has already changed. Fetch, swap, and run initial state and intro only, or wrap the swap in `document.startViewTransition` so it is not a hard cut.
 - After the swap, move focus to the route container or its main heading if focus was on removed content or on `body`. Give the target `tabindex="-1"` and a focus style that fits the design.
 - Update `document.title` and announce the new page through a live region.

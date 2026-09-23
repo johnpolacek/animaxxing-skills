@@ -9,14 +9,14 @@ Read this before building a page transition that covers the whole screen, a firs
 A curtain hides the swap behind panels that sweep in during the outro and sweep out during the intro. It replaces the route-area swap cover for that navigation; it does not add a second one.
 
 - **Where it lives.** In the persistent shell, outside the route boundary, fixed over the viewport. A curtain inside the page unmounts with the page it is hiding. The framework skill defines what persists: a root layout, an element the router carries across swaps, or, across full document loads, a cover that closes on one document and opens on the next.
-- **Outro.** Compose `cover()` into the outro, after or overlapping the item exit. The navigation lock holds until `cover()` completes. Stop any smooth scroller now.
+- **Outro.** Start `cover()` with the outro, after or overlapping the item exit. The navigation lock holds until `cover()` completes. Stop any smooth scroller now. The cover belongs to the shell: build it on the shell's timeline or GSAP context, never inside the outgoing page's context, whose revert at unmount would pull the curtain open mid-swap. The page's end state waits for the cover's completion instead of nesting it.
 - **End state.** Covered. The outgoing page may now unmount; the router swaps under the curtain. Keep the curtain's pointer blocking on so a second click cannot reach the page underneath.
 - **Intro.** Mount the incoming page at its initial state, sized, with split text and media prepared. Then call `reveal()`, overlapping it with the page's own intro if the design wants items to arrive as the curtain leaves. Never reveal onto an unprepared page: that shows the flash the curtain exists to hide.
 - **Settled.** Curtain hidden, panels restored to rest. Release the navigation lock and move focus as for any intro.
 - **Back and forward.** Intro-only, like every history move: no cover. If the curtain is still closed when the history move arrives, reveal it once the page is prepared.
 - **Interruption.** A second navigation during `cover()` joins it: keep covering, change the destination, swap once. A navigation during `reveal()` calls `cover()` again; the recipe turns the panels back from where they are.
 - **Recovery.** The curtain is a cover under the initialization contract. When the incoming owner recovers, the recovery path must also reveal or hide the curtain, or the page stays covered forever. Register that with the owner's rollback.
-- **Reduced motion.** The recipe never shows the panels. The navigation falls back to the ordinary route-area swap cover.
+- **Reduced motion.** Skip the curtain: call neither `cover()` nor `reveal()`, leave its phase at rest, and use the ordinary route-area swap cover. The recipe is still safe to call there; it never shows a panel, and its timelines complete on the next frame.
 
 ## Preloader
 
@@ -36,9 +36,9 @@ A shared element morphs from its box on the outgoing page into its counterpart o
 
 - **Capture in the outro.** Call `captureShared` on the outgoing element while it is still laid out, before anything hides or unmounts it. Fade everything else and leave that element lit; the end state is what the user sees during the swap.
 - **No cover for this navigation.** A curtain or route cover would hide the element the morph needs. Use the morph or the curtain, not both.
-- **Hand off the state.** Keep it in a small handoff object owned by the persistent shell, keyed by destination. Reading it must not consume it: development double-mounts read twice. Clear it when the navigation settles, is cancelled, or is replaced by another.
-- **Play in the intro.** Once the incoming target has rendered at its final size and is visible, call `playShared(state, target)` with the target explicitly. Some routers keep the old element in the DOM, hidden, and Flip would otherwise animate that copy; the explicit target costs nothing where they do not. Keep the target out of the page's stagger and pre-paint hiding.
-- **Back and forward.** A history move has no outro and therefore no captured state. The incoming page takes its ordinary intro. Do not replay a stale handoff. Where the framework runs the same leave hooks for history moves, its skill says how to recognize that path and skip the capture.
+- **Hand off the state.** Keep it in a small handoff object owned by the persistent shell, keyed by destination with trailing slashes normalized. Reading it must not consume it: development double-mounts read twice. Clear it when the navigation settles, is cancelled, or is replaced by another.
+- **Play in the intro.** Once the incoming target has rendered at its final size and is visible, and after the router's scroll has landed, call `playShared(state, target)` with the target explicitly. The recipe corrects for a scroll change between capture and play, not for one that lands during the morph. Some routers keep the old element in the DOM, hidden, and Flip would otherwise animate that copy; the explicit target costs nothing where they do not. Keep the target out of the page's stagger and pre-paint hiding.
+- **Back and forward.** A history move has no outro and therefore no captured state. The incoming page takes its intro-only path without travel, such as a fade, so the thumbnail appears in its own box rather than rising into it; no ancestor of a shared element travels either. Do not replay a stale handoff. Where the framework runs the same leave hooks for history moves, its skill says how to recognize that path and skip the capture.
 - **Reduced motion.** `playShared` shows the target at once and still completes.
 - **Cross-document navigations** lose the state in the full page load. Use a cross-document View Transition with `view-transition-name` for that case, and keep GSAP off the named element.
 

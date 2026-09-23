@@ -9,7 +9,7 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 - Smooth scroll recipe in `animaxxing`: Lenis and ScrollSmoother behind one set of controls, stepped with ScrollTrigger, with native controls under reduced motion.
 - Page covers recipe in `animaxxing`: a curtain that covers a route swap and turns back when interrupted, and a first-visit preloader that follows real readiness.
 - Layout Flip recipe in `animaxxing`: filter, reorder, and expand animations, and shared-element morphs across pages.
-- Shared framework references `smooth-scroll.md` and `transition-archetypes.md`, packaged into every framework skill, with framework-specific integration for scrollers, curtains, preloaders, shared elements, and Flip in each render cycle.
+- Shared framework references `smooth-scroll.md` and `transition-archetypes.md`, packaged into every framework skill, with framework-specific integration for scrollers, curtains, preloaders, shared elements, and Flip in each render cycle. Reference apps in all seven frameworks now implement the scroller, a curtain, and a shared-element morph against a common spec in animaxxing-skills-test, and the guidance was corrected wherever they found it wrong or missing.
 - Pause controls for every ambient loop (WCAG 2.2.2): the wave's stop function carries `pause()` and `resume()`, and particle controls add `pause()` and `play()`. Follower and wave guidance covers off-screen and user pausing.
 - `revertText(element)` in split entrances restores a runner's target when the controller kills a parent timeline, which never reaches a nested runner's interrupt callback.
 

@@ -6,7 +6,7 @@ Eased scrolling for the whole document, kept in step with ScrollTrigger. Two eng
 
 The framework skill's controller creates the scroller once per document, from the persistent shell, and destroys it when the shell unmounts. It stops the scroller through an outro, moves it after a route swap, and resizes it once the incoming page's triggers exist. Its `references/smooth-scroll.md` owns that sequence. This module never listens for navigation.
 
-Dependencies: `gsap`, `gsap/ScrollTrigger`. `lenisScroll` needs `lenis` (1.3 or later) and its stylesheet, `lenis/dist/lenis.css`, which stops the page while the scroller is stopped. `smootherScroll` needs `gsap/ScrollSmoother`, free since 3.13. Check the installed Lenis version and types before trusting option names; they change between minors.
+Dependencies: `gsap`, `gsap/ScrollTrigger`. `lenisScroll` needs `lenis` (1.3 or later) and its stylesheet, `lenis/dist/lenis.css`, imported once from the shell's global styles; it stops the page while the scroller is stopped. Lenis scrolls the window, so the document itself must scroll: no fixed-height app shell with its own overflow. Stopping clips the root's overflow; `scrollbar-gutter: stable` on `html` keeps a classic scrollbar's width from reflowing the page. `smootherScroll` needs `gsap/ScrollSmoother`, free since 3.13. Check the installed Lenis version and types before trusting option names; they change between minors.
 
 Keep native behavior: keyboard, scrollbar, find-in-page, and focus scrolling still work, and touch stays native unless you opt into `syncTouch`. Scroll areas inside the page that should not be smoothed take `data-lenis-prevent`. Lenis's `anchors: true` eases in-page hash links on plain pages; leave it off where a router handles hash links.
 
@@ -117,6 +117,8 @@ export function lenisScroll(options: LenisOptions = {}): SmoothScroll {
     stop: () => lenis.stop(),
     start: () => lenis.start(),
     scrollTo(target, { immediate = false, offset = 0 } = {}) {
+      // Lenis clamps to the height it last measured; a jump into a taller page after a swap needs a fresh measure.
+      if (immediate) lenis.resize();
       lenis.scrollTo(target, { immediate, offset, force: true });
     },
     resize() {

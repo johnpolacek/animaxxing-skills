@@ -47,6 +47,6 @@ Run the checks in [Smooth scrolling](smooth-scroll.md#verify) and [Transition ar
 
 ## Builds and wider checks
 
-Run a production build, and `vite preview` or the Start server, for changes to routes, the router options, the Vite or Start config, dependencies, the root document shell, or anything release-facing; the dev server hydrates differently from the built output and React development runs effects twice. Run wider browser, accessibility, responsive, streaming, and performance checks only when the change touches them or the user asks for a full audit.
+Run a production build, and `vite preview` or the Start server, for changes to routes, the router options, the Vite or Start config, dependencies, the root document shell, or anything release-facing; the dev server hydrates differently from the built output, React development runs effects twice, and only the production build tree-shakes a bare plugin registration. Run wider browser, accessibility, responsive, streaming, and performance checks only when the change touches them or the user asks for a full audit.
 
 Report which checks ran and which could not. Do not claim runtime behavior was verified when only static review was possible.
