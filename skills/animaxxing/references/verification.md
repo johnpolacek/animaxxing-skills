@@ -46,6 +46,17 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 - Revert during a throw: the track stops and its inline styles and the viewport's `overflow` restore.
 - Reduced motion: no magnetic, tilt, or follower; the track drags and snaps without a throw.
 
+## SVG, counters, and marquees
+
+- Drawn strokes start hidden without a flash and end at the SVG's own appearance after revert.
+- A morphed icon returns to its original `d` on revert; `set()` after revert does nothing.
+- Counted figures keep their prefix, suffix, separators, and decimals, and end on the exact source text.
+- Neighbors of a counted figure do not shift while it counts; assistive technology reads the final value.
+- Marquee clones are `aria-hidden` and `inert` with no duplicate ids; each item is announced and focused once.
+- The marquee loops without a visible seam, slows on hover, pauses on focus, off screen, and on `pause()`.
+- Resizing rebuilds the clones to fill; revert restores the original markup exactly.
+- Reduced motion: strokes whole, figures final, no follower, marquee static; completion callbacks still fire.
+
 ## Effect failure and restoration
 
 - Throw before writes, after initial styles, and after a split or particle resource is created. Confirm partial setup rolls back even without a returned handle.

@@ -141,6 +141,18 @@ Scroll effects tie motion to the reader's position instead of a page phase. Pick
 
 Scrubbed effects smooth with `scrub: 0.6` by default; parallax locks to the scrollbar. Reveals hide at initial state and the rest build at settled, as in the [controller contract](recipes/scroll-effects.md#controller-contract).
 
+## Figures, marquees, and SVG
+
+| Effect | Move | Role |
+|---|---|---|
+| `drawIn` / `drawOut` | DrawSVG `0% → 100%`, 0.8s, `power2.inOut`, stagger 0.12 | Lines, diagrams, and signatures drawing themselves. |
+| `morphToggle` | MorphSVG to the alternate shape, 0.35s, `power2.inOut` | Menu to close, play to pause. Follows the control's state. |
+| `followPath` | MotionPath along a path, 6s a lap, linear | A mark tracing a route. Ambient. |
+| `countUp` | 0 to the element's own value, 1.6s, `power3.out` | Statistics landing on their figure. Width reserved. |
+| `marquee` | Row loops by its own width at 60px/s | Logos, tags, or a running headline. Needs a pause control. |
+
+Code is in [svg-effects.md](recipes/svg-effects.md) and [counters-and-marquees.md](recipes/counters-and-marquees.md).
+
 ## Resize
 
 Width changes can invalidate split positions and the wave's pinned character widths; height-only changes from mobile browser chrome do not. Keep text readable during a resize. Particle fields remeasure through their own observers.

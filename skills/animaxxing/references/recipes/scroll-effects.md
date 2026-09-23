@@ -96,6 +96,7 @@ function snapshotStyles(elements: HTMLElement[], props = SCENE_PROPS): () => voi
       props.forEach((prop, j) => {
         const value = saved[i]?.[j];
         if (value) element.style.setProperty(prop, value);
+        else element.style.removeProperty(prop);
       });
     });
 }

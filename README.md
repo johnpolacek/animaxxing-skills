@@ -53,7 +53,7 @@ Copy the folders under `skills/` into your agent's skill directory:
 
 | Skill | Description |
 |-------|-------------|
-| **animaxxing** | Reusable vanilla TypeScript and GSAP recipes: split-text entrances, scattering headlines, speak-in copy, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, magnetic buttons, tilt cards, cursor followers, drag tracks, particle buttons/cards/links/fields, and blast-off exits. Includes text stability and effect verification. Preserves existing fonts, colors, and layout; the framework skill owns lifecycle timing |
+| **animaxxing** | Reusable vanilla TypeScript and GSAP recipes: split-text entrances, scattering headlines, speak-in copy, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, magnetic buttons, tilt cards, cursor followers, drag tracks, SVG drawing and morphs, count-up figures, marquees, particle buttons/cards/links/fields, and blast-off exits. Includes text stability and effect verification. Preserves existing fonts, colors, and layout; the framework skill owns lifecycle timing |
 
 ### Framework skills
 
@@ -140,6 +140,8 @@ animaxxing-skills/
           blast-off.md
           scroll-effects.md
           pointer-effects.md
+          svg-effects.md
+          counters-and-marquees.md
           particle-field.md
           particle-effects.md
     gsap-vanilla/

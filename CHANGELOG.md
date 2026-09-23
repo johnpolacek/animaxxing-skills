@@ -6,6 +6,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ### Added
 
+- SVG effects recipe in `animaxxing`: stroke drawing in and out, icon morph toggles, and a path follower.
+- Counters and marquees recipe in `animaxxing`: count-up figures that keep their formatting and reserved width, and a seamless marquee with accessible clones and pause controls.
 - Pointer effects recipe in `animaxxing`: magnetic pull, tilt with pointer position variables, a cursor follower, and a drag-and-throw track, mouse-only where decorative and keyboard- and touch-safe for the track.
 - Scroll effects recipe in `animaxxing`: reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, a progress rule, and velocity skew, with rollback, reduced-motion fallbacks, and keyboard support for horizontal runs.
 

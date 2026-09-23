@@ -7,8 +7,8 @@ Framework skills include local references/initialization.md for readiness, recov
 ## Motion skills
 
 [animaxxing](animaxxing/SKILL.md)
-  Reusable vanilla TypeScript and GSAP text, scroll, pointer, and particle effects with text stability and technical checks. Preserve existing fonts, colors, and layout; no style skill required. The framework skill owns lifecycle timing.
-  Triggers: animate without restyling, preserve branding, Animaxxing motion, split-text entrance, scattering headline, speak-in, letter wave, scroll reveal, scrub text, parallax, pinned section, horizontal scroll, scroll progress, magnetic button, tilt card, custom cursor, drag carousel, particle buttons, blast-off, hover stuck on touch, particle density on phones.
+  Reusable vanilla TypeScript and GSAP text, scroll, pointer, SVG, and particle effects with text stability and technical checks. Preserve existing fonts, colors, and layout; no style skill required. The framework skill owns lifecycle timing.
+  Triggers: animate without restyling, preserve branding, Animaxxing motion, split-text entrance, scattering headline, speak-in, letter wave, scroll reveal, scrub text, parallax, pinned section, horizontal scroll, scroll progress, magnetic button, tilt card, custom cursor, drag carousel, SVG line draw, icon morph, motion path, count-up number, marquee ticker, particle buttons, blast-off, hover stuck on touch, particle density on phones.
 
 ## Framework skills
 
