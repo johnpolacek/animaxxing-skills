@@ -4,6 +4,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-23
+
 ### Added
 
 - Smooth scroll recipe in `animaxxing`: Lenis and ScrollSmoother behind one set of controls, stepped with ScrollTrigger, with native controls under reduced motion.
