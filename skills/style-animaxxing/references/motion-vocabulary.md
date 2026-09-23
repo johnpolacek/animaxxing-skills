@@ -21,6 +21,7 @@ Install and load `animaxxing`, then read only the selected reference inside that
 | Scattering headline and coordinated page items | `references/recipes/route-letters.md` |
 | Spoken hero subhead | `references/recipes/speak-in.md` |
 | Ambient heading wave | `references/recipes/wave.md` |
+| Scroll reveals, scrubbed statement, progress rule | `references/recipes/scroll-effects.md` |
 | Hero dispersal | `references/recipes/blast-off.md` |
 | Button/card/link/field treatments | `references/recipes/particle-effects.md` and `particle-field.md` in the same directory |
 
@@ -46,6 +47,9 @@ For the full treatment, select these recipes from `animaxxing`. These are art-di
 | Onward link | `slipstream.enter()` on idle | drifting hairlines | `blast()` when pressed |
 | Command block or giant field | `ignite.enter(0.75 + index * 0.25)` on entering | embers off the rule | `blast()` on copy or submit, `exit()` on route exit |
 | Wordmark | `charsSpringIn` plus underline `scaleX 0 → 1` | still | none when the framework keeps the shell persistent |
+| Long-page sections below the fold | `revealOnScroll` | still | route exit |
+| Manifesto statement | none | `scrubStatement` | route exit |
+| Page progress | none | `scrollProgress` as a 1px foreground hairline | route exit |
 | Everything else | route standard rise | still | route exit |
 
 Timing on the hero, for reference: letters land from 0.75s; the subhead starts speaking at 1.05s; the buttons enter at speak start plus 0.2s and 0.35s; the wave starts on `idle`. The blast-off visual disperses the hero; its completion handle belongs to the framework controller. Do not substitute a fixed navigation timer for completion.

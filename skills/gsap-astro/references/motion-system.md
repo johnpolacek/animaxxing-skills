@@ -116,6 +116,7 @@ Use `gsap-scrolltrigger` for the API; these rules cover page lifetime and measur
 - Create triggers in document order. Refresh after fonts, images, or dynamic content change layout, and after scroll restoration on a traverse.
 - Create triggers inside the owning context and kill them in `astro:before-swap`. Do not kill all triggers globally when one page leaves; chrome, persisted regions, and islands own theirs.
 - A page can arrive already scrolled, by reload, hash, or traverse. Reveal-on-scroll targets above the restored position must not stay hidden. Let the trigger evaluate on creation and keep the pre-paint rule from outliving the initial phase.
+- Reverting a scrubbed trigger's animation can leave start values inline on its targets, such as a zeroed `transform`, `opacity: 1`, or `visibility: inherit`. It always does with `invalidateOnRefresh` and can for a plain `to()` in a pinned timeline. When a re-show, a reused page, or another effect needs the targets clean, record their inline motion properties at setup and restore them after the revert; `clearProps` also resets GSAP's cached transform.
 - A `will-change` written from an `onToggle` callback is outside the context and survives its revert. Write it as a plain style and undo it in cleanup, or write it before the trigger is created.
 
 Under reduced motion, go straight from initial to settled without unnecessary triggers. Keep outro and end callbacks that release the swap or remove content.

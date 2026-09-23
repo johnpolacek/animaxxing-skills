@@ -1,9 +1,9 @@
 ---
 name: animaxxing
-description: "Build GSAP text and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, particle controls, and blast-off exits. Use for Animaxxing motion or hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle timing. Not for branding, layout redesign, routing, or isolated GSAP API questions."
+description: "Build GSAP text, scroll, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, particle controls, and blast-off exits. Use for Animaxxing motion or hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle timing. Not for branding, layout redesign, routing, or isolated GSAP API questions."
 license: MIT
 metadata:
-  short-description: Reusable GSAP text and particle motion for any brand
+  short-description: Reusable GSAP text, scroll, and particle motion for any brand
 ---
 
 # Animaxxing
@@ -14,7 +14,7 @@ Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for p
 
 ## Setup and adaptation
 
-- Check installed GSAP docs/types. SplitText recipes require 3.13+ (`SplitText.create`, `smartWrap`, `mask`, `aria`); register only the plugins used. Use the official GSAP skills for API details as needed.
+- Check installed GSAP docs/types. SplitText recipes require 3.13+ (`SplitText.create`, `smartWrap`, `mask`, `aria`); scroll recipes need ScrollTrigger. Register only the plugins used. Use the official GSAP skills for API details as needed.
 - Select only effects the request calls for. A particle button does not imply a page transition, a font change, or a complete hero sequence.
 - Recipe constants are editable defaults, not brand rules. Adapt timing, stagger, spread, and intensity to the surface. Use each recipe's documented options; expose additional constants in the copied module if the app needs runtime configuration.
 - Weight effects require a loaded variable weight axis, not Rethink Sans. Match endpoints and resting weight to the existing face; the examples use 400–800. Choose transform-only effects or omit weight moves when that capability is absent.
@@ -32,6 +32,7 @@ Read the matching `gsap-<framework>` skill first (including `gsap-vanilla` for p
 | Page items, including scattering headlines | [Route letters](references/recipes/route-letters.md) |
 | Short display copy arriving at speaking pace | [Speak-in](references/recipes/speak-in.md) |
 | Ambient headline ripple | [Wave](references/recipes/wave.md) |
+| Scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, progress, velocity skew | [Scroll effects](references/recipes/scroll-effects.md) |
 | Dispersal on a call to action | [Blast-off](references/recipes/blast-off.md) |
 | Particle buttons, cards, links, or command fields | [Particle effects](references/recipes/particle-effects.md) plus [field/attach helpers](references/recipes/particle-field.md) |
 | Touch, focus, stuck hover, mobile particle budgets | [Input and devices](references/motion-vocabulary.md#input-and-devices) |

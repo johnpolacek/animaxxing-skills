@@ -125,6 +125,22 @@ Register recipe rollback before hiding or splitting. Restore partial DOM/style c
 
 If the controller uses `waiting` for its swap barrier, it owns that rule and its release. Do not add unconditional hiding CSS or a separate readiness mechanism here.
 
+## Scroll grammar
+
+Scroll effects tie motion to the reader's position instead of a page phase. Pick at most one scrubbed treatment per viewport; reading text never moves with the scroll. Code is in [scroll-effects.md](recipes/scroll-effects.md).
+
+| Effect | Move | Role |
+|---|---|---|
+| `revealOnScroll` | `autoAlpha 0, y 16 → 0`, 0.42s, `power3.out`, stagger 0.09, batched, once | The workhorse below the fold: sections, cards, figures. |
+| `scrubStatement` | words `opacity 0.15 → 1`, scrubbed through the reading zone | One display statement filling in as it is read. |
+| `parallax` | `y ∓ data-parallax` px, scrubbed across the section | Depth between media and captions. Small travel. |
+| `pinnedScene` | caller's timeline, pinned for `length` section heights | Steps, a product reveal, a diagram assembling. The loudest; one per page. |
+| `horizontalRun` | track `x → -overflow`, pinned | A gallery or timeline run sideways. Native scroller when skipped. |
+| `scrollProgress` | `scaleX 0 → 1` from the left edge | A hairline reporting position. Runs under reduced motion. |
+| `velocitySkew` | `skewY` up to ±8°, springs back in 0.8s | Ambient energy on media columns. Never on reading text. |
+
+Scrubbed effects smooth with `scrub: 0.6` by default; parallax locks to the scrollbar. Reveals hide at initial state and the rest build at settled, as in the [controller contract](recipes/scroll-effects.md#controller-contract).
+
 ## Resize
 
 Width changes can invalidate split positions and the wave's pinned character widths; height-only changes from mobile browser chrome do not. Keep text readable during a resize. Particle fields remeasure through their own observers.

@@ -24,6 +24,17 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). It exer
 - Reduced motion (`prefers-reduced-motion: reduce`, or `data-motion="reduced"` on `<html>`): entrances reach the readable settled state immediately, exits reach their documented end state, no splits, no particles, no wave, and every completion callback still fires.
 - Off screen: scroll a treated element out of view and confirm its field stops ticking.
 
+## Scroll
+
+- Reload mid-page and restore via back: reveal targets above the fold are visible, never stuck hidden.
+- Scroll down and back through every scrubbed effect; each returns exactly to its start values.
+- Pinned scenes and runs: no jump entering or leaving the pin; content below lands in place.
+- Resize across a breakpoint and refresh: pin lengths and run distance recompute; nothing overlaps.
+- Tab through a horizontal run: each focused item scrolls into view; the section never scrolls itself.
+- Tear down mid-pin: pin spacer removed, inline styles and `overflow` restored, page scroll stays usable.
+- Reduced motion: no pins, splits, or scrubbing; static fallbacks readable; progress rule still tracks.
+- With a custom scroller, every trigger receives it and cleanup leaves the app's proxy intact.
+
 ## Effect failure and restoration
 
 - Throw before writes, after initial styles, and after a split or particle resource is created. Confirm partial setup rolls back even without a returned handle.

@@ -125,6 +125,7 @@ Use `gsap-scrolltrigger` for the API; these rules cover route lifetime and measu
 - Nuxt scrolls after the outro and one frame into the intro. Create page-level triggers in `onAfterEnter`, or after `page:transition:finish` plus a frame, and let them evaluate on creation so targets above the restored position are not left hidden.
 - A page in keepalive storage measures zero. Kill triggers in `onDeactivated` and create them again in `onActivated` after the scroll settles.
 - Reverting a pinned trigger removes its spacer. That happens at leave start, so hold the wrapper's height through the outro.
+- Reverting a scrubbed trigger's animation can leave start values inline on its targets, such as a zeroed `transform`, `opacity: 1`, or `visibility: inherit`. It always does with `invalidateOnRefresh` and can for a plain `to()` in a pinned timeline. When a re-show, a reused page, or another effect needs the targets clean, record their inline motion properties at setup and restore them after the revert; `clearProps` also resets GSAP's cached transform.
 - A `will-change` written from an `onToggle` callback is outside the context and survives its revert. Write it as a plain style and undo it in cleanup, or write it before the trigger is created.
 
 Under reduced motion, go straight from initial to settled without unnecessary triggers. Keep outro and end callbacks that control `done` or removal.

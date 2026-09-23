@@ -20,6 +20,7 @@ Apply this when adapting any recipe. The examples show effects, not a complete f
 | Split entrances / route letters | Timelines, every split, masks, original item styles, and any suspended CSS transition. |
 | Speak-in | Nested word/character splits, persistent tilt/weight finishes, widths, and timeline callbacks. |
 | Wave | Scheduled next cycles, active tweens, splits, pinned glyph widths, and inline weight. |
+| Scroll effects | Triggers, pin spacers, splits, scrubbed and reveal tweens, the settle tween, focus listeners, the run's `overflow`, and inline motion values a pinned revert leaves behind. Inner `containerAnimation` triggers first. |
 | Blast-off | Tweens and splits across the composition, including container transforms and button changes. |
 | Particle field/effects | Ticker callbacks, emitters, particles/tweens, observers, event listeners, and effect-owned canvas/wrapper styles. |
 
