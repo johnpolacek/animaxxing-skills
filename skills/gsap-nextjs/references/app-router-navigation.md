@@ -122,15 +122,24 @@ Under `cacheComponents` a route is a static shell plus streamed holes. The lifec
 - **The page outro owns everything present at leave time.** Query outro targets when the outro is built, not at setup, so content that streamed in after setup leaves with the page. Intros stay separate: the page intro reveals what mounted with it, the region intro reveals what arrived later.
 - **`loading.tsx` is a skeleton, not a page.** It only appears when the whole shell is missing. Give it the same geometry and let the boundary's ready timeout release the cover; the real page then enters through the unrequested path.
 
+## Curtains and preloaders
+
+Both follow [Transition archetypes](transition-archetypes.md); the builders come from the `animaxxing` skill's `references/recipes/page-covers.md`.
+
+- A curtain is the one cover allowed to span the chrome. Render its panels in the persistent client boundary in `app/layout.tsx`, after the route container and outside any ScrollSmoother wrapper, and build `curtain()` once in the boundary's setup. For the navigations that use it, it replaces the route-area cover.
+- `onNavigate` accepts the navigation, the scroller stops, the outro runs with `cover()` composed in, and the push fires from the cover's completion. The lock holds through the fetch, and the panels keep pointer events so a second click lands nowhere. `reveal()` starts from the same ready signal that drops the route-area cover: the incoming page has written its initial values and built its intro. Back and forward, `router.refresh`, and redirects mount without a cover; if the curtain is still closed when one arrives, reveal once that page is ready.
+- A second click during `cover()` changes the pending destination and pushes once; a click during `reveal()` calls `cover()` again. Register the reveal with the boundary's recovery so a timed-out page never stays covered. Under `cacheComponents` the hidden outgoing route sits behind the panels either way.
+- Preloader: decide in the first-paint inline script from `sessionStorage` and set a root attribute for it. Server HTML cannot know the session, so render the markup unconditionally in the root layout and show it only under that attribute in CSS; rendering it from client state mismatches hydration and paints late. When the attribute is present the boundary builds `preloader(root)`, sets `aria-busy="true"` on the route container, and feeds `progress()` from `document.fonts.ready`, the hero image's `decode()`, and the page's structural readiness, each bounded by the deadline the same script armed. `finish()` overlaps the first intro while the page waits at initial state. When the early deadline expires, dropping the root attribute hides it before the bundle arrives; the boundary's recovery releases `aria-busy`. The shell never remounts on a client navigation, so it never shows again.
+
 ## Shared elements with Flip
 
-A GSAP morph across routes works on the App Router, including under `cacheComponents`:
+The handoff in [Transition archetypes](transition-archetypes.md#shared-elements) works on the App Router, including under `cacheComponents`, with `captureShared` and `playShared` from the `animaxxing` skill's `references/recipes/layout-flip.md`:
 
-- The outgoing outro captures `Flip.getState` on the element inside the clicked link, then fades everything else and leaves that element lit. Use no cover for this navigation; the end state is what the user should see until the swap.
-- Pass the state to the incoming page through a small handoff object owned by the boundary. Reads must not consume it: React StrictMode runs the page setup twice and the first run's intro can read before the second run's does. Clear the handoff when the navigation finishes.
-- The incoming intro calls `Flip.from(state, { targets: newElement, absolute: true })`. `targets` is required: the old element is still in the DOM, hidden by Activity, and without it Flip animates that hidden copy. Matching by `data-flip-id` works even when the original is hidden or gone.
-- Keep the incoming shared element visible at setup and out of the stagger set. Position it before first paint by building the intro in the ready microtask, not a frame later.
-- The reverse direction is the same two builders with the roles swapped, so one pair serves grid, detail, and home.
+- The outgoing outro calls `captureShared` on the element inside the clicked link before anything hides it, then fades everything else and leaves that element lit. No route cover and no curtain for this navigation.
+- The handoff object lives in the boundary, keyed by destination pathname. Reads must not consume it: StrictMode runs the page setup twice and the first run's intro can read before the second run's does. Clear it when the navigation settles, is rejected, or is replaced, and on a `POP` mid-transition.
+- The incoming intro calls `playShared(state, newElement, { absolute: true })` from the ready microtask, so the target is positioned before first paint. The explicit target matters here: under `cacheComponents` the old element is still in the DOM, hidden by Activity, and Flip would otherwise animate that copy.
+- Keep the incoming shared element visible at setup, out of the stagger set, and out of the pre-paint rule. Back and forward carry no captured state and take the ordinary intro.
+- The reverse direction is the same pair with the roles swapped, so one pair serves grid, detail, and home.
 
 ## Targets and order
 
@@ -148,6 +157,19 @@ On intro completion:
 - Move focus to the route container or main heading only if navigation left focus on `body`. Do not steal focus from an active control.
 - Give a focused container `tabIndex={-1}` and a visible focus style that fits the design.
 - Keep the router's scroll behavior. Do not add a second scroll reset unless the product needs it.
+
+## Smooth scrolling
+
+Follow [Smooth scrolling](smooth-scroll.md) for the contract; the `animaxxing` skill's `references/recipes/smooth-scroll.md` supplies the controls. App Router specifics:
+
+- Create the scroller in the persistent client boundary in `app/layout.tsx`, the component that already owns the route cover, from a layout effect or `useGSAP` with no dependencies, and destroy it in that cleanup. Keep the handle in a ref and share it through context, never module scope. StrictMode, on by default in the App Router since 13.5.1, and Fast Refresh both rerun that effect; the cleanup's `destroy()` runs before the second create, so the pair leaves one scroller. A ScrollSmoother wrapper goes around `{children}` in the root layout, with the header, the route cover, and any curtain outside it.
+- **Outro.** `stop()` when `onNavigate` accepts the navigation, before the outro timeline starts.
+- **End state and swap.** Still stopped through the push. Next.js scrolls in the commit that mounts the new segment, after the page's layout effects: the top of the first visible page element on a new visit, the hash target with `scrollIntoView`, nothing with `scroll={false}` or `{ scroll: false }`. On back and forward the App Router does not scroll; the browser restores the position itself, since Next.js leaves `history.scrollRestoration` alone. Carry the Link's `scroll` intent through the helper's `router.push`.
+- **New page mounted.** From the boundary's ready microtask, after that commit, `scrollTo(window.scrollY, { immediate: true })` so the engine adopts whatever the router or the browser chose. The page's own layout effect is too early. If the browser restore lands wrong because the incoming tree was still short when it ran, take restoration over as the shared contract describes.
+- **Intro built.** `resize()` once the page's triggers exist, and again at settled if the intro changed height above a trigger.
+- **Settled.** `start()`. Also `start()` wherever the lock releases without an intro: an `onNavigate` the design rejects, a `POP` that kills an outro, the ready timeout.
+- A hash-only href through `<Link>` still routes and jumps with `scrollIntoView`. To ease it, handle those links in the transition-aware Link: prevent default, `scrollTo(hash)`, `router.push(href, { scroll: false })`, then move focus to the target.
+- Under `cacheComponents` a hidden route's triggers are reverted with its cleanup; the scroller survives. Recreate the scroller from the boundary when the app's motion setting changes.
 
 ## Outro, end state, and interruption
 

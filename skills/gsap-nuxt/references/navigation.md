@@ -65,6 +65,8 @@ So the window moves after the outro and around the first frame of the intro. Kee
 
 Override `scrollBehavior` only to change the position logic. Keep the wait: returning a promise that resolves after `page:transition:finish` is Vue Router's documented way to delay scroll for a transition.
 
+With a smooth scroller, follow [Smooth scrolling](smooth-scroll.md). Create it once in a client plugin (`plugins/scroll.client.ts`), which runs before hydration on a document that already holds the server HTML and before any page's `onMounted`, never in a page or layout. Lenis needs nothing else. ScrollSmoother needs its wrapper and content rendered by `app.vue` around `<NuxtLayout>`, fixed chrome outside them, and `data-allow-mismatch="style"` (Vue 3.5) on both so the inline styles it writes before hydration are not reported as mismatches. Map the table onto the hooks: `stop()` in `onLeave`, or at the click when the outro starts there. Nuxt scrolls after the leave's `done` plus one frame, so `onEnter` runs before the window moves; the sync point is a `scrollBehavior` in `app/router.options.ts` that keeps the default's wait (copy it from `node_modules/nuxt/dist/pages/runtime/router.options.js`), passes the resolved position to the scroller (`scrollTo(position.top, { immediate: true })` for a saved or top position; `scrollTo(position.el, { immediate: true, offset: -(position.top ?? 0) })` for a hash), and returns the same position for Vue Router to apply. A `false` result means no scroll and no sync. Then `resize()` and `start()` in `onAfterEnter`, after that hook created the page's triggers. `scrollToTop: false` returns `false`. Nuxt leaves `history.scrollRestoration` on `auto` until the first client navigation and takes `manual` from there (4.5; read `pages/runtime/plugins/router.js`), so reloads restore natively; leave it alone. A failed or cancelled navigation fires `page:loading:end` without `page:finish`; `start()` there, in the handler that releases the lock.
+
 Focus: in `onAfterEnter`, move focus to the page root or its heading only if focus is on `body`. Give the target `tabindex="-1"` and a visible focus style. `autoAlpha: 0` is `visibility: hidden` and refuses focus, so focus at settled, not at insert. Keep `<NuxtRouteAnnouncer>` for the announcement.
 
 ## Outro before navigation
@@ -77,7 +79,7 @@ The ways to move the outro earlier:
 - **Nothing may load and the URL must wait until the outro ends.** A global route middleware `await`s the outro on the client (`import.meta.client && !useNuxtApp().isHydrating`) and then returns. Route middleware runs after `page:loading:start` and before guards, chunk loading, the URL commit, and the incoming setup. Never await it on history navigation. The lock cannot live in this middleware: returning `false` for a second click while the first is awaiting makes Vue Router cancel the first as well, since the pending navigation is now the second, and both are lost. Put the lock in front of the router, in the link component, so the second click never becomes a navigation.
 - **A leave must be refused.** `onBeforeRouteLeave` returning `false` cancels the navigation before anything moves. Use it for unsaved work, not for animation locks; returning `false` on back or forward also rewrites the URL back.
 
-Shared elements need no interception. `Flip.getState` in `onBeforeLeave` (the old page is laid out and the new page is not yet inserted in either mode), hand the state through the transition module, `Flip.from(state, { targets })` in `onEnter`. Under no `mode` the old element is still in the DOM, so pass `targets` explicitly.
+Shared elements need no interception. Follow [Transition archetypes](transition-archetypes.md): `captureShared` in `onBeforeLeave`, where the old root is laid out and the new one is not yet inserted in either mode, and let the outro dim everything but that element. Keep the state in the transition module keyed by the destination route, and clear it in `onAfterEnter` and `onEnterCancelled`. `playShared(state, target)` in `onEnter` with the target queried inside `el`: under no `mode` the old element is still in the DOM, so Flip must be told which one. A history navigation on the quiet path below captures nothing.
 
 ## Back and forward
 
@@ -90,6 +92,13 @@ History navigation runs the same middleware, hooks, and transition as a click, a
 Give history navigation a quieter path: a short outro or an immediate `done`, then intro-only with no travel, since the user is returning. The hooks still fire; do not skip `done`.
 
 The bfcache does not apply to same-document navigation. A full reload of a Nuxt page is a fresh hydration and takes the first-load path.
+
+## Curtains and preloaders
+
+Follow [Transition archetypes](transition-archetypes.md). Both live in `app.vue` outside `<NuxtLayout>`, since pages and layouts leave.
+
+- **Curtain.** The leave starts only after the incoming page resolved, so `cover()` composed into `onLeave` hides the swap, not the load; to cover the load, start it at the click with `<NuxtLink custom>` as in [Outro before navigation](#outro-before-navigation). Under `out-in` the old root leaves at `done` and `onEnter` inserts the new one covered: write start values there and call `reveal()` from `onEnter`, overlapping the intro, with `done` still bound to the intro. A history navigation on the quiet path never covers; reveal only if still closed. A route with `pageTransition: false` runs no hooks and gets no curtain. A failed navigation fires `page:loading:end` without `page:finish`: reveal there if closed, with the lock release.
+- **Preloader.** The `app.head.script` inline script decides before paint: on a first visit it sets a root mark beside the pre-paint mark and records the visit in `sessionStorage`; `app.vue` renders the preloader markup on every request and CSS shows it only under that mark. `finish()` runs from `app:suspense:resolve` once deadline-bounded fonts and hero media report, and the page's first-load intro waits on it instead of playing from `onMounted`. Route changes never show it again.
 
 ## View Transitions
 

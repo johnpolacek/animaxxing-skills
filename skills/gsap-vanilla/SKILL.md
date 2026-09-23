@@ -42,6 +42,8 @@ Use cross-document View Transitions for snapshot morphs or page crossfades, with
 - `@view-transition`, `pageswap`, `pagereveal`, types, render blocking, and handing off between the browser and GSAP: [Cross-document navigation](references/cross-document-navigation.md).
 - Fetch and swap routers, link interception, history, scroll, focus, script re-execution, and when to use a library: [Same-document navigation](references/spa-navigation.md).
 - The five phases, GSAP setup, contexts, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Lenis, ScrollSmoother, or eased page scrolling across documents and swaps: [Smooth scrolling](references/smooth-scroll.md), plus [per-document scrollers](references/page-load.md#smooth-scrolling) and [one scroller under a swap router](references/spa-navigation.md#smooth-scrolling-curtains-and-shared-elements).
+- Curtains, first-visit preloaders, and shared-element morphs: [Transition archetypes](references/transition-archetypes.md), plus the [full-document](references/page-load.md#curtains-and-preloaders) and [same-document](references/spa-navigation.md#smooth-scrolling-curtains-and-shared-elements) integration.
 - Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 

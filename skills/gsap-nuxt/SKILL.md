@@ -32,6 +32,8 @@ Use Vue Transition CSS for simple page fades/slides, `experimental.viewTransitio
 - The hooks, `done`, modes, what dies when the leave starts, first load, layouts, direction, interruptions: [Page transitions](references/page-transitions.md).
 - Page keys, keepalive, Nuxt app hooks, scroll and focus, outro before navigation, back and forward, View Transitions, SSR and first paint: [Navigation](references/navigation.md).
 - The five phases, GSAP setup, Vue lifecycle, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Lenis, ScrollSmoother, or eased page scrolling across routes: [Smooth scrolling](references/smooth-scroll.md), plus the [hook mapping](references/navigation.md#scroll-and-focus).
+- Curtains, first-visit preloaders, and shared-element morphs: [Transition archetypes](references/transition-archetypes.md), plus the [app.vue integration](references/navigation.md#curtains-and-preloaders) and [shared elements](references/navigation.md#outro-before-navigation).
 - Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 

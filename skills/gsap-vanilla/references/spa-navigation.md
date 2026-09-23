@@ -46,6 +46,14 @@ Where the Navigation API exists, one `navigate` listener with `event.intercept({
 - Update `document.title` and announce the new page through a live region.
 - Do not transition to the current URL. Treat search-param changes as page changes only when they mean a different screen.
 
+## Smooth scrolling, curtains, and shared elements
+
+One scroller per document means one per router lifetime: create it with the router, outside the route container, never in a page setup. Map [Smooth scrolling](smooth-scroll.md) onto the router's own steps: `stop()` as the outro starts, restore or reset the native position after the swap as above and then `scrollTo(position, { immediate: true })`, `resize()` once the page setup has created its triggers, `start()` at settled. A failed fetch falls back to `location.assign`; an aborted fetch that leaves the page current calls `start()` where it releases the lock. With Swup, Barba, or Taxi, put the same calls in the library's leave, content-replace, and enter hooks; read the installed version's hook list rather than memory, since names changed between majors. A same-page hash link is a `scrollTo(hash)`, not a navigation.
+
+A curtain from [Transition archetypes](transition-archetypes.md) is the one case for a fixed cover: it lives beside the route container in persistent chrome, `cover()` composes into the outro, the swap runs on its completion, and `reveal()` runs after start values are written on the new content, overlapping the intro. `popstate` never covers.
+
+Capture a shared element with `captureShared` as the outro starts, keep the state in the router module keyed by destination, clear it when the navigation settles or is replaced, and `playShared(state, target)` after the swap once the target is measured and visible. The old node left with the swap, so nothing stale can match; pass the target anyway. Flip cannot cross a document load: a full-document site uses `view-transition-name` instead, see [Combining with GSAP](cross-document-navigation.md#combining-with-gsap).
+
 ## Cleanup on unmount
 
 Before replacing the container's children:

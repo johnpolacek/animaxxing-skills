@@ -32,6 +32,8 @@ In data/framework mode, use Link, Form, or `navigate` with `viewTransition` for 
 - The blocker outro, transition-aware links, the lock, pending state, back and forward, the swap gap, scroll, focus, View Transitions: [React Router navigation](references/react-router-navigation.md).
 - Modes and their hooks, route reuse versus remount, layouts and `<Outlet>`, SSR and SPA mode first paint, streaming, fetchers, modal routes: [Route lifetime](references/route-lifetime.md).
 - The five phases, GSAP setup, React lifecycle, show and hide, layout stability, scroll, text, plugins: [Lifecycle implementation](references/motion-system.md).
+- Lenis, ScrollSmoother, or eased page scrolling across routes: [Smooth scrolling](references/smooth-scroll.md), plus the [React Router integration](references/react-router-navigation.md#smooth-scrolling).
+- Curtains, first-visit preloaders, and shared-element morphs: [Transition archetypes](references/transition-archetypes.md), plus [where they live under React Router](references/react-router-navigation.md#curtains-preloaders-and-shared-elements).
 - Touch, viewport changes, and device budgets: [Devices and input](references/devices.md).
 - Before calling work done: [Verification](references/verification.md).
 

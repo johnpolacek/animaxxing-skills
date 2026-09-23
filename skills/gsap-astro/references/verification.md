@@ -35,6 +35,8 @@ When Astro's `transition:animate` and GSAP are both involved, confirm no element
 
 For islands, test the island hydrating after the page intro started, a `transition:persist` island crossing a swap mid-animation, and the island's cleanup running at `astro:after-swap` without doubled tweens on the next page.
 
+With a smooth scroller, run the [scroll checks](smooth-scroll.md#verify) across a swap, a traverse, and a `data-astro-reload` link; after three swaps there is one scroller and one ticker callback, and `<html>` still carries Lenis's classes while stopped. With a curtain, preloader, or shared element, run the [archetype checks](transition-archetypes.md#verify); also confirm the curtain survives the swap through `transition:persist`, the preloader never appears after a swap, and a shared element is not both `transition:name`d and Flipped.
+
 Without the router, follow `gsap-vanilla`'s checks for full-document navigation, the bfcache, and cross-document View Transitions.
 
 For conditional components, test show, hide, and one interruption. Confirm removal happens after the outro.

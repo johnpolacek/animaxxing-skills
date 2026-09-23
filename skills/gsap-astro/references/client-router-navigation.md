@@ -99,6 +99,8 @@ The router sets `history.scrollRestoration` to `manual` and owns it: push and re
 
 Create ScrollTriggers in `astro:page-load` and refresh after fonts and the new page's images, since window `load` does not fire again. On traverse the page is already scrolled when triggers are created; reveal targets above the restored position must not stay hidden. Refresh once more at settle if the intro changed heights above a trigger.
 
+With a smooth scroller, follow [Smooth scrolling](smooth-scroll.md). The window survives every swap, so a Lenis instance created once at the layout module's top level, before the first `astro:page-load`, is the one scroller per document. ScrollSmoother's wrapper and content sit in `<body>`, which the swap replaces, and `transition:persist` on the wrapper would carry the old page inside it; under the router prefer Lenis, or kill the smoother in `astro:before-swap` and create it again in `astro:after-swap` before the page's triggers. Map the table onto the events: `stop()` inside the wrapped loader as the outro starts; the router resets or restores the native position inside the swap, before `astro:after-swap`, so `scrollTo(window.scrollY, { immediate: true })` there; `resize()` in `astro:page-load` after the page's triggers exist; `start()` at settled. The swap replaces every attribute on `<html>`, including the `lenis` and `lenis-stopped` classes that Lenis's stylesheet keys `overflow: clip` on (1.3; read `dist/lenis.css`), so copy those classes onto `event.newDocument.documentElement` in `astro:before-swap`; Lenis rewrites them itself at `start()`. A navigation the `signal` aborts is followed by a newer one that stops again; a loader that gives up becomes a full load, so `start()` with the readable end state in `pagehide`, and the new document builds its own scroller under `gsap-vanilla`'s rules.
+
 ## Focus and announcement
 
 After the swap, focus is restored only if it was inside a `transition:persist` element. Otherwise it is on `body`. On intro completion, move focus to the page container or main heading if it is still on `body`, with `tabindex="-1"` and a focus style that fits the design. Never take focus from a control inside a persisted region.
@@ -122,6 +124,14 @@ Every element with a `transition:*` directive gets a `view-transition-name` and,
 - `initial` hands the element to the browser's default and is not simulated in fallback mode.
 - Add `::view-transition { pointer-events: none }` so a running transition does not swallow clicks.
 - The router disables all of its animations, fallback included, under `prefers-reduced-motion`. GSAP takes its own reduced path.
+
+## Curtains, preloaders, and shared elements
+
+Follow [Transition archetypes](transition-archetypes.md) for the sequence; this maps it onto the events.
+
+- **Curtain.** The panels are in `<body>`, so give the curtain `transition:persist`, or the `curtain()` instance points at nodes that left with the old body and the new body paints uncovered. Compose `cover()` into the wrapped loader beside the outro; the swap runs on its completion, under a root `transition:animate="none"`. Write start values in `astro:after-swap` and call `reveal()` from `astro:page-load`, overlapping the intro. `traverse` never covers; reveal only if the curtain is still closed. A navigation the `signal` aborts is covered again by the newer one; a loader that gives up becomes a full load, and the new document's first-load path owns the reveal. Keep the persisted curtain out of page cleanup.
+- **Preloader.** The `is:inline` head script that sets the pre-paint mark also decides: on a first visit it sets a second root mark that CSS shows the preloader under, and records the visit in `sessionStorage`. That script runs once per visit and never after a swap, so a swap never shows the preloader. Feed `progress()` from fonts and the hero's images inside the deadline, call `finish()` from the first `astro:page-load`, and start the page intro as it lifts. Revert the preloader at settled so it does not travel through a later `astro:before-swap`.
+- **Shared element.** `transition:name` is the router's own morph and needs no GSAP. Use `captureShared` and `playShared` when the morph must be sequenced or interrupted with the rest of the intro, and keep `transition:name` off that element. Capture in `astro:before-preparation` on live DOM, keep the state in the layout module keyed by `event.to`, and play from `astro:page-load` with the new element queried from the current body. Clear it after playing and when a newer `astro:before-preparation` replaces it. `traverse` has no capture. A root `none` keeps the browser from crossfading the element the morph moves.
 
 ## Cases to design for
 
