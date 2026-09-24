@@ -33,7 +33,17 @@ This repository contains **Animaxxing skills** in three families. **Framework sk
 - Shared framework guidance lives in `shared/`; run `scripts/sync_initialization.py` to package it into each `gsap-*/references/`. Keep framework-specific guidance local.
 - Core motion skill layout: `skills/animaxxing/SKILL.md`, `agents/openai.yaml`, `references/motion-vocabulary.md`, `text-stability.md` when relevant, `verification.md`, and `references/recipes/*.md`, one self-contained module per recipe with its lifecycle contract stated at the top.
 - Style skill layout: `skills/style-<name>/SKILL.md`, `agents/openai.yaml`, `references/tokens.md`, `typography-and-layout.md`, `motion-vocabulary.md` for art direction and surface choices, and `verification.md` for design checks.
-- When adding a new skill: create `skills/<skill-name>/SKILL.md`, then update `skills/llms.txt` and the README "Skills" and "Structure" sections. For a framework skill, add a matching framework directory to the animaxxing-skills-test repository (starter, TASK.md, reference app, specs) so the skill can be verified. For a motion or style skill, record how it is verified in its `references/verification.md` and point at the demo that exercises it until the test repository grows dedicated suites. Motion verification also checks reuse without the demo's branding.
+- When adding a new skill: create `skills/<skill-name>/SKILL.md`, then update `skills/llms.txt` and the README "Skills" and "Structure" sections. For a framework skill, add a matching framework directory to the animaxxing-skills-test repository (starter, TASK.md, reference app, specs) so the skill can be verified. For a motion skill, add its recipes to the test repository's `motion/` suite (see **Testing** below) and record its checks in `references/verification.md`. For a style skill, record how it is verified in its `references/verification.md` and point at the demo that exercises it until a style suite exists. Motion verification also checks reuse without the demo's branding.
+
+## Testing
+
+Tests live in [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test), checked out beside this repo as `../animaxxing-skills-test` on branch `main`. Its `motion/build.mjs` reads recipes from `../animaxxing-skills` unless `SKILLS_REPO` points elsewhere. Its `CLAUDE.md` holds the step-by-step checklist and test-writing tips.
+
+- Every new or changed motion recipe builder ships with specs in the same session: visible behavior, touch or pointer filtering where it applies, reduced motion, and teardown that restores markup and inline styles exactly. A bug fix gets a spec that fails without it.
+- A new recipe file also needs entries in `motion/build.mjs` (`RECIPES`, `ENTRIES`, `ENTRY_RECIPES`), a fixture, and a spec.
+- Type-check and run only what changed with `MOTION_ONLY=<recipe> node motion/build.mjs`, then `npx playwright test -c motion/playwright.config.ts <specs> --repeat-each=3`. Finish with the full `pnpm test:motion`.
+- Framework skill changes run that framework's suite, such as `pnpm test:nextjs`.
+- Commit the skills change and its tests together in both repos; report which checks ran in a browser.
 
 ## References
 
