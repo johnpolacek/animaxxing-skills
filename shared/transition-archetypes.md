@@ -1,6 +1,6 @@
-# Transition archetypes: curtains, preloaders, and shared elements
+# Transition archetypes: curtains, preloaders, shared elements, and persistent canvases
 
-Read this before building a page transition that covers the whole screen, a first-visit preloader, or an element that morphs from one page into the next. Each still runs the lifecycle, **mount → initial state → intro → settled → outro → end state → unmount**, and each adds one rule about what persists across the swap. The framework skill owns timing, locks, and recovery. The `animaxxing` skill supplies the builders: `curtain` and `preloader` in `references/recipes/page-covers.md`, `captureShared` and `playShared` in `references/recipes/layout-flip.md`.
+Read this before building a page transition that covers the whole screen, a first-visit preloader, an element that morphs from one page into the next, or a WebGL canvas that outlives each page. Each still runs the lifecycle, **mount → initial state → intro → settled → outro → end state → unmount**, and each adds one rule about what persists across the swap. The framework skill owns timing, locks, and recovery. The `animaxxing` skill supplies the builders: `curtain` and `preloader` in `references/recipes/page-covers.md`, `captureShared` and `playShared` in `references/recipes/layout-flip.md`. The `animaxxing-webgl` skill supplies `holdStage` in `references/recipes/webgl-stage.md`.
 
 ## Curtain
 
@@ -40,8 +40,19 @@ A shared element morphs from its box on the outgoing page into its counterpart o
 - **Reduced motion.** `playShared` shows the target at once and still completes.
 - **Cross-document navigations** lose the state in the full page load. Use a cross-document View Transition with `view-transition-name` for that case, and keep GSAP off the named element.
 
+## Persistent WebGL canvas
+
+WebGL image planes draw on one fixed canvas per document. Creating a context per page costs a shader compile and a texture upload on every navigation, and browsers cap live contexts, so keep one canvas across client-side routes.
+
+- **Where it lives.** The persistent shell holds the stage once, outside the route boundary, like a curtain. Pages build and revert their planes; the canvas and context stay. Across full document loads nothing persists: each document holds its own stage.
+- **Outro.** Planes keep drawing through the page's exit, including a wipe `exit()`. Revert the outgoing page's planes at unmount, after its end state, so their images never flash back first.
+- **Intro.** Build the incoming page's planes once their images are mounted and laid out. An intro that depends on a plane awaits its `ready` within the initialization deadline; on `false` or timeout, the `<img>` is already the readable page.
+- **Swap order.** When the router overlaps pages, the outgoing planes follow their images wherever the router moves them; revert them before the outgoing page is detached, since a detached image has no box.
+- **Recovery and reduced motion.** No stage exists under reduced motion or without WebGL, and the shell's hold returns `null`; nothing else changes. A recovery path reverts the page's planes like any effect. Release the shell's hold only when the shell itself unmounts.
+
 ## Verify
 
 - Curtain: the chrome and the swap never flash; a click during the cover goes nowhere; back and forward show no cover; a recovery leaves no curtain behind.
 - Preloader: shows once per session, tracks real readiness, lifts into an intro that has not already played, and releases `aria-busy`. Disabled JavaScript and a blocked bundle both show the readable page.
 - Shared element: the morph starts at the old element's exact box, ends in the new element's settled layout with no inline styles, and a history move afterwards does not replay it.
+- Persistent canvas: after several navigations there is still one `canvas[data-webgl-stage]`, the same element, and each visited page's images show again the moment their planes revert.
