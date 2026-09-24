@@ -118,6 +118,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 ## Media, components, and hover
 
 - Menu: links are out of the tab order at rest; `close()` mid-open turns the wipe back from where it is; revert leaves no inline style.
+- Enter and exit: the closed state paints at build, before GSAP's first tick; `close()` from the open rest plays the exit, not the entrance reversed; `close()` mid-entrance reverses without reaching the exit, and `open()` mid-exit returns to the pause; each rest fires its callback once; `easeReverse` changes the reversed curve; revert restores inline styles.
 - Dialog: focus lands inside through `showModal()` and returns to the trigger natively; Escape runs the exit while `open` stays true, then closes; `close(value)` sets `returnValue`.
 - Disclosure: hidden or closed-`<details>` panels are collapsed at build; `open()` ends at the exact content height with no inline `height` or `overflow`; an interrupted open shrinks from its current height.
 - Tab indicator: its own box never changes; it lands within half a pixel of the tab, in RTL and after a sibling tab resizes.

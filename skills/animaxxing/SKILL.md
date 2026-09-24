@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build GSAP text, scroll, pointer, SVG, layout, media, component, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, Lenis or ScrollSmoother scrolling, curtain and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scrubbed video, frame sequences, menu, dialog, accordion, and tab motion, label rolls, underline sweeps, magnetic buttons, tilt cards, cursor followers, image trails, momentum hover, drag-and-throw tracks, endless drag loops, wrapping grids, flick card stacks, CustomEase curves, section paging, sound cues synced to motion, SVG draws and morphs, count-up figures, marquees, confetti and emoji rain, particle controls, and blast-off exits. Use for Animaxxing motion, or to fix hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle. Not for branding, redesign, routing, or GSAP API questions."
+description: "Build GSAP text, scroll, pointer, SVG, layout, media, component, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, Lenis or ScrollSmoother scrolling, curtain and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scrubbed video, frame sequences, menu, dialog, accordion, tab, enter/exit motion, label rolls, underline sweeps, magnetic buttons, tilt cards, cursor followers, image trails, momentum hover, drag-and-throw tracks, endless drag loops, wrapping grids, flick card stacks, CustomEase curves, section paging, sound cues synced to motion, SVG draws and morphs, count-up figures, marquees, confetti, emoji rain, particle controls, and blast-off exits. Use for Animaxxing motion, or to fix hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle. Not for branding, redesign, routing, or GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text, scroll, pointer, layout, SVG, and particle motion for any brand
@@ -14,7 +14,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 
 ## Setup and adaptation
 
-- Read the installed GSAP version and types. Every plugin used is free since 3.13; SplitText recipes need 3.13+ (`SplitText.create`, `smartWrap`, `mask`, `aria`). Each recipe lists its dependencies; register only those used. Use the official GSAP skills for API details.
+- Read the installed GSAP version and types. Every plugin used is free since 3.13; SplitText recipes need 3.13+ (`SplitText.create`, `smartWrap`, `mask`, `aria`); `easeReverse` needs 3.15+. Each recipe lists its dependencies; register only those used. Use the official GSAP skills for API details.
 - Recipes register plugins at module scope, which is server-safe, but import them only from client code. Drop a copy's registration when the project registers plugins centrally.
 - Add only requested effects. A particle button does not imply a page transition, font change, or hero sequence.
 - Recipe constants are editable defaults, not brand rules. Tune timing, stagger, spread, and intensity to the surface; expose more constants only if the app needs runtime configuration.
@@ -46,7 +46,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Filter, reorder, and expand layouts; shared-element morphs across pages | [Layout Flip](references/recipes/layout-flip.md) |
 | Image wipe reveals, hover image previews, scroll-scrubbed video, canvas frame sequences | [Media effects](references/recipes/media-effects.md) |
 | Label rolls, underline sweeps, image zoom on hover and focus | [Hover effects](references/recipes/hover-effects.md) |
-| Menu overlays, dialog enter and exit, accordion height, sliding tab indicators | [Component motion](references/recipes/component-motion.md) |
+| Menu overlays, interruptible enter/exit with reverse easing, dialog enter and exit, accordion height, sliding tab indicators | [Component motion](references/recipes/component-motion.md) |
 | Dispersal on a call to action | [Blast-off](references/recipes/blast-off.md) |
 | Confetti bursts and emoji rain thrown under gravity | [Physics effects](references/recipes/physics-effects.md) |
 | Particle buttons, cards, links, or command fields | [Particle effects](references/recipes/particle-effects.md) plus [field/attach helpers](references/recipes/particle-field.md) |

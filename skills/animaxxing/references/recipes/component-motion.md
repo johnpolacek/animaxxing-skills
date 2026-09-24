@@ -1,6 +1,6 @@
 # Recipe: component motion
 
-A full-screen menu, native `<dialog>` enter and exit, an accordion panel, and a sliding tab indicator. The app keeps its markup, styling, and state (`aria-expanded`, `inert`, the focus trap, `hidden`, `open`, `aria-selected`); builders only move inline styles between states the app has chosen, and teardown restores them.
+A full-screen menu, an interruptible entrance with a different exit, native `<dialog>` enter and exit, an accordion panel, and a sliding tab indicator. The app keeps its markup, styling, and state (`aria-expanded`, `inert`, the focus trap, `hidden`, `open`, `aria-selected`); builders only move inline styles between states the app has chosen, and teardown restores them.
 
 Lifecycle: the framework controller creates each builder once the component is mounted, calls `open`, `close`, or `moveTo` when app state changes, and `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -187,6 +187,126 @@ export function menuOverlay(
 ```
 
 Links become focusable as each arrives; put a close control that must work at once outside the `links` selector.
+
+`menuOverlay` rebuilds a timeline per call, so its close always retraces the open. For an exit that differs from the entrance, use `enterExit`.
+
+## enterExit
+
+One timeline holds a different entrance and exit, split by a pause: `open()` plays the entrance to the pause and `close()` plays on into the exit. Interruptions stay continuous. Closing mid-entrance reverses it, and reopening mid-exit reverses back to the open rest. With GSAP 3.15+, `easeReverse` sets the reversal's own ease, so a `back.out` entrance can retreat on a quick `power3.in`. Without it, a reversed tween runs its ease backwards, and overshoot eases turn sluggish.
+
+The caller writes both halves. The entrance uses `fromTo` from the closed state, including `autoAlpha: 0` on the container, so time 0 is closed. The exit uses `to`, starting from the open rest. After the exit finishes, the playhead returns to 0 and the next `open()` replays the entrance. The builder skips `overwrite`: a reused timeline must own its targets, because an overwrite would kill its tweens for good. The app owns state and focus, as with `menuOverlay`.
+
+```ts
+export type EnterExitOptions = {
+  /** Reverse ease for every tween in both halves; GSAP 3.15+. Leave unset on older GSAP. */
+  easeReverse?: string | boolean;
+  /** Speed of a reversed entrance. Above 1 gets out of the way faster. */
+  reverseSpeed?: number;
+  /** Called at the open rest, including a reopen that reversed out of the exit. */
+  onOpen?: () => void;
+  /** Called at the closed rest, from a reversed entrance or a finished exit. */
+  onClose?: () => void;
+};
+
+export type EnterExitPhase = "closed" | "opening" | "open" | "closing";
+
+export type EnterExit = {
+  /** Plays the entrance, or turns an exit in flight back to the open rest. */
+  open(): void;
+  /** Plays the exit from the open rest, or reverses an entrance in flight. */
+  close(): void;
+  phase(): EnterExitPhase;
+  revert: Teardown;
+};
+
+export function enterExit(
+  enter: (tl: gsap.core.Timeline) => void,
+  exit: (tl: gsap.core.Timeline) => void,
+  { easeReverse, reverseSpeed = 1.5, onOpen, onClose }: EnterExitOptions = {},
+): EnterExit {
+  let tl: gsap.core.Timeline | undefined;
+  let openAt = 0;
+  let phase: EnterExitPhase = "closed";
+  const opened = () => {
+    phase = "open";
+    tl?.timeScale(1);
+    onOpen?.();
+  };
+  const closed = () => {
+    phase = "closed";
+    tl?.timeScale(1);
+    onClose?.();
+  };
+  // Reverting the context reverts the timeline, restoring every target's inline styles.
+  const revert = own(() => {
+    const timeline = gsap.timeline({
+      paused: true,
+      defaults: easeReverse === undefined ? {} : { easeReverse },
+      // A finished exit rewinds to the entrance's closed start, without firing callbacks.
+      onComplete: () => {
+        timeline.pause(0);
+        closed();
+      },
+      onReverseComplete: closed,
+    });
+    tl = timeline;
+    enter(timeline);
+    openAt = timeline.duration();
+    // Fires in both directions: forward at the end of the entrance, backward when a reopen reverses the exit.
+    timeline.addPause(openAt, () => void (phase === "open" || opened()));
+    exit(timeline);
+    // Paint the closed state now: before GSAP's first tick, a context defers the entrance's immediate render a frame.
+    timeline.render(0, true, true);
+  });
+  const reduced = (to: number, done: () => void) => {
+    tl?.pause(to);
+    done();
+  };
+  return {
+    open() {
+      if (!tl || phase === "open" || phase === "opening") return;
+      if (prefersReducedMotion()) return reduced(openAt, opened);
+      if (phase === "closed") tl.timeScale(1).play(0);
+      // Closing: an entrance being reversed plays forward again; an exit reverses to the pause.
+      else if (tl.time() < openAt) tl.timeScale(1).play();
+      else tl.timeScale(1).reverse();
+      phase = "opening";
+    },
+    close() {
+      if (!tl || phase === "closed" || phase === "closing") return;
+      if (prefersReducedMotion()) return reduced(0, closed);
+      if (phase === "open") tl.timeScale(1).play();
+      // Opening: an entrance reverses at `reverseSpeed`; a reopen from the exit plays on into it.
+      else if (tl.time() < openAt) tl.timeScale(reverseSpeed).reverse();
+      else tl.timeScale(1).play();
+      phase = "closing";
+    },
+    phase: () => phase,
+    revert,
+  };
+}
+```
+
+```ts
+// Example: a menu whose links spring in and tumble out.
+const panel = document.querySelector<HTMLElement>(".menu")!;
+const items = panel.querySelectorAll<HTMLElement>("a");
+const menu = enterExit(
+  (tl) =>
+    tl
+      .fromTo(panel, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2 })
+      .fromTo(items, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: "back.out(2)", stagger: 0.05 }, "<0.1"),
+  (tl) =>
+    tl
+      .to(items, { y: () => window.innerHeight, rotation: () => gsap.utils.random(-30, 30), duration: 0.6, ease: "power2.in", stagger: 0.03 })
+      .to(panel, { autoAlpha: 0, duration: 0.2 }, "-=0.2"),
+  { easeReverse: "power3.in", onClose: () => toggle.focus() },
+);
+```
+
+- Values are recorded on first play. Function-based values, such as the random rotations above, are drawn once. Revert and rebuild to re-roll them or to re-measure after a resize.
+- Under reduced motion, `open()` and `close()` jump to the pause or to 0 and still call `onOpen` and `onClose`.
+- A reversed entrance never plays its exit; reserve an exit-only cue, such as a sound, for the full close.
 
 ## dialogMotion
 
@@ -452,11 +572,12 @@ tablist.addEventListener("click", (event) => {
 | Builder | Create | Returns | Reduced motion |
 |---|---|---|---|
 | `menuOverlay` | Settled, once the panel is laid out | `{ open, close, revert }` | Panel and links appear or vanish whole; both timelines complete |
+| `enterExit` | Settled, once the targets are laid out; rebuild after a resize that changes measured values | `{ open, close, phase, revert }` | Jumps to the open or closed rest; `onOpen` and `onClose` still fire |
 | `dialogMotion` | Settled, once per `<dialog>` | `{ open, close, revert }` | `open()` shows at once; `close()` closes on the next tick |
 | `disclosure` | Settled, once per panel | `{ open, close, revert }` | Height snaps; inline height still clears once open |
 | `tabIndicator` | Settled, once tab widths are final | `{ moveTo, revert }` | Jumps onto the tab |
 
-- State first, motion second, in the same task: set `aria-expanded`, `inert`, `hidden`, or `open`, then call the builder. Hang the closing state change on the returned timeline's `onComplete`; every timeline completes, under reduced motion too.
+- State first, motion second, in the same task: set `aria-expanded`, `inert`, `hidden`, or `open`, then call the builder. Hang the closing state change on the returned timeline's `onComplete`, or `enterExit`'s `onClose`; every timeline completes, under reduced motion too.
 - `open()` and `close()` may interrupt each other; the next call tweens from where things are. Nothing here navigates, changes attributes, or moves focus, except `dialogMotion`'s `showModal()` and `close()`.
 - A menu in the persistent shell belongs to the shell's controller, not a page's GSAP context; a context reverted at unmount would strip its rest styles.
 - Revert before the panel, dialog, or tabs are removed from the DOM.

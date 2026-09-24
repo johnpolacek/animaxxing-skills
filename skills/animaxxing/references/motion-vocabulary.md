@@ -201,6 +201,7 @@ A curtain and a shared-element morph never share a navigation: the curtain would
 | Effect | Move | Role |
 |---|---|---|
 | `menuOverlay` | panel clip inset 100 → 0 from an edge, 0.5s, `power3.inOut`; links `autoAlpha 0, y 16 → 0`, 0.4s, stagger 0.05 | A full-screen menu. Close runs back from wherever the open is. |
+| `enterExit` | caller's entrance to a pause, then a different exit; closing mid-entrance reverses at 1.5× speed, reopening mid-exit returns to the pause | A menu that springs in and tumbles out. Pair with `easeReverse` on 3.15+. |
 | `dialogMotion` | `--dialog-backdrop 0 → 1`, panel `opacity 0 → 1` with `scale 0.96`, or `xPercent`/`yPercent ±100` for a drawer, 0.3s, `power3.out`; exit 0.21s `power2.in`, then `dialog.close()` | Native `<dialog>` enter and exit. Escape runs the exit. |
 | `disclosure` | `height 0 ↔ auto`, 0.3s, `power2.inOut`, `overflow: hidden` only while moving | An accordion panel. The one sanctioned layout tween. |
 | `tabIndicator` | `x` and `scaleX` from its own resting box onto the tab, 0.3s, `power3.out` | The selected tab's underline or pill. Re-fits on resize. |
@@ -215,6 +216,22 @@ A curtain and a shared-element morph never share a navigation: the curtain would
 | `imageZoom` | `scale 1 → 1.05`, 0.6s, `power2.out`, inside a clipped frame | A card's image answering the card or its link; never clip the card itself. |
 
 Code: [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), [hover-effects.md](recipes/hover-effects.md).
+
+### Interruption
+
+Anything the visitor can toggle gets interrupted. Choose one of two patterns per component.
+
+| Pattern | How | Use when |
+|---|---|---|
+| Rebuild | Kill the running timeline, then build the next with `to` tweens from current values | The close retraces the open: `menuOverlay`, `dialogMotion`, `disclosure`, `tabIndicator`. |
+| Reverse | One timeline, entrance and exit split by `addPause()`; reverse it to take back a half-played move | The exit differs from the entrance: [`enterExit`](recipes/component-motion.md#enterexit). |
+
+- Rebuilt entrances also use `to` from the rest state `set()` at build, so a reopen mid-exit never snaps back to the start.
+- A reversed tween runs its ease backwards by default. Overshoot eases (`back`, `elastic`) then linger before they retreat.
+- `easeReverse` (GSAP 3.15+) gives the reverse direction its own ease, from wherever the playhead turned. `true` reuses the forward ease; a name picks another. It replaces `yoyoEase`.
+- Pairing: `back.out` or `elastic.out` in, `power3.in` or `power2.in` in reverse, so a changed mind gets out of the way. Registered signature curves work here too.
+- A faster reverse helps: `timeScale(1.5)` for the reversal only, then back to 1.
+- Before 3.15, leave `easeReverse` out. Older GSAP reads it as a property to animate.
 
 ## Physics
 
