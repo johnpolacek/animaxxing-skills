@@ -106,6 +106,8 @@ Character effects are for display type. Keep reading text immediately readable; 
 | `charsWeightWave` | chars, widths pinned | `fontWeight` dips to the far end of the axis and back, stagger 0.03 | A wave of weight through a line. |
 | `wordsSlideIn` / `Out` | words | `x ±40` alternating sides, `power2.out`, stagger 0.05 | Words zip together. |
 | `linesMaskIn` / `Out` | lines, masked | `yPercent: 110 → 0`, 0.28s, `power3.out`, stagger 0.05 | Whole lines wiped up behind masks. |
+| `linesEllipseIn` / `Out` | lines, masked | mask `clip-path: ellipse(20% 0%)` swells to cover the line from its bottom edge while the line rises `yPercent 40 → 0`, 0.8s, `power3.out`, stagger 0.05 | A softer, rounder line reveal for display copy. |
+| `linesHighlightIn` / `Out` | lines, words | a `--line-highlight` bar sweeps `scaleX 0 → 1` over each line's words, the words appear, the bar retracts toward the line end; 0.12s between lines | A marker pass across a statement or pull quote. |
 | `scrambleIn` / `Out` | none | ScrambleText over `01{}/<>()=;` | Text resolving out of noise. Display only; needs ScrambleTextPlugin. |
 
 Split runners use `aria: "auto"`, revert on completion, and never split under reduced motion. Weight moves pin each character to its width at the heaviest weight it reaches (`inline-block`, centered) so the axis moves without reflow. Code: [split-entrances.md](recipes/split-entrances.md).
@@ -153,6 +155,7 @@ Scroll effects follow reading position, not page phase. Use at most one scrubbed
 | `parallax` | `y ∓ data-parallax` px, scrubbed across the section | Depth between media and captions. Small travel. |
 | `pinnedScene` | caller's timeline, pinned for `length` section heights | Steps, a product reveal, a diagram assembling. The loudest; one per page. |
 | `horizontalRun` | track `x → -overflow`, pinned | A gallery or timeline run sideways. Native scroller when skipped. |
+| `runDrift` | `[data-run-drift]` items `x ∓ travel` px as each crosses the run's viewport | Depth inside a horizontal run: images slide within their frames. |
 | `scrollProgress` | `scaleX 0 → 1` from the left edge | A hairline reporting position. Runs under reduced motion. |
 | `velocitySkew` | `skewY` up to ±8°, springs back in 0.8s | Ambient energy on media columns. Never on reading text. |
 | `navTheme` | Header `data-nav-theme` follows the `[data-nav-theme]` section under its middle; CSS transitions the colors | Light type over a dark hero, dark over a light page. Runs under reduced motion. |
@@ -169,6 +172,7 @@ Scrubs smooth with `scrub: 0.6`; parallax locks to the scrollbar. Build phases: 
 | `drawIn` / `drawOut` | DrawSVG `0% → 100%`, 0.8s, `power2.inOut`, stagger 0.12 | Lines, diagrams, and signatures drawing themselves. |
 | `morphToggle` | MorphSVG to the alternate shape, 0.35s, `power2.inOut` | Menu to close, play to pause. Follows the control's state. |
 | `followPath` | MotionPath along a path, 6s a lap, linear | A mark tracing a route. Ambient. |
+| `morphScrub` | MorphSVG toward the alternate shape, scrubbed from `top bottom` to `top top` | A curved section edge flattening as the section arrives. |
 | `countUp` | 0 to the element's own value, 1.6s, `power3.out` | Statistics landing on their figure. Width reserved. |
 | `marquee` | Row loops by its own width at 60px/s | Logos, tags, or a running headline. Needs a pause control. |
 | `logoCycle` | Every 2s one cell's logo slides out `yPercent -100` as the next from the pool slides in, 0.6s `power3.inOut` | A client wall with more logos than cells. Needs a pause control. |
@@ -184,6 +188,7 @@ Code: [svg-effects.md](recipes/svg-effects.md), [counters-and-marquees.md](recip
 |---|---|---|
 | `curtain` | Panels `yPercent 100 → 0 → -100`, 0.6s each way, `power3.inOut`, stagger 0.06 | A full-screen wipe hiding a route swap. From the persistent shell; the loudest transition there is. |
 | `curtain` with `tilt` or `title` | Panels lean `tilt°` in, straighten, and tip the other way out; the title fades up once covered and out before the reveal | A page that swings away, or a cover naming the page it opens on. One oversized panel suits a tilt. |
+| `curtain` with `wipe` or `drift` | Panels hold still while `clip-path` opens from the entry edge and closes toward the far edge; content travels 20% of the viewport with the sweep | A clean polygon wipe, and a page pushed away then trailing in behind the cover. |
 | `preloader` | Count eases to reported readiness; lifts `yPercent -100`, 0.7s, `power4.inOut` | First visit only, while real dependencies arrive. |
 | `captureLayout` | Flip from old boxes to new, 0.5s, `power2.inOut`; entering items fade and grow, leaving items fade and shrink | Filters, reorders, and panels that open in place. |
 | `captureShared` / `playShared` | Flip from one element's box onto its counterpart, 0.7s, `power3.inOut` | A thumbnail becoming the next page's hero. One per navigation. |
@@ -199,7 +204,7 @@ A curtain and a shared-element morph never share a navigation: the curtain would
 | `dialogMotion` | `--dialog-backdrop 0 → 1`, panel `opacity 0 → 1` with `scale 0.96`, or `xPercent`/`yPercent ±100` for a drawer, 0.3s, `power3.out`; exit 0.21s `power2.in`, then `dialog.close()` | Native `<dialog>` enter and exit. Escape runs the exit. |
 | `disclosure` | `height 0 ↔ auto`, 0.3s, `power2.inOut`, `overflow: hidden` only while moving | An accordion panel. The one sanctioned layout tween. |
 | `tabIndicator` | `x` and `scaleX` from its own resting box onto the tab, 0.3s, `power3.out` | The selected tab's underline or pill. Re-fits on resize. |
-| `imageReveal` | frame `clip-path inset` closed → open, 1s `power3.inOut`; image `scale 1.15 → 1`, `power2.out` | Editorial image entrance; `onScroll` variant for galleries. Clip only, never hidden. |
+| `imageReveal` | frame `clip-path inset` closed → open, 1s `power3.inOut`; image `scale 1.15 → 1`, `power2.out` | Editorial image entrance; `onScroll` variant for galleries. Clip only, never hidden. A CSS `mask` on the frame opens the image inside a brand shape. |
 | `hoverPreview` | one image follows the mouse (`quickTo` 0.35s), 0.25s crossfade on item change | Work lists and indexes. Mouse-only decoration; the link stays the way in. |
 | `imageTrail` | an image every 80px of mouse travel pops in with `back.out(2)`, drifts with the pointer, and shrinks away over 0.9s; at most 10 alive | A hero or work index with images spilling from the cursor. Never over reading text. |
 | `cursorFollower` with `label` | over `[data-cursor-text]`, the dot gives way to a pill scrolling that text at 60px/s | "View project" on work links. Restates the link; `aria-hidden`. |

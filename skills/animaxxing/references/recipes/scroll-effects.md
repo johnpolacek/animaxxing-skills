@@ -1,6 +1,6 @@
 # Recipe: scroll effects
 
-Nine scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, a horizontal run, a progress rule, a velocity skew, a header theme that follows the section beneath it, and a scroll direction state.
+Nine scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, a horizontal run with optional item drift, a progress rule, a velocity skew, a header theme that follows the section beneath it, and a scroll direction state.
 
 Lifecycle: the framework controller builds these once the owner is measurable, refreshes ScrollTrigger when fonts, media, data, or scroll restoration change layout, and calls each idempotent teardown on unmount. Builders never kill triggers they did not create. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -388,6 +388,39 @@ export function horizontalRun(
 
 Nested effects pass `animation` as their `containerAnimation`; create them after the run and revert them first. Narrow or coarse-pointer tiers may keep the native scroller.
 
+### runDrift
+
+Items inside a run drift sideways against the track as they cross the viewport, so the run reads in depth. `data-run-drift` sets each item's travel in px; put it on an inner element, such as a card's image, so the card's own box stays aligned.
+
+```html
+<article class="card"><img data-run-drift="48" src="…" alt="…" /></article>
+```
+
+```ts
+export function runDrift(track: HTMLElement, run: Run, { scrub = true }: { scrub?: number | boolean } = {}): Teardown {
+  const items = gsap.utils.toArray<HTMLElement>("[data-run-drift]", track);
+  const containerAnimation = run.animation;
+  if (!items.length || !containerAnimation || prefersReducedMotion()) return () => {};
+  return own((_dispose, after) => {
+    after(snapshotStyles(items));
+    items.forEach((item) => {
+      const travel = Number(item.dataset.runDrift) || 0;
+      gsap.fromTo(
+        item,
+        { x: -travel },
+        {
+          x: travel,
+          ease: "none",
+          scrollTrigger: { trigger: item, containerAnimation, start: "left right", end: "right left", scrub },
+        },
+      );
+    });
+  });
+}
+```
+
+Clip each item's frame so the drift never shows past its edge. Revert `runDrift` before the run's own `revert`.
+
 ## scrollProgress
 
 A rule that grows with reading progress through the page or one `section`. It reports state, so it runs under reduced motion too.
@@ -573,6 +606,7 @@ Runs under reduced motion: the header still hides and returns, without a transit
 | `scrubStatement`, `parallax`, `velocitySkew` | Settled, once text and media are measurable | teardown | No-op; static |
 | `pinnedScene` | Settled, after fonts and media above it have sized | teardown | No-op; stacked fallback |
 | `horizontalRun` | Settled, same as a scene | `{ revert, animation }` | No-op; native scroller |
+| `runDrift` | Settled, right after its run | teardown | No-op; static |
 | `scrollProgress` | Settled | teardown | Runs, unsmoothed |
 | `navTheme` | Settled, once section heights are final; the header persists, so rebuild per page | teardown | Runs; CSS drops the transition |
 | `scrollDirection` | Once per document, from the persistent shell | teardown | Runs; CSS drops the transition |

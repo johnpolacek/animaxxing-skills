@@ -30,19 +30,19 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | A brand's signature curve for every `ease` option | [Signature curves](references/motion-vocabulary.md#signature-curves) |
 | Loading flashes, auth-dependent content, or layout shifts | Matching installed framework skill's `references/initialization.md`, **Data readiness and layout stability** |
 | Character animation: font readiness, kerning, masks, stable split/revert | [Text stability](references/text-stability.md) |
-| Character, word, line, or scramble entrances/exits | [Split entrances](references/recipes/split-entrances.md) |
+| Character, word, line, or scramble entrances/exits, ellipse line reveals, highlighter line sweeps | [Split entrances](references/recipes/split-entrances.md) |
 | Page items, including scattering headlines | [Route letters](references/recipes/route-letters.md) |
 | Short display copy arriving at speaking pace | [Speak-in](references/recipes/speak-in.md) |
 | Ambient headline ripple | [Wave](references/recipes/wave.md) |
-| Scroll reveals and pop-ins, scrubbed statements, parallax and footer reveals, pinned scenes, horizontal runs, progress, velocity skew, header theme per section, hide-on-scroll headers | [Scroll effects](references/recipes/scroll-effects.md) |
+| Scroll reveals and pop-ins, scrubbed statements, parallax and footer reveals, pinned scenes, horizontal runs and drift inside them, progress, velocity skew, header theme per section, hide-on-scroll headers | [Scroll effects](references/recipes/scroll-effects.md) |
 | Magnetic buttons, tilt cards, cursor follower and its scrolling label, momentum hover, image trails, drag-and-throw tracks | [Pointer effects](references/recipes/pointer-effects.md) |
 | Endless drag galleries: a wrapping loop with snap, wheel, and drift; a 2D grid that wraps on both axes; a fanned card stack dealt by drag or flick | [Endless drag](references/recipes/endless-drag.md) |
 | Full-screen sections changing on a wheel flick, swipe, or key | [Section pager](references/recipes/section-pager.md) |
 | Opt-in sound on interactions and timelines, ambient beds | [Sound cues](references/recipes/sound-cues.md) |
-| Line drawing, icon morphs, a mark following a path | [SVG effects](references/recipes/svg-effects.md) |
+| Line drawing, icon morphs, a mark following a path, a section edge that morphs with scroll | [SVG effects](references/recipes/svg-effects.md) |
 | Count-up figures, looping marquees, logo walls that cycle | [Counters and marquees](references/recipes/counters-and-marquees.md) |
 | Eased page scrolling with Lenis or ScrollSmoother | [Smooth scroll](references/recipes/smooth-scroll.md) |
-| Curtain page transitions, tilted or titled covers, first-visit preloaders | [Page covers](references/recipes/page-covers.md) |
+| Curtain page transitions, tilted, titled, clip-path wipe, or drifting covers, first-visit preloaders | [Page covers](references/recipes/page-covers.md) |
 | Filter, reorder, and expand layouts; shared-element morphs across pages | [Layout Flip](references/recipes/layout-flip.md) |
 | Image wipe reveals, hover image previews, scroll-scrubbed video, canvas frame sequences | [Media effects](references/recipes/media-effects.md) |
 | Label rolls, underline sweeps, image zoom on hover and focus | [Hover effects](references/recipes/hover-effects.md) |

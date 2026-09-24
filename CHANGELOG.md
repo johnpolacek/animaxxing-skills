@@ -4,6 +4,14 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+### Added
+
+- `linesEllipseIn` / `Out` and `linesHighlightIn` / `Out` in split entrances: lines swell open from an elliptical sliver while rising, and a highlighter bar in `--line-highlight` sweeps each line's words in and retracts.
+- `morphScrub` in SVG effects: a path morphs toward an alternate shape as the page scrolls, such as a curved section edge that flattens as its section arrives.
+- `runDrift` in scroll effects: `[data-run-drift]` items slide within their frames as they cross a horizontal run, through its `containerAnimation`.
+- Curtain `wipe` and `drift` options: panels open and close by `clip-path` polygon instead of sliding, and the content wrapper travels with the sweep so the outgoing page is pushed away and the incoming page trails in.
+- Masked frames for `imageReveal`: a CSS `mask` in a brand shape combines with the wipe.
+
 ## [0.9.0] - 2026-09-24
 
 ### Added

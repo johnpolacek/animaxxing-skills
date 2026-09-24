@@ -204,6 +204,17 @@ export function imageReveal(
 }
 ```
 
+A frame can carry a brand shape, such as a logo outline or a torn edge, with a CSS mask. The mask and the wipe's `clip-path` combine, so the image opens inside the shape. Keep the shape as its own SVG file:
+
+```css
+.frame--shaped {
+  -webkit-mask: url("/shapes/frame.svg") center / contain no-repeat;
+  mask: url("/shapes/frame.svg") center / contain no-repeat;
+}
+```
+
+A shaped frame's `alt` text still describes the image, never the shape.
+
 ## hoverPreview
 
 List items carry an image URL in `data-preview`. One floating image follows the mouse over the list, crossfades between items, and hides on leave. The app supplies the empty floating element and styles its size, radius, and shadow; the builder adds and removes two `<img>` crossfade layers. Mouse only: touch and pen never show it, and items stay ordinary links.

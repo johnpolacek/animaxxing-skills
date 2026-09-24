@@ -347,7 +347,115 @@ export const linesMaskOut: SplitRunner = (element, options = {}) =>
     },
     { autoAlpha: 0 },
   );
+
+/** Clip for each line mask: a narrow sliver on the edge the line leaves from, or wide enough to show the whole line. */
+const ELLIPSE = {
+  closedBottom: "ellipse(20% 0% at 50% 100%)",
+  openBottom: "ellipse(100% 120% at 50% 100%)",
+  openTop: "ellipse(100% 120% at 50% 0%)",
+  closedTop: "ellipse(20% 0% at 50% 0%)",
+} as const;
+
+/** Each line swells open from a sliver at its bottom edge while it rises into place. */
+export const linesEllipseIn: SplitRunner = (element, options = {}) =>
+  withSplit(element, options, { type: "lines", mask: "lines" }, (split, tl) => {
+    tl.fromTo(
+      split.masks,
+      { clipPath: ELLIPSE.closedBottom },
+      { clipPath: ELLIPSE.openBottom, duration: 0.8, ease: "power3.out", stagger: STAGGER.loose },
+      0,
+    ).from(split.lines, { yPercent: 40, duration: 0.8, ease: "power3.out", stagger: STAGGER.loose }, 0);
+  });
+
+/** And closes into a sliver at the top edge. */
+export const linesEllipseOut: SplitRunner = (element, options = {}) =>
+  withSplit(
+    element,
+    options,
+    { type: "lines", mask: "lines" },
+    (split, tl) => {
+      tl.fromTo(
+        split.masks,
+        { clipPath: ELLIPSE.openTop },
+        { clipPath: ELLIPSE.closedTop, duration: DURATION.page, ease: "power2.in", stagger: STAGGER.tight },
+        0,
+      )
+        .to(split.lines, { yPercent: -40, duration: DURATION.page, ease: "power2.in", stagger: STAGGER.tight }, 0)
+        .set(element, { autoAlpha: 0 });
+    },
+    { autoAlpha: 0 },
+  );
+
+type HighlightLine = { bar: HTMLElement; words: Element[] };
+
+/** Lays a bar over each line's words. SplitText's revert removes the bars with the rest of the split. */
+function addBars(split: SplitText): HighlightLine[] {
+  return split.lines.map((line) => {
+    const words = split.words.filter((word) => line.contains(word));
+    const lineBox = line.getBoundingClientRect();
+    const boxes = words.map((word) => word.getBoundingClientRect());
+    const left = boxes.length ? Math.min(...boxes.map((box) => box.left)) : lineBox.left;
+    const right = boxes.length ? Math.max(...boxes.map((box) => box.right)) : lineBox.right;
+    const bar = document.createElement("span");
+    bar.setAttribute("aria-hidden", "true");
+    Object.assign(bar.style, {
+      position: "absolute",
+      top: "0",
+      bottom: "0",
+      left: `${left - lineBox.left}px`,
+      width: `${right - left}px`,
+      background: "var(--line-highlight, currentColor)",
+      pointerEvents: "none",
+    });
+    (line as HTMLElement).style.position = "relative";
+    line.appendChild(bar);
+    return { bar, words };
+  });
+}
+
+/** Transform origins for a bar that grows in reading direction, then retracts toward the line's end. */
+function barOrigins(element: HTMLElement): { start: string; end: string } {
+  const rtl = getComputedStyle(element).direction === "rtl";
+  return { start: rtl ? "100% 50%" : "0% 50%", end: rtl ? "0% 50%" : "100% 50%" };
+}
+
+/**
+ * A highlighter bar sweeps across each line, the words appear beneath it, and the
+ * bar retracts. The bar color is `--line-highlight`, else the text color.
+ */
+export const linesHighlightIn: SplitRunner = (element, options = {}) =>
+  withSplit(element, options, { type: "lines,words" }, (split, tl) => {
+    const { start, end } = barOrigins(element!);
+    tl.set(split.words, { autoAlpha: 0 }, 0);
+    addBars(split).forEach(({ bar, words }, i) => {
+      const at = i * 0.12;
+      tl.fromTo(bar, { scaleX: 0, transformOrigin: start }, { scaleX: 1, duration: 0.35, ease: "power3.in" }, at)
+        .set(words, { autoAlpha: 1 }, at + 0.35)
+        .to(bar, { scaleX: 0, transformOrigin: end, duration: 0.4, ease: "power3.out" }, at + 0.35);
+    });
+  });
+
+/** The bar sweeps back over each line and takes the words with it. */
+export const linesHighlightOut: SplitRunner = (element, options = {}) =>
+  withSplit(
+    element,
+    options,
+    { type: "lines,words" },
+    (split, tl) => {
+      const { start, end } = barOrigins(element!);
+      addBars(split).forEach(({ bar, words }, i) => {
+        const at = i * 0.08;
+        tl.fromTo(bar, { scaleX: 0, transformOrigin: start }, { scaleX: 1, duration: 0.25, ease: "power3.in" }, at)
+          .set(words, { autoAlpha: 0 }, at + 0.25)
+          .to(bar, { scaleX: 0, transformOrigin: end, duration: 0.25, ease: "power3.out" }, at + 0.25);
+      });
+      tl.set(element, { autoAlpha: 0 });
+    },
+    { autoAlpha: 0 },
+  );
 ```
+
+The ellipse runners clip the line masks, so glyphs that overhang a line box need the same room as `linesMaskIn`. The highlight bars measure word boxes at split time; run them once fonts are ready. Set `--line-highlight` from an existing brand token; the bar never changes the text color.
 
 ## Scramble
 

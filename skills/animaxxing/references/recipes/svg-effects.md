@@ -1,10 +1,10 @@
 # Recipe: SVG effects
 
-Three SVG effects on the project's own SVG, keeping its strokes and fills: strokes that draw in and out, an icon morph, and a mark that follows a path.
+Four SVG effects on the project's own SVG, keeping its strokes and fills: strokes that draw in and out, an icon morph, a mark that follows a path, and a shape that morphs with scroll.
 
 Lifecycle: see the [controller contract](#controller-contract); the controller calls each `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-Dependencies: `gsap`, `gsap/DrawSVGPlugin`, `gsap/MorphSVGPlugin`, `gsap/MotionPathPlugin`. Register only the ones used.
+Dependencies: `gsap`, `gsap/DrawSVGPlugin`, `gsap/MorphSVGPlugin`, `gsap/MotionPathPlugin`. Register only the ones used. `morphScrub` also needs `gsap/ScrollTrigger`.
 
 ```ts
 import gsap from "gsap";
@@ -180,6 +180,59 @@ export function morphToggle(
 
 To avoid twisting, draw both shapes with the same segment count and starting corner.
 
+## morphScrub
+
+A path morphs toward an alternate shape as the page scrolls, such as a curved section edge that flattens while its section arrives. Scroll position drives the shape both ways. Also needs `gsap/ScrollTrigger`.
+
+```html
+<section class="bowl">
+  <svg class="bowl-edge" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+    <path id="edge-curve" d="M0 10 C30 0 70 0 100 10 Z" />
+  </svg>
+  …
+</section>
+<svg hidden><path id="edge-flat" d="M0 10 C30 10 70 10 100 10 Z" /></svg>
+```
+
+```css
+.bowl { position: relative; }
+.bowl-edge { position: absolute; left: 0; bottom: 100%; width: 100%; height: 6vw; fill: currentColor; }
+```
+
+```ts
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
+export type MorphScrubOptions = {
+  /** The element whose pass through the viewport drives the morph; defaults to the path's `svg`. */
+  trigger?: Element;
+  start?: string;
+  end?: string;
+  scrub?: number | boolean;
+  scroller?: Element | string;
+};
+
+export function morphScrub(
+  path: SVGPathElement,
+  alternate: SVGPathElement | string,
+  { trigger, start = "top bottom", end = "top top", scrub = true, scroller }: MorphScrubOptions = {},
+): Teardown {
+  // Reduced motion keeps the authored shape; the morph is decoration.
+  if (prefersReducedMotion()) return () => {};
+  return own((_dispose, after) => {
+    after(snapshot([path], ["d"], []));
+    gsap.to(path, {
+      morphSVG: { shape: alternate },
+      ease: "none",
+      scrollTrigger: { trigger: trigger ?? path.ownerSVGElement ?? path, start, end, scrub, scroller },
+    });
+  });
+}
+```
+
+Match fills: the edge takes the section's own background token, so the curve reads as the section's top. Keep the segment rules from `morphToggle`.
+
 ## followPath
 
 A small mark loops along a path, such as a dot along a route. Ambient: one per surface.
@@ -223,6 +276,7 @@ The controller pauses it off screen. The endless loop needs a user pause (WCAG 2
 | `drawOut` | Outro | `{ timeline, revert }` | Removed at once, completion fires |
 | `morphToggle` | Settled; `set()` on each state change | `{ set, revert }` | Instant swap |
 | `followPath` | Settled | `{ pause, play, revert }` | No-op |
+| `morphScrub` | Settled, once the trigger is measurable; the controller refreshes ScrollTrigger on layout change | teardown | No-op; authored shape |
 
 - SVG markers for pre-paint hiding use `data-draw`; `drawIn` renders its start before the controller releases them.
 - Call `revert` before another effect animates the same element. It restores the SVG's own strokes and `d`.

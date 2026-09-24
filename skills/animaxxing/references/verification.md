@@ -18,6 +18,8 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Kill a parent timeline of split runners mid-way: `revertText` restores each target, and a new runner starts from clean markup.
 - A setup that throws leaves GSAP's global context untouched: later tweens are not recorded by the failed context.
 - Scramble runners visibly scramble, end on the real words, and restore them when killed.
+- Highlight runners leave no bar behind at settled or when killed, and bars span each line's words, not the full line box, in LTR and RTL.
+- Ellipse runners show whole lines at settled, with descenders and accents unclipped at both endpoints.
 - No inline `transform`, `will-change`, or `transition` remains on route items at settled.
 - If the controller uses `data-transition-state`, it reports `entering → idle` and `exiting → waiting`, never completion while a timeline runs.
 - Particle canvases: one per treated element, at `-bleed`, `pointer-events: none`, `aria-hidden`, colored from the canvas `color`. The ticker drops a field once its particles are gone and no emitter is attached.
@@ -38,6 +40,8 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Reveal targets waiting below the fold stay in the accessibility tree and tab order; tabbing into one shows it at once.
 - Scroll down and back through every scrubbed effect; each returns exactly to its start values.
 - Pinned scenes and runs: no jump entering or leaving the pin; content below lands in place.
+- `runDrift` items travel from `-travel` toward `+travel` across the run and never show past their frames; `morphScrub` returns to the authored shape scrolling back up, and to the authored `d` after revert.
+- A `drift` curtain leaves no transform on the content wrapper after `reveal()` or `revert`; fixed UI stays in the shell.
 - Resize across a breakpoint and refresh: pin lengths and run distance recompute; nothing overlaps.
 - Tab through a horizontal run: each focused item scrolls into view without the section scrolling itself. A mouse click on an item does not scroll the page.
 - Tearing down a pinned scene restores only what its tweens animated; other effects' inline values survive.
