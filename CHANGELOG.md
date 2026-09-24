@@ -4,6 +4,20 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-24
+
+### Added
+
+- Momentum hover in `animaxxing`'s pointer effects: a fast mouse sweep knocks items along its path with InertiaPlugin and spins them by where they were struck, then they settle. Each item is a still hit area with a moving target, so a target never slides out from under the pointer and gets struck again. Mouse only.
+- Image trail in pointer effects: images spill along the mouse path, drift with its motion, and shrink away, capped at a set number alive. Copies are `aria-hidden` with empty `alt`.
+- Cursor follower `label` option: over `[data-cursor-text]`, the dot gives way to a pill scrolling that text, looping two copies by one copy's width like the marquee.
+- Flick cards in the endless drag recipe: a fanned card stack that wraps; a drag past a threshold or a quick flick deals the next card to the front. Only the front card is reachable by Tab; arrow keys, `next`, `prev`, and `toIndex` take the shortest way round, and a click on a leaning card brings it forward.
+- Physics effects recipe: `burst` and `burstFrom` fire confetti from a point, and `rain` drops emoji or icons over a layer, all with Physics2DPlugin. Pieces live in one `aria-hidden` shell layer, share a 120-piece budget (60 on coarse pointers), and remove themselves. Reduced motion spawns nothing.
+- `navTheme` and `scrollDirection` in scroll effects, one ScrollTrigger each: the header mirrors the `[data-nav-theme]` section beneath its middle, and the root carries `data-scroll-direction` and `data-scroll-started` for a header that hides going down. Both run under reduced motion; CSS drops the transition.
+- `logoCycle` in counters and marquees: grid cells swap one at a time with a hidden pool of logos, moving real elements, with pause and play.
+- Curtain `tilt` and `title` options: panels lean in and tip out the other way, and `cover(title)` shows the incoming page's name while covered.
+- `revealOnScroll` gains `scale`, `rotation`, and `ease` for pop-in stickers; `parallax` gains `start` and `end` for a footer revealed from under the page. Defaults are unchanged.
+
 ## [0.8.0] - 2026-09-23
 
 ### Added

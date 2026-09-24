@@ -3,7 +3,7 @@
   "name": "animaxxing-skills",
   "displayName": "Animaxxing Skills",
   "description": "Composable GSAP skills: framework lifecycle guidance, reusable text and particle motion that preserves existing brands, and style art direction for the complete Animaxxing look.",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "author": {
     "name": "John Polacek",
     "url": "https://github.com/johnpolacek"
