@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build GSAP text, scroll, pointer, SVG, layout, media, component, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, smooth scrolling with Lenis or ScrollSmoother, curtain and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scrubbed video and frame sequences, menu, dialog, accordion, and tab motion, label rolls and underline sweeps, magnetic buttons, tilt cards, cursor followers, drag-and-throw tracks, endless drag loops and wrapping grids, CustomEase curves, section paging, sound cues synced to motion, SVG drawing and morphs, count-up figures, marquees, particle controls, and blast-off exits. Use for Animaxxing motion, or to fix hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle timing. Not for branding, layout redesign, routing, or isolated GSAP API questions."
+description: "Build GSAP text, scroll, pointer, SVG, layout, media, component, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, Lenis or ScrollSmoother scrolling, curtain and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scrubbed video, frame sequences, menu, dialog, accordion, and tab motion, label rolls, underline sweeps, magnetic buttons, tilt cards, cursor followers, momentum hover, drag-and-throw tracks, endless drag loops, wrapping grids, flick card stacks, CustomEase curves, section paging, sound cues synced to motion, SVG draws and morphs, count-up figures, marquees, confetti and emoji rain, particle controls, and blast-off exits. Use for Animaxxing motion, or to fix hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle. Not for branding, redesign, routing, or GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text, scroll, pointer, layout, SVG, and particle motion for any brand
@@ -35,8 +35,8 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Short display copy arriving at speaking pace | [Speak-in](references/recipes/speak-in.md) |
 | Ambient headline ripple | [Wave](references/recipes/wave.md) |
 | Scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, progress, velocity skew | [Scroll effects](references/recipes/scroll-effects.md) |
-| Magnetic buttons, tilt cards, cursor follower, drag-and-throw tracks | [Pointer effects](references/recipes/pointer-effects.md) |
-| Endless drag galleries: a wrapping loop with snap, wheel, and drift; a 2D grid that wraps on both axes | [Endless drag](references/recipes/endless-drag.md) |
+| Magnetic buttons, tilt cards, cursor follower, momentum hover, drag-and-throw tracks | [Pointer effects](references/recipes/pointer-effects.md) |
+| Endless drag galleries: a wrapping loop with snap, wheel, and drift; a 2D grid that wraps on both axes; a fanned card stack dealt by drag or flick | [Endless drag](references/recipes/endless-drag.md) |
 | Full-screen sections changing on a wheel flick, swipe, or key | [Section pager](references/recipes/section-pager.md) |
 | Opt-in sound on interactions and timelines, ambient beds | [Sound cues](references/recipes/sound-cues.md) |
 | Line drawing, icon morphs, a mark following a path | [SVG effects](references/recipes/svg-effects.md) |
@@ -48,6 +48,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Label rolls, underline sweeps, image zoom on hover and focus | [Hover effects](references/recipes/hover-effects.md) |
 | Menu overlays, dialog enter and exit, accordion height, sliding tab indicators | [Component motion](references/recipes/component-motion.md) |
 | Dispersal on a call to action | [Blast-off](references/recipes/blast-off.md) |
+| Confetti bursts and emoji rain thrown under gravity | [Physics effects](references/recipes/physics-effects.md) |
 | Particle buttons, cards, links, or command fields | [Particle effects](references/recipes/particle-effects.md) plus [field/attach helpers](references/recipes/particle-field.md) |
 | Touch, focus, stuck hover, mobile particle budgets | [Input and devices](references/motion-vocabulary.md#input-and-devices) |
 | Roll back partial setup and restore modified content | [Effect restoration](references/effect-restoration.md) |

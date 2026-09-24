@@ -169,6 +169,7 @@ Scrubs smooth with `scrub: 0.6`; parallax locks to the scrollbar. Build phases: 
 | `marquee` | Row loops by its own width at 60px/s | Logos, tags, or a running headline. Needs a pause control. |
 | `dragLoop` | Row wraps endlessly under drag, throw, and sideways wheel; lands on an item in 0.6s, `power3.out`; optional drift | A throwable gallery with no ends. Drift needs a pause control. |
 | `dragGrid` | Tiles wrap on both axes under drag, throw, and wheel; focus centers a tile | A pannable canvas of work, often full screen. |
+| `flickCards` | Front card `0`, neighbors `xPercent ±25/±45`, `rotation ±10/±15`, `scale 0.9/0.8`; a drag or flick deals the next card, 0.8s `elastic.out(1, 0.8)` | A deck of featured work or testimonials. Only the front card is reachable; pair with previous and next buttons. |
 
 Code: [svg-effects.md](recipes/svg-effects.md), [counters-and-marquees.md](recipes/counters-and-marquees.md), [endless-drag.md](recipes/endless-drag.md).
 
@@ -202,6 +203,15 @@ A curtain and a shared-element morph never share a navigation: the curtain would
 
 Code: [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), [hover-effects.md](recipes/hover-effects.md).
 
+## Physics
+
+| Effect | Move | Role |
+|---|---|---|
+| `burst` / `burstFrom` | Pieces launch 500–900px/s in a 70° cone, fall at 1200px/s², spin, and fade over the last third of 1.4s | Confetti from a pressed button: a vote, a purchase, a finished form. |
+| `rain` | Pieces drop from above the layer at 80–240px/s under 900px/s², spread over 1.2s, and fall out the bottom | Emoji or icons falling over a section for a moment. |
+
+Pieces live in one fixed, `aria-hidden` layer from the shell, share a 120-piece budget (60 on coarse pointers), and remove themselves. Never gate an action on a run. Code: [physics-effects.md](recipes/physics-effects.md).
+
 ## Paging and sound
 
 | Effect | Move | Role |
@@ -220,9 +230,9 @@ Width changes can invalidate split positions and the wave's pinned widths; heigh
 Particle and pointer effects respond to input; text and scroll effects do not.
 
 - [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
-- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, and `cursorFollower` answer the mouse only and never gate a control. `dragTrack`, `dragLoop`, and `dragGrid` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
+- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, `cursorFollower`, and `momentumHover` answer the mouse only and never gate a control. `dragTrack`, `dragLoop`, `dragGrid`, and `flickCards` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
 - Hover effects share one hot state for mouse hover and `:focus-visible`; touch, pen, and click-derived focus never enter it.
-- One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state.
+- One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state. Momentum hover is for decoration beside controls, never on them.
 - The framework skill's `references/devices.md` owns viewport tiers, orientation, and CPU budgets.
 
 ## Ambient motion
@@ -235,3 +245,19 @@ Loops that run while a surface idles, such as the wave, button embers, or an out
 - On small screens, lower particle density and limit wave character counts.
 - Every cycle ends where it started; embers die.
 - None under reduced motion: nothing is split or spawned.
+
+## Backlog
+
+Patterns common on current GSAP showcase sites that have no recipe yet. Build one only when asked, from the named recipe, keeping its contract: mouse-only decoration ignores touch, reduced motion lands settled, and teardown restores exactly.
+
+| Pattern | Build from |
+|---|---|
+| Image trail: images spawn along the mouse path and shrink out | `hoverPreview`'s layer, with a spawn distance and a cap on live images |
+| Cursor marquee label: the follower scrolls the hovered item's label | `cursorFollower` plus `marquee` inside it |
+| Nav theme by section: the header takes the colors of the section beneath it | One ScrollTrigger per `data-nav-theme` section toggling an attribute on the header |
+| Scroll direction state: a header that hides going down and returns going up | One ScrollTrigger reading `direction`, writing an attribute; CSS moves the header |
+| Logo and image cycle: grid tiles swap to the next item in a staggered sequence | A `delayedCall` loop crossfading one tile at a time, paused off screen; needs a pause control |
+| Plop-in: stickers pop in with an elastic overshoot and a tilt | `revealOnScroll` with an ease, scale, and rotation option |
+| Footer reveal: the page lifts to uncover a fixed footer | CSS `position: sticky` footer plus a `parallax` layer inside it |
+| Page tilt-away and next-title curtain | `curtain` with a rotation per panel and a title slot filled by the controller |
+

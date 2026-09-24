@@ -21,7 +21,7 @@ Apply when adapting any recipe. Each recipe rolls back its own setup when constr
 | Speak-in | Nested word/character splits, persistent tilt/weight finishes, widths, and timeline callbacks. |
 | Wave | Scheduled next cycles, active tweens, splits, pinned glyph widths, and inline weight. |
 | Scroll effects | Triggers, pin spacers, splits, scrubbed and reveal tweens, the settle tween, focus listeners, the run's `overflow`, and inline motion values a pinned revert leaves behind. Inner `containerAnimation` triggers first. |
-| Pointer effects | Listeners, `quickTo` values left inline, `--pointer-*` properties, the `Draggable` and any throw in flight, its inline touch and selection styles, observers, and the viewport's `overflow`. |
+| Pointer effects | Listeners, `quickTo` values and inertia throws left inline, `--pointer-*` properties, the `Draggable` and any throw in flight, its inline touch and selection styles, observers, and the viewport's `overflow`. |
 | SVG effects | Draw timelines, stroke dash styles, the original `d` of a morphed path, the follower's transform and origin, and any morph in flight. |
 | Counters and marquees | The count tween, original text, reserved width, the counting and visually hidden spans, the marquee strip and clones, observers, listeners, and the hover ease. |
 | Blast-off | Tweens and splits across the composition, including container transforms and button changes. |
@@ -30,7 +30,8 @@ Apply when adapting any recipe. Each recipe rolls back its own setup when constr
 | Media effects | Reveal timelines and their inline clip and transform, preview layers and `aria-hidden`, `quickTo` values, the video's `muted` and `playsInline` and its deferred tween and trigger, the sequence's observer, in-flight image requests, and canvas width and height attributes. |
 | Component motion | The timeline in flight; the menu panel's `visibility` and `clip-path` and its links' opacity and transforms; the dialog's `cancel` and `close` listeners, opacity, transform, and `--dialog-backdrop`; the disclosure's inline `height` and `overflow`; the indicator's transform, origin, and observer. Never the dialog's `open`, `hidden`, or ARIA. |
 | Hover effects | Listeners, tweens started from them, the roll's mask and copy with the label's original nodes moved back, the underline span and the link's position, the image's transform and the frame's overflow. |
-| Endless drag | The throw in flight and the velocity tracker, the Draggable, landing tweens, the wheel's rest call, the drift ticker, observers, listeners, every clone, item and tile transforms and sizes, the grid's `data-drag-grid`, and every `style` attribute under the viewport exactly as it was, including none. |
+| Endless drag | The throw or deal in flight and the velocity tracker, the Draggable, landing tweens, the wheel's rest call, the drift ticker, observers, listeners, every clone, item and tile transforms and sizes, the grid's `data-drag-grid`, the deck's `data-flick` and each card's `inert`, and every `style` attribute under the viewport exactly as it was, including none. |
+| Physics effects | The run's timeline and every spawned piece, and its share of the live budget. Never the shared layer. |
 | Section pager | The move in flight, the Observer, key and focus listeners, section transforms and `z-index`, the container's `data-pager`, and the document's `overflow` and `overscroll-behavior`. |
 | Sound cues | Gesture and visibility listeners, in-flight file loads, every sounding source, and the audio context. Never the toggle or stored preference. |
 | Layout Flip | A running Flip: `revert()` jumps it to the end and clears its inline styles; `kill()` alone leaves them. |

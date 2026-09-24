@@ -54,7 +54,8 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - On touch, horizontal drags move the track and vertical swipes scroll the page.
 - Keyboard focus slides the focused item into view; a mouse press does not.
 - Revert during a throw: the track stops and its inline styles and the viewport's `overflow` restore.
-- Reduced motion: no magnetic, tilt, or follower; the track drags and lands on the nearest item without a throw.
+- Momentum hover: a fast sweep throws and spins the struck targets, which settle to rest; hit areas never move. A still pointer entering an item does nothing.
+- Reduced motion: no magnetic, tilt, follower, or momentum hover; the track drags and lands on the nearest item without a throw.
 
 ## Endless drag
 
@@ -69,6 +70,19 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Revert mid-throw: the throw stops, and the markup, including `style` attributes, matches its pre-build state exactly.
 - Reduced motion: both still drag, with no throw and no drift; the loop still lands on an item.
 - A registered CustomEase name passed as `ease` shapes the landing, like every recipe's `ease` option.
+- `flickCards`: the front card is the only card not `inert`; neighbors mirror on both sides; far cards are hidden.
+- A drag past the threshold or a fast flick deals the next card; a short slow drag springs back. One card per gesture.
+- Arrow keys on the deck, `next`, `prev`, and `toIndex` take the shortest way round; focus in a card leaving the front moves to the deck.
+- A click on a leaning card deals it; a click on a link in the front card follows it; a drag over that link does not.
+- Revert mid-deal restores the markup, `style` attributes, and each card's `inert` exactly. Reduced motion deals at once.
+
+## Physics
+
+- Every piece is `aria-hidden`, without ids, inside the layer, and removed when its flight ends; `finished` resolves then.
+- `stop()` removes every piece at once and is safe twice; the layer itself is never created or removed.
+- Live pieces across runs never exceed the budget; ended runs free it.
+- Rain pieces start above the layer and fall out the bottom; burst pieces rise from the origin before falling.
+- Reduced motion spawns nothing and `finished` is already resolved; the triggering action is never delayed.
 
 ## SVG, counters, and marquees
 

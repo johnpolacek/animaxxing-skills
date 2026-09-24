@@ -1,10 +1,10 @@
 # Recipe: pointer effects
 
-Four pointer effects: magnetic pull, 3D tilt, a cursor follower, and a drag-and-throw track. The first three are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The drag track works with mouse, touch, and keyboard.
+Five pointer effects: magnetic pull, 3D tilt, a cursor follower, momentum hover, and a drag-and-throw track. The first four are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The drag track works with mouse, touch, and keyboard.
 
 Lifecycle: the framework controller builds these once the target is mounted and visible and calls the idempotent teardown on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-Dependencies: `gsap`. `dragTrack` also needs `gsap/Draggable` and `gsap/InertiaPlugin`.
+Dependencies: `gsap`. `momentumHover` also needs `gsap/InertiaPlugin`; `dragTrack` needs `gsap/Draggable` and `gsap/InertiaPlugin`.
 
 ```ts
 import gsap from "gsap";
@@ -283,6 +283,91 @@ export function cursorFollower(cursor: HTMLElement): Teardown {
 }
 ```
 
+## momentumHover
+
+Items the mouse sweeps across get knocked along the pointer's path and spin by where they were struck, then settle back to rest. A slow pass barely moves them; a fast swipe scatters them. Suits stickers, badges, and icon clusters, never reading text or controls.
+
+Each item is a still hit area; its `[data-momentum-target]` child is what moves. A target that moved itself would slide out from under the pointer and be struck again on the way back.
+
+```html
+<ul class="stickers">
+  <li data-momentum-item><img data-momentum-target src="/sticker-1.png" alt="" /></li>
+  <li data-momentum-item><img data-momentum-target src="/sticker-2.png" alt="" /></li>
+</ul>
+```
+
+```ts
+export type MomentumOptions = {
+  /** Selects the hit areas inside the root. */
+  items?: string;
+  /** Share of pointer velocity (px/s) the target is thrown with. */
+  carry?: number;
+  /** Degrees per second of spin per px/s of pointer speed across the strike's lever arm. */
+  spin?: number;
+  /** Deceleration of the throw; higher settles sooner. */
+  resistance?: number;
+};
+
+/** Caps a single throw in px/s and a spin in degrees/s. */
+const MAX_THROW = 1080;
+const MAX_SPIN = 60;
+/** A pointer that has not moved for this long counts as still. */
+const STILL_MS = 100;
+
+export function momentumHover(
+  root: HTMLElement,
+  { items = "[data-momentum-item]", carry = 0.4, spin = 0.25, resistance = 160 }: MomentumOptions = {},
+): Teardown {
+  if (prefersReducedMotion() || !finePointer()) return () => {};
+  return own((dispose, after) => {
+    const hits = Array.from(root.querySelectorAll<HTMLElement>(items));
+    const targets = hits.map((hit) => hit.querySelector<HTMLElement>("[data-momentum-target]") ?? hit);
+    after(snapshotStyles(targets));
+    dispose(() => gsap.killTweensOf(targets));
+    const clampThrow = gsap.utils.clamp(-MAX_THROW, MAX_THROW);
+    const clampSpin = gsap.utils.clamp(-MAX_SPIN, MAX_SPIN);
+    let last: { x: number; y: number; t: number } | undefined;
+    let vx = 0;
+    let vy = 0;
+
+    // Track on the document: an item at the root's edge is struck by the same move that enters the root.
+    listen(dispose, document, "pointermove", (event) => {
+      if (event.pointerType !== "mouse") return;
+      if (last) {
+        // Several events can land in one frame; floor the interval and blend to steady the reading.
+        const dt = Math.max(event.timeStamp - last.t, 8) / 1000;
+        vx = (vx + (event.clientX - last.x) / dt) / 2;
+        vy = (vy + (event.clientY - last.y) / dt) / 2;
+      }
+      last = { x: event.clientX, y: event.clientY, t: event.timeStamp };
+    });
+
+    hits.forEach((hit, i) => {
+      const target = targets[i]!;
+      listen(dispose, hit, "pointerenter", (event) => {
+        if (event.pointerType !== "mouse" || !last || event.timeStamp - last.t > STILL_MS) return;
+        const rect = target.getBoundingClientRect();
+        const ox = event.clientX - (rect.left + rect.width / 2);
+        const oy = event.clientY - (rect.top + rect.height / 2);
+        // Torque: a strike off center spins the target; dividing by the lever arm keeps spin tied to speed.
+        const torque = (ox * vy - oy * vx) / (Math.hypot(ox, oy) || 1);
+        gsap.to(target, {
+          inertia: {
+            x: { velocity: clampThrow(vx * carry), end: 0 },
+            y: { velocity: clampThrow(vy * carry), end: 0 },
+            rotation: { velocity: clampSpin(torque * spin), end: 0 },
+            resistance,
+          },
+          overwrite: true,
+        });
+      });
+    });
+  });
+}
+```
+
+Leave room around the items: a hard throw travels well past their boxes, so an `overflow: hidden` ancestor clips it.
+
 ## dragTrack
 
 A row to drag sideways and throw, snapping to the nearest item. The static CSS is a native horizontal scroller, the fallback without JavaScript. Dragging a link does not follow it; a click does. Touch drags claim only horizontal movement, so vertical swipes still scroll. Keyboard focus slides an item into view.
@@ -375,9 +460,10 @@ export function dragTrack(viewport: HTMLElement, track: HTMLElement, { snap = tr
 |---|---|---|---|
 | `magnetic`, `tilt` | Settled, once the target's layout is final | teardown | No-op |
 | `cursorFollower` | Once per document, from the persistent shell | teardown | No-op; follower stays hidden |
+| `momentumHover` | Settled, once the items are laid out | teardown | No-op; items stay at rest |
 | `dragTrack` | Settled, once item widths are final | `{ revert, draggable }` | Drag and snap still work; reduced motion drops the throw |
 
-- Stop magnetic and tilt before an outro moves the same target.
+- Stop magnetic, tilt, and momentum hover before an outro moves the same target.
 - One pointer response per control: not `magnetic` or `tilt` plus a particle hot state.
 - The fine-pointer check runs at build; per-event `pointerType` filtering covers hybrid devices.
 - Revert the drag track before its items change; rebuild after they render.

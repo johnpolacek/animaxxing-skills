@@ -1,6 +1,6 @@
 # Recipe: endless drag
 
-Two galleries without ends. `dragLoop` is a horizontal row that wraps seamlessly: drag it, throw it, or wheel it sideways, and it lands on the nearest item, with an optional slow drift. `dragGrid` is a 2D canvas of tiles that wraps on both axes: drag and throw in any direction. Both follow GSAP's `horizontalLoop` pattern: every item keeps its place in the DOM and moves by its own transform, wrapped into a fixed span, so no element ever jumps in the tab order. Clones fill the span when there are too few items to cover the viewport; they are `aria-hidden` and `inert`, without ids, so each real item is announced and focused once. For a row that stops at its ends, use `dragTrack` from [pointer effects](pointer-effects.md).
+Three galleries without ends. `dragLoop` is a horizontal row that wraps seamlessly: drag it, throw it, or wheel it sideways, and it lands on the nearest item, with an optional slow drift. `dragGrid` is a 2D canvas of tiles that wraps on both axes: drag and throw in any direction. `flickCards` is a fanned stack of cards that deals the next card to the front on a drag or flick. The loop and grid follow GSAP's `horizontalLoop` pattern: every item keeps its place in the DOM and moves by its own transform, wrapped into a fixed span, so no element ever jumps in the tab order. Clones fill the span when there are too few items to cover the viewport; they are `aria-hidden` and `inert`, without ids, so each real item is announced and focused once. For a row that stops at its ends, use `dragTrack` from [pointer effects](pointer-effects.md).
 
 Lifecycle: the framework controller builds these once the items have their final sizes (fonts and images loaded), pauses the loop's drift while a menu or dialog owns the page, and calls `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -599,6 +599,229 @@ export function dragGrid(
 
 Tiles need one size; a masonry of mixed sizes does not wrap without gaps. Rebuild the grid after its tiles change. Tab order follows the real tiles' DOM order, and focus centers each tile on its way through.
 
+## flickCards
+
+A fanned stack: the front card faces the viewer, its neighbors lean out to either side, and a drag or flick deals the next one to the front. The deck wraps, so it has no ends. Cards pose by their own size (`xPercent`), so resizing needs no remeasure. For a row of items rather than a pile, use `dragLoop`.
+
+```html
+<section class="flick" aria-roledescription="carousel" aria-label="Featured work" tabindex="0">
+  <ul class="flick-stack">…cards…</ul>
+  <button type="button" data-flick-prev>Previous</button>
+  <button type="button" data-flick-next>Next</button>
+</section>
+```
+
+```css
+/* No JavaScript: a native horizontal scroller. */
+.flick-stack { display: flex; gap: 16px; overflow-x: auto; }
+/* Applies only while the deck is built: every card shares one grid cell, so the tallest sets the height. */
+[data-flick] .flick-stack { display: grid; overflow: visible; }
+[data-flick] .flick-stack > * { grid-area: 1 / 1; }
+```
+
+```ts
+/** A resting pose; x and rotation mirror for cards on the left. */
+export type FlickPose = { xPercent: number; yPercent: number; rotation: number; scale: number; autoAlpha: number };
+
+/** Poses by distance from the front card. The last is the hidden pose every further card takes. */
+export const FLICK_POSES: FlickPose[] = [
+  { xPercent: 0, yPercent: 0, rotation: 0, scale: 1, autoAlpha: 1 },
+  { xPercent: 25, yPercent: 1, rotation: 10, scale: 0.9, autoAlpha: 1 },
+  { xPercent: 45, yPercent: 5, rotation: 15, scale: 0.8, autoAlpha: 1 },
+  { xPercent: 55, yPercent: 5, rotation: 20, scale: 0.6, autoAlpha: 0 },
+];
+
+export type FlickCardsOptions = {
+  poses?: FlickPose[];
+  /** Share of the root's width a drag covers to move one card. */
+  distance?: number;
+  /** Share of `distance` past which a release deals the next card. */
+  threshold?: number;
+  /** Release speed in px/s that deals the next card however short the drag. */
+  flick?: number;
+  /** The deal. Accepts a registered CustomEase name. */
+  ease?: string;
+  duration?: number;
+  /** Called with the new front card's index, such as to update a live counter. */
+  onChange?: (index: number) => void;
+};
+
+export type FlickCards = {
+  next(): void;
+  prev(): void;
+  /** Deals a card to the front, the shortest way round. */
+  toIndex(index: number): void;
+  /** The front card. */
+  index(): number;
+  draggable: Draggable | undefined;
+  revert: Teardown;
+};
+
+export function flickCards(
+  root: HTMLElement,
+  stack: HTMLElement,
+  {
+    poses = FLICK_POSES,
+    distance = 0.5,
+    threshold = 0.15,
+    flick = 500,
+    ease = "elastic.out(1, 0.8)",
+    duration = 0.8,
+    onChange,
+  }: FlickCardsOptions = {},
+): FlickCards {
+  const reduced = prefersReducedMotion();
+  const cards = Array.from(stack.children).filter((el): el is HTMLElement => el instanceof HTMLElement);
+  const n = cards.length;
+  const last = poses.length - 1;
+  const proxy = document.createElement("div");
+  /** The deck's position in cards; fractional mid-drag and mid-deal. */
+  const state = { position: 0 };
+  let aim = 0;
+  let current = 0;
+  let deal: gsap.core.Tween | undefined;
+  let draggable: Draggable | undefined;
+  const wrapIndex = (i: number) => ((i % n) + n) % n;
+  const mix = (a: number, b: number, f: number) => a + (b - a) * f;
+
+  const render = () => {
+    cards.forEach((card, i) => {
+      // Signed distance from the front, the shorter way round the deck.
+      const d = gsap.utils.wrap(-n / 2, n / 2, i - state.position);
+      const reach = Math.min(Math.abs(d), last);
+      const k = Math.floor(reach);
+      const from = poses[k]!;
+      const to = poses[Math.min(k + 1, last)]!;
+      const f = reach - k;
+      const side = d < 0 ? -1 : 1;
+      gsap.set(card, {
+        xPercent: side * mix(from.xPercent, to.xPercent, f),
+        yPercent: mix(from.yPercent, to.yPercent, f),
+        rotation: side * mix(from.rotation, to.rotation, f),
+        scale: mix(from.scale, to.scale, f),
+        autoAlpha: mix(from.autoAlpha, to.autoAlpha, f),
+        zIndex: Math.round((last - reach) * 10) + 1,
+      });
+    });
+  };
+
+  /** Only the front card is reachable by Tab and assistive technology. */
+  const settle = () => {
+    const holder = cards.find((card) => card.contains(document.activeElement));
+    cards.forEach((card, i) => (card.inert = i !== current));
+    // Focus inside a card going inert would drop to the body; keep it on the deck.
+    if (holder && holder.inert) root.focus({ preventScroll: true });
+  };
+
+  const go = (target: number) => {
+    if (!n) return;
+    const next = wrapIndex(target);
+    const changed = next !== current;
+    aim = target;
+    current = next;
+    settle();
+    deal?.kill();
+    if (reduced) {
+      state.position = target;
+      render();
+    } else {
+      deal = gsap.to(state, { position: target, duration, ease, overwrite: true, onUpdate: render });
+    }
+    if (changed) onChange?.(current);
+  };
+  const toIndex = (index: number) => go(aim + gsap.utils.wrap(-n / 2, n / 2, wrapIndex(index) - current));
+
+  const revert = own((dispose, after) => {
+    if (!n) return;
+    after(snapshotStyleAttributes(root));
+    const wasInert = cards.map((card) => card.inert);
+    after(() => cards.forEach((card, i) => (card.inert = wasInert[i]!)));
+    after(() => root.removeAttribute("data-flick"));
+    dispose(() => deal?.kill());
+    root.setAttribute("data-flick", "");
+    stack.scrollLeft = 0;
+    render();
+    settle();
+
+    let startX = 0;
+    let start = 0;
+    let lastX = 0;
+    let lastT = 0;
+    let velocity = 0;
+    [draggable] = Draggable.create(proxy, {
+      type: "x",
+      trigger: root,
+      inertia: false,
+      dragClickables: true,
+      zIndexBoost: false,
+      onPress() {
+        startX = lastX = drag().x;
+        lastT = performance.now();
+        velocity = 0;
+      },
+      onDragStart() {
+        deal?.kill();
+        start = state.position;
+      },
+      onDrag() {
+        const now = performance.now();
+        const x = drag().x;
+        velocity = ((x - lastX) / Math.max(now - lastT, 8)) * 1000;
+        lastX = x;
+        lastT = now;
+        // Dragging left brings the next card forward; one card per gesture.
+        state.position = start + gsap.utils.clamp(-1, 1, -(x - startX) / (root.clientWidth * distance));
+        render();
+      },
+      onDragEnd() {
+        // A pause before release cancels the flick.
+        if (performance.now() - lastT > 100) velocity = 0;
+        const moved = state.position - start;
+        let step = 0;
+        if (Math.abs(velocity) > flick) step = velocity < 0 ? 1 : -1;
+        else if (Math.abs(moved) > threshold) step = Math.sign(moved);
+        go(Math.round(start) + step);
+      },
+      onClick() {
+        // A leaning card is inert, so a click on it lands on the deck; find the card by its box.
+        const event = drag().pointerEvent;
+        const point = "changedTouches" in event ? event.changedTouches[0] : event;
+        if (!point) return;
+        const inside = (card: HTMLElement) => {
+          const box = card.getBoundingClientRect();
+          return point.clientX >= box.left && point.clientX <= box.right && point.clientY >= box.top && point.clientY <= box.bottom;
+        };
+        if (inside(cards[current]!)) return;
+        const hit = cards
+          .map((card, i) => ({ card, i, z: Number(gsap.getProperty(card, "zIndex")) }))
+          .filter(({ card, i }) => i !== current && Number(gsap.getProperty(card, "autoAlpha")) > 0.5 && inside(card))
+          .sort((a, b) => b.z - a.z)[0];
+        if (hit) toIndex(hit.i);
+      },
+    });
+    const drag = () => draggable!;
+    const instance = draggable;
+    dispose(() => instance?.kill());
+    // Links and images start a native drag that swallows the gesture.
+    listen(dispose, stack, "dragstart", (event) => event.preventDefault());
+    listen(dispose, root, "keydown", (event) => {
+      const target = event.target as HTMLElement;
+      if (target.closest("input, textarea, select, [contenteditable]")) return;
+      if (event.key === "ArrowRight") go(aim + 1);
+      else if (event.key === "ArrowLeft") go(aim - 1);
+      else return;
+      event.preventDefault();
+    });
+  });
+
+  return { next: () => go(aim + 1), prev: () => go(aim - 1), toIndex, index: () => current, draggable, revert };
+}
+```
+
+The deck needs at least twice as many cards as poses beyond the front, six with the defaults; with fewer, a card crossing the back of the deck pops from one side to the other while visible. Pass fewer poses for a small deck. Rebuild after the cards change.
+
+Only the front card is in the tab order and accessibility tree. Give the deck visible previous and next buttons wired to `prev` and `next`: they are the way through for keyboard, switch, and screen reader users, and arrow keys work while focus is on the deck. Announce the change with `onChange` if the app has a live region.
+
 ## Wiring
 
 ```ts
@@ -618,6 +841,7 @@ pauseButton.addEventListener("click", () => {
 |---|---|---|---|
 | `dragLoop` | Settled, once item widths are final | `{ toIndex, index, pause, play, draggable, revert }` | Drags, wheels, and lands on items with no throw and no drift |
 | `dragGrid` | Settled, once the tile size is final | `{ toTile, draggable, revert }` | Drags and wheels with no throw; focus centers at once |
+| `flickCards` | Settled, once the cards have rendered | `{ next, prev, toIndex, index, draggable, revert }` | Drags follow the pointer; deals land at once, without the spring |
 
 - Revert before the items change; rebuild after they render.
 - `pause()` the loop while a menu or dialog owns the page, and `play()` after, unless the visitor paused it.
