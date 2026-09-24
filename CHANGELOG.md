@@ -4,8 +4,15 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-09-24
+
 ### Added
 
+- `enterExit` in component motion: one timeline holds an entrance and a different exit, split by `addPause()`. Closing mid-entrance reverses it at `reverseSpeed`, and reopening mid-exit returns to the open rest. An `easeReverse` option (GSAP 3.15+) gives reversals their own ease, and the closed state paints at build even before GSAP's first tick.
+- Interruption guidance in the motion vocabulary: when to rebuild a timeline and when to reverse one, `easeReverse` pairings for overshoot eases, and the 3.15 version gate.
+- `proximity` in pointer effects: items scale, and optionally lift, by the mouse's distance, shaped by a `falloff` ease. With `axis: "x"` and a bottom origin it makes a dock; hit areas stay still while `[data-proximity-target]` children scale. Mouse only.
+- `scrollWaypoints` in scroll effects: one element `Flip.fit`s onto a `[data-waypoint]` marker in each later section, landing as that marker reaches the viewport's middle. Legs last the scroll between stops, and every ScrollTrigger refresh re-measures from rest.
+- `curveCover` in page covers: one SVG shape sweeps across with its edge bowed ahead and flattens as it covers, then carries its trailing edge out the far side. Same `cover` and `reveal` as the curtain, from any edge, turning back when interrupted.
 - `linesEllipseIn` / `Out` and `linesHighlightIn` / `Out` in split entrances: lines swell open from an elliptical sliver while rising, and a highlighter bar in `--line-highlight` sweeps each line's words in and retracts.
 - `morphScrub` in SVG effects: a path morphs toward an alternate shape as the page scrolls, such as a curved section edge that flattens as its section arrives.
 - `runDrift` in scroll effects: `[data-run-drift]` items slide within their frames as they cross a horizontal run, through its `containerAnimation`.
