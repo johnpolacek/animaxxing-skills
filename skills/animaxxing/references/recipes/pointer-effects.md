@@ -1,6 +1,6 @@
 # Recipe: pointer effects
 
-Six pointer effects: magnetic pull, 3D tilt, a cursor follower with an optional scrolling label, momentum hover, an image trail, and a drag-and-throw track. All but the drag track are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The drag track works with mouse, touch, and keyboard.
+Seven pointer effects: magnetic pull, 3D tilt, a cursor follower with an optional scrolling label, momentum hover, a proximity field, an image trail, and a drag-and-throw track. All but the drag track are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The drag track works with mouse, touch, and keyboard.
 
 Lifecycle: the framework controller builds these once the target is mounted and visible and calls the idempotent teardown on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -430,6 +430,130 @@ export function momentumHover(
 
 Leave room around the items: a hard throw travels well past their boxes, so an `overflow: hidden` ancestor clips it.
 
+## proximity
+
+Items swell as the mouse nears them and settle as it moves away, each by its own distance from the pointer. A grid of thumbnails ripples under the cursor; with `axis: "x"`, a bottom origin, and `lift`, a row of icons behaves like the macOS dock. Distance maps to a 0–1 intensity through `falloff`, so neighbors grow a little and the nearest item grows most.
+
+As with `momentumHover`, each item is a still hit area measured once; its `[data-proximity-target]` child is what scales. Without a child the item scales itself, which suits a centered origin and no `lift`. The root's CSS keeps room for the peak size, and the target's `transform-origin` sets the direction it grows.
+
+```html
+<nav class="dock">
+  <a data-proximity-item href="/mail"><img data-proximity-target src="/mail.svg" alt="Mail" /></a>
+  <a data-proximity-item href="/notes"><img data-proximity-target src="/notes.svg" alt="Notes" /></a>
+</nav>
+```
+
+```css
+.dock [data-proximity-target] { display: block; transform-origin: 50% 100%; }
+```
+
+```ts
+export type ProximityOptions = {
+  /** Selects the hit areas inside the root. */
+  items?: string;
+  /** Distance in px at which an item stops responding. */
+  radius?: number;
+  /** Scale at zero distance. */
+  scale?: number;
+  /** Px an item rises at zero distance. */
+  lift?: number;
+  /** Distance measured on both axes, or along one for a row or column. */
+  axis?: "both" | "x" | "y";
+  /** Shapes intensity from the radius edge (0) to the item's center (1). */
+  falloff?: string;
+  /** Seconds each item takes to catch its target size. */
+  duration?: number;
+};
+
+export function proximity(
+  root: HTMLElement,
+  {
+    items = "[data-proximity-item]",
+    radius = 160,
+    scale = 1.6,
+    lift = 0,
+    axis = "both",
+    falloff = "sine.inOut",
+    duration = 0.3,
+  }: ProximityOptions = {},
+): Teardown {
+  if (prefersReducedMotion() || !finePointer()) return () => {};
+  return own((dispose, after) => {
+    const hits = Array.from(root.querySelectorAll<HTMLElement>(items));
+    const targets = hits.map((hit) => hit.querySelector<HTMLElement>("[data-proximity-target]") ?? hit);
+    after(snapshotStyles(targets));
+    const shape = gsap.parseEase(falloff);
+    const to = (target: HTMLElement, prop: string) => gsap.quickTo(target, prop, { duration, ease: FOLLOW_EASE });
+    // quickTo drives one property; the `scale` shorthand needs both axes.
+    const movers = targets.map((target) => {
+      const sx = to(target, "scaleX");
+      const sy = to(target, "scaleY");
+      return {
+        scale: (value: number) => {
+          sx(value);
+          sy(value);
+        },
+        y: lift ? to(target, "y") : undefined,
+      };
+    });
+    /** Hit-area centers relative to the root. Hits never move, so these hold until layout changes. */
+    let centers: Array<{ x: number; y: number }> = [];
+    const measure = () => {
+      const box = root.getBoundingClientRect();
+      centers = hits.map((hit) => {
+        const rect = hit.getBoundingClientRect();
+        return { x: rect.left - box.left + rect.width / 2, y: rect.top - box.top + rect.height / 2 };
+      });
+    };
+    measure();
+    const resize = new ResizeObserver(measure);
+    resize.observe(root);
+    dispose(() => resize.disconnect());
+
+    let active = false;
+    const rest = () => {
+      if (!active) return;
+      active = false;
+      movers.forEach((mover) => {
+        mover.scale(1);
+        mover.y?.(0);
+      });
+    };
+    // Track on the document: items at the root's edge answer a pointer still outside it.
+    listen(dispose, document, "pointermove", (event) => {
+      if (event.pointerType !== "mouse") return;
+      // The root's box follows scrolling; the centers are relative to it.
+      const box = root.getBoundingClientRect();
+      const px = event.clientX - box.left;
+      const py = event.clientY - box.top;
+      if (px < -radius || py < -radius || px > box.width + radius || py > box.height + radius) return rest();
+      active = true;
+      movers.forEach((mover, i) => {
+        const center = centers[i]!;
+        const dx = axis === "y" ? 0 : px - center.x;
+        const dy = axis === "x" ? 0 : py - center.y;
+        const intensity = shape(gsap.utils.clamp(0, 1, 1 - Math.hypot(dx, dy) / radius));
+        mover.scale(1 + (scale - 1) * intensity);
+        mover.y?.(-lift * intensity);
+      });
+    });
+    // Leaving the window sends no further move.
+    listen(dispose, document, "pointerout", (event) => {
+      if (event.pointerType === "mouse" && !event.relatedTarget) rest();
+    });
+  });
+}
+```
+
+```ts
+// Example: a dock along the bottom edge, and a thumbnail grid.
+proximity(document.querySelector<HTMLElement>(".dock")!, { axis: "x", scale: 1.8, lift: 16, radius: 180 });
+proximity(document.querySelector<HTMLElement>(".thumbs")!, { scale: 1.25, radius: 220 });
+```
+
+- Keep `scale` modest where items sit close together: an enlarged target that covers a neighbor takes that neighbor's clicks.
+- The effect is decoration. Keyboard focus and touch get the app's own focus and pressed styles; nothing here gates a link.
+
 ## imageTrail
 
 Images spill out along the mouse's path over an area: one appears each time the pointer travels `spacing` px, pops up, drifts a little with the pointer's motion, then shrinks away. Suits a hero or a work index. The images are decoration drawn from a hidden set in the markup, so they load with the page; each copy is `aria-hidden` with empty `alt`.
@@ -620,10 +744,11 @@ export function dragTrack(viewport: HTMLElement, track: HTMLElement, { snap = tr
 | `magnetic`, `tilt` | Settled, once the target's layout is final | teardown | No-op |
 | `cursorFollower` | Once per document, from the persistent shell | teardown | No-op; follower stays hidden |
 | `momentumHover` | Settled, once the items are laid out | teardown | No-op; items stay at rest |
+| `proximity` | Settled, once the items are laid out; rebuild when items are added or removed | teardown | No-op; items stay at rest |
 | `imageTrail` | Settled, once the trail images have loaded | teardown | No-op; nothing spawns |
 | `dragTrack` | Settled, once item widths are final | `{ revert, draggable }` | Drag and snap still work; reduced motion drops the throw |
 
-- Stop magnetic, tilt, and momentum hover before an outro moves the same target.
+- Stop magnetic, tilt, momentum hover, and proximity before an outro moves the same target.
 - One pointer response per control: not `magnetic` or `tilt` plus a particle hot state.
 - The fine-pointer check runs at build; per-event `pointerType` filtering covers hybrid devices.
 - Revert the drag track before its items change; rebuild after they render.

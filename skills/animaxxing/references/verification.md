@@ -65,7 +65,8 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Image trail: images spawn only after `spacing` px of mouse travel, never more than `max` at once; each is `aria-hidden` with empty `alt` and no id, and all are gone after their life and on teardown. Touch and pen spawn nothing.
 - Cursor label: over `[data-cursor-text]` the dot hides and the label scrolls two copies of the text seamlessly; leaving hides it and pauses the loop; teardown restores the label's track and styles.
 - Momentum hover: a fast sweep throws and spins the struck targets, which settle to rest; hit areas never move. A still pointer entering an item does nothing.
-- Reduced motion: no magnetic, tilt, follower, or momentum hover; the track drags and lands on the nearest item without a throw.
+- Proximity: the nearest item reaches the peak scale and neighbors grow less; items past `radius` stay at 1; hit areas never move; leaving the window or the radius settles everything; `axis` ignores the other axis.
+- Reduced motion: no magnetic, tilt, follower, momentum hover, or proximity; the track drags and lands on the nearest item without a throw.
 
 ## Endless drag
 

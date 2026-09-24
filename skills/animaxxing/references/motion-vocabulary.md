@@ -207,6 +207,7 @@ A curtain and a shared-element morph never share a navigation: the curtain would
 | `tabIndicator` | `x` and `scaleX` from its own resting box onto the tab, 0.3s, `power3.out` | The selected tab's underline or pill. Re-fits on resize. |
 | `imageReveal` | frame `clip-path inset` closed → open, 1s `power3.inOut`; image `scale 1.15 → 1`, `power2.out` | Editorial image entrance; `onScroll` variant for galleries. Clip only, never hidden. A CSS `mask` on the frame opens the image inside a brand shape. |
 | `hoverPreview` | one image follows the mouse (`quickTo` 0.35s), 0.25s crossfade on item change | Work lists and indexes. Mouse-only decoration; the link stays the way in. |
+| `proximity` | each item's `scale` up to 1.6 and optional `lift` by pointer distance within 160px, shaped by `sine.inOut`, `quickTo` 0.3s | A dock of icons or a thumbnail grid rippling under the cursor. Mouse-only decoration. |
 | `imageTrail` | an image every 80px of mouse travel pops in with `back.out(2)`, drifts with the pointer, and shrinks away over 0.9s; at most 10 alive | A hero or work index with images spilling from the cursor. Never over reading text. |
 | `cursorFollower` with `label` | over `[data-cursor-text]`, the dot gives way to a pill scrolling that text at 60px/s | "View project" on work links. Restates the link; `aria-hidden`. |
 | `scrubVideo` | `currentTime 0 → duration`, scrubbed across a section | A product turn or process read at scroll speed. Poster under reduced motion. |
@@ -260,9 +261,9 @@ Width changes can invalidate split positions and the wave's pinned widths; heigh
 Particle and pointer effects respond to input; text and scroll effects do not.
 
 - [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
-- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, `cursorFollower`, `momentumHover`, and `imageTrail` answer the mouse only and never gate a control. `dragTrack`, `dragLoop`, `dragGrid`, and `flickCards` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
+- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, `cursorFollower`, `momentumHover`, `proximity`, and `imageTrail` answer the mouse only and never gate a control. `dragTrack`, `dragLoop`, `dragGrid`, and `flickCards` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
 - Hover effects share one hot state for mouse hover and `:focus-visible`; touch, pen, and click-derived focus never enter it.
-- One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state. Momentum hover is for decoration beside controls, never on them.
+- One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state. Momentum hover is for decoration beside controls, never on them. Proximity may scale links, as in a dock, but never replaces their focus style.
 - The framework skill's `references/devices.md` owns viewport tiers, orientation, and CPU budgets.
 
 ## Ambient motion
