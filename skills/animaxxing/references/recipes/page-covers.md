@@ -1,6 +1,6 @@
 # Recipe: page covers
 
-Full-screen covers in the persistent shell, outside any route, so they survive the swap they hide: a curtain over a route swap, and a first-visit preloader that follows real readiness.
+Full-screen covers in the persistent shell, outside any route, so they survive the swap they hide: a curtain over a route swap, a curved cover whose edge bows as it sweeps, and a first-visit preloader that follows real readiness.
 
 Lifecycle: the shell's controller runs them per its [contract](#controller-contract); the framework skill's `references/transition-archetypes.md` owns the sequence, navigation locks, and recovery. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -86,7 +86,7 @@ function own(setup: (dispose: Register, after: Register) => void): Teardown {
 }
 
 /** Records inline properties and returns a restore that also resets GSAP's cached transform. */
-function snapshotStyles(elements: HTMLElement[], props: string[]): () => void {
+function snapshotStyles(elements: Array<HTMLElement | SVGElement>, props: string[]): () => void {
   const saved = elements.map((element) => props.map((prop) => element.style.getPropertyValue(prop)));
   return () =>
     elements.forEach((element, i) => {
@@ -235,6 +235,118 @@ export function curtain(
 }
 ```
 
+## curveCover
+
+One SVG shape sweeps across the viewport with its leading edge bowed ahead of its corners, then flattens as it covers. The reveal pulls the trailing edge across the same way and out the far side. It is the curtain's liquid sibling: one color, no panels, the same `cover()` and `reveal()`. A cover requested mid-reveal, or a reveal mid-cover, turns the edge back from where it is.
+
+```html
+<!-- In the persistent shell, in place of the curtain. -->
+<svg class="curve-cover" aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none"><path /></svg>
+```
+
+```css
+.curve-cover { position: fixed; inset: 0; z-index: 50; width: 100%; height: 100%; fill: currentColor; pointer-events: none; visibility: hidden; }
+```
+
+```ts
+type CoverEdge = "bottom" | "top" | "left" | "right";
+
+export type CurveCoverOptions = {
+  /** The edge the shape comes from. It leaves by the opposite edge. */
+  from?: CoverEdge;
+  duration?: number;
+  /** How far the edge's middle leads its corners mid-sweep, in percent of the viewport. */
+  bend?: number;
+};
+
+export type CurveCover = {
+  /** Sweeps the shape in. Swap the route when it completes. */
+  cover(): gsap.core.Timeline;
+  /** Sweeps the shape out the far edge, uncovering the incoming page. */
+  reveal(): gsap.core.Timeline;
+  revert: Teardown;
+};
+
+export function curveCover(svg: SVGSVGElement, { from = "bottom", duration = 0.8, bend = 30 }: CurveCoverOptions = {}): CurveCover {
+  const path = svg.querySelector("path");
+  if (!path) throw new Error("curveCover needs a <path> inside its <svg>");
+  /**
+   * `front` is the moving edge's distance from the entry edge, 0 to 100. Covering, the shape
+   * spans the entry edge to the front; revealing, it spans the front to the far edge.
+   */
+  const state = { front: 0, bulge: 0 };
+  let mode: "cover" | "reveal" = "cover";
+  /** Maps (along the edge, away from the entry edge) onto the viewBox. */
+  const at = (along: number, away: number) =>
+    from === "bottom" ? `${along} ${100 - away}` : from === "top" ? `${along} ${away}` : from === "left" ? `${away} ${along}` : `${100 - away} ${along}`;
+  const draw = () => {
+    const { front, bulge } = state;
+    const edge = `${at(0, front)} Q${at(50, front + bulge)} ${at(100, front)}`;
+    const base = mode === "cover" ? 0 : 100;
+    path.setAttribute("d", `M${at(0, base)} L${edge} L${at(100, base)} Z`);
+  };
+  let current: gsap.core.Timeline | undefined;
+  const sweep = () => {
+    current?.kill();
+    current = gsap.timeline({ defaults: { overwrite: "auto" } });
+    return current;
+  };
+  /** Moves the front to `to`, bowing its middle ahead in the direction of travel. A turn-back takes its share of the time. */
+  const move = (tl: gsap.core.Timeline, to: number) => {
+    const distance = to - state.front;
+    const time = duration * Math.max(Math.abs(distance) / 100, 0.25);
+    const lead = bend * Math.sign(distance);
+    return tl
+      .to(state, { front: to, duration: time, ease: "power3.inOut", onUpdate: draw }, 0)
+      .to(state, { bulge: lead, duration: time / 2, ease: "power2.out", onUpdate: draw }, 0)
+      .to(state, { bulge: 0, duration: time / 2, ease: "power2.in", onUpdate: draw }, time / 2);
+  };
+  const empty = () => {
+    mode = "cover";
+    state.front = 0;
+    state.bulge = 0;
+    draw();
+  };
+  const revert = own((dispose, after) => {
+    const d = path.getAttribute("d");
+    after(snapshotStyles([svg], COVER_PROPS));
+    after(() => (d === null ? path.removeAttribute("d") : path.setAttribute("d", d)));
+    dispose(() => current?.kill());
+    gsap.set(svg, { visibility: "hidden" });
+    empty();
+  });
+  const hide = { visibility: "hidden", pointerEvents: "none" };
+  return {
+    cover() {
+      const tl = sweep();
+      if (prefersReducedMotion()) return tl.set(svg, hide);
+      tl.set(svg, { visibility: "visible", pointerEvents: "auto" });
+      // Mid-reveal, the trailing edge turns back to the entry edge; otherwise the front crosses to the far edge.
+      return move(tl, mode === "reveal" ? 0 : 100);
+    },
+    reveal() {
+      const tl = sweep();
+      if (prefersReducedMotion()) return tl.set(svg, hide);
+      if (mode === "cover" && state.front < 100) {
+        // Mid-cover: the front retreats to the entry edge.
+        move(tl, 0);
+      } else {
+        if (mode === "cover") {
+          // Fully covered: the same full shape, now measured from the trailing edge.
+          mode = "reveal";
+          state.front = 0;
+        }
+        move(tl, 100);
+      }
+      return tl.call(empty).set(svg, hide);
+    },
+    revert,
+  };
+}
+```
+
+A dark shape suits a light site and the reverse; color it with an existing brand token through `fill`. Keep `bend` under about 40, or the bowed middle outruns the viewport before the corners arrive.
+
 ## preloader
 
 The count eases toward reported readiness and never runs backward. `finish()` completes the count and lifts the preloader, which then leaves the accessibility tree. The controller reports progress from fonts, critical images, and data under a deadline, never from a fake timer.
@@ -330,6 +442,7 @@ cover.reveal().eventCallback("onComplete", () => markSettled());
 | Builder | Create | Returns | Reduced motion |
 |---|---|---|---|
 | `curtain` | Once, from the persistent shell; `cover(title)` per navigation | `{ cover, reveal, revert }` | Panels never show and content never drifts; timelines complete next frame. The controller uses its ordinary swap cover |
+| `curveCover` | Once, from the persistent shell, in place of `curtain`; `cover()` per navigation | `{ cover, reveal, revert }` | Never shows; timelines complete next frame, like the curtain |
 | `preloader` | First paint of a visit that shows it | `{ progress, finish, revert }` | Count jumps to reported values; `finish` hides at once |
 
 - Run `cover()` on the shell's own timeline, never inside a page's GSAP context, and swap when it completes. Where each page builds its own outro, run the cover as a sibling offset into it and swap once both complete. A cover nested in a page timeline must leave that parent before the page's context reverts, or the revert reopens the curtain.

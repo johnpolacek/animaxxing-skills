@@ -190,12 +190,13 @@ Code: [svg-effects.md](recipes/svg-effects.md), [counters-and-marquees.md](recip
 | `curtain` | Panels `yPercent 100 → 0 → -100`, 0.6s each way, `power3.inOut`, stagger 0.06 | A full-screen wipe hiding a route swap. From the persistent shell; the loudest transition there is. |
 | `curtain` with `tilt` or `title` | Panels lean `tilt°` in, straighten, and tip the other way out; the title fades up once covered and out before the reveal | A page that swings away, or a cover naming the page it opens on. One oversized panel suits a tilt. |
 | `curtain` with `wipe` or `drift` | Panels hold still while `clip-path` opens from the entry edge and closes toward the far edge; content travels 20% of the viewport with the sweep | A clean polygon wipe, and a page pushed away then trailing in behind the cover. |
+| `curveCover` | One SVG shape sweeps in with its edge's middle bowed up to 30% ahead, flattening as it covers; the reveal carries the trailing edge out the far side, 0.8s `power3.inOut` | A liquid alternative to the curtain for the same route swap. One color. |
 | `preloader` | Count eases to reported readiness; lifts `yPercent -100`, 0.7s, `power4.inOut` | First visit only, while real dependencies arrive. |
 | `captureLayout` | Flip from old boxes to new, 0.5s, `power2.inOut`; entering items fade and grow, leaving items fade and shrink | Filters, reorders, and panels that open in place. |
 | `captureShared` / `playShared` | Flip from one element's box onto its counterpart, 0.7s, `power3.inOut` | A thumbnail becoming the next page's hero. One per navigation. |
 | `lenisScroll` / `smootherScroll` | Eased document scrolling | The whole site's feel. Once per document, never per page. |
 
-A curtain and a shared-element morph never share a navigation: the curtain would hide the morph's element. The framework skill's `references/transition-archetypes.md` and `references/smooth-scroll.md` own their timing. Code: [page-covers.md](recipes/page-covers.md), [layout-flip.md](recipes/layout-flip.md), [smooth-scroll.md](recipes/smooth-scroll.md).
+A curtain or curve cover and a shared-element morph never share a navigation: the cover would hide the morph's element. The framework skill's `references/transition-archetypes.md` and `references/smooth-scroll.md` own their timing. Code: [page-covers.md](recipes/page-covers.md), [layout-flip.md](recipes/layout-flip.md), [smooth-scroll.md](recipes/smooth-scroll.md).
 
 ## Media, components, and hover
 

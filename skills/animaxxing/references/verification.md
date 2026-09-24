@@ -112,6 +112,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 
 - Smooth scroll: wheel and trackpad ease; keyboard, scrollbar, find-in-page, and touch stay native. `stop()` holds the page; `scrollTo(..., { immediate: true })` still lands while stopped. ScrollTrigger effects fire at the eased position. `destroy()` removes the engine's classes, styles, and ticker callback. Reduced motion creates nothing.
 - Curtain with `tilt`: panels lean in, sit square while covered, and tip the other way out. With `title`: the text shows only while covered and restores on revert.
+- Curve cover: mid-sweep the edge's middle leads its corners; covered, the path fills the viewBox and takes clicks; revealed, it is hidden, empty, and click-through. A cover mid-reveal or reveal mid-cover turns the edge back. Reduced motion never shows it; revert restores the `<svg>` style and the path's `d`.
 - Curtain: at rest the panels are hidden and the page takes clicks; covered, the panels take them. A cover requested mid-reveal turns back from where the panels are. Reduced motion never shows a panel, and both timelines complete.
 - Preloader: the count follows reported progress forward only, `aria-valuenow` matches it, and `finish()` leaves it hidden and out of the accessibility tree.
 - Layout Flip: survivors slide, entering items grow in, leaving items shrink out while still displayed, and no target keeps an inline transform. The app's inline styles survive. A shared element morphs from the old box onto the new element, never onto a hidden original.
