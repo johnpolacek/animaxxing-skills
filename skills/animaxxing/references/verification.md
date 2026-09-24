@@ -88,6 +88,18 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - `textRoll` keeps the control's box and accessible name, its copy is `aria-hidden` without duplicated ids, and tight `line-height` crops no ascenders or descenders.
 - Reduced motion: reveals complete unclipped with callbacks, preview and video build nothing, the sequence draws one still, no roll or zoom, and the underline appears without moving.
 
+## Paging and sound
+
+- Pager: one trackpad flick with a long inertia tail moves exactly one section; the next flick after a rest moves again.
+- Swipes page on touch, pinch-zoom still works, and swipes inside `data-pager-ignore` scroll that element.
+- Arrow, Page, Home, End, and Space keys page from the body; fields, tablists, and Space on a control keep their keys.
+- Tabbing into a parked section shows it at once; neither the pager nor the document scrolls.
+- `disable()` stops gestures and keys; revert restores the scrolling layout and the document's `overflow`.
+- Sound: no audio context exists until the toggle is pressed; a stored "on" unlocks on the first gesture.
+- Repeated cues respect the gap and voice cap; cues on reversed timelines stay silent.
+- Hiding the tab suspends audio; turning sound off fades, then suspends; revert closes the context.
+- Reduced motion: the pager swaps instantly with `onChange` still firing; sound follows only its toggle.
+
 ## Effect failure and restoration
 
 - Throw before writes, after initial styles, and after a split or particle resource exists. Partial setup rolls back even without a returned handle.

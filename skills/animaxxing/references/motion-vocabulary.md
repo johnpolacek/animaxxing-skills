@@ -181,6 +181,15 @@ A curtain and a shared-element morph never share a navigation: the curtain would
 
 Code: [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), [hover-effects.md](recipes/hover-effects.md).
 
+## Paging and sound
+
+| Effect | Move | Role |
+|---|---|---|
+| `sectionPager` | next section `yPercent ±100 → 0` over the current, which drifts `0 → ∓30`, 0.9s, `power3.inOut`; one move per gesture | A site told in full-screen chapters. Owns the viewport; the stacked page is the no-script state. |
+| `soundCues` | Web Audio one-shots with ±40 cent spread, 4 voices, 60ms per-cue gap; beds fade 1.5s | Clicks, rolls, and covers that sound. Off until the visitor opts in. |
+
+A pager replaces page scrolling, so never pair it with smooth scroll or scroll-driven effects on the same page. Sound only doubles what motion or text already says. Code: [section-pager.md](recipes/section-pager.md), [sound-cues.md](recipes/sound-cues.md).
+
 ## Resize
 
 Width changes can invalidate split positions and the wave's pinned widths; height-only changes from mobile browser chrome do not. The controller decides whether to rebuild an effect or replay an entrance; recipes supply fresh measurements when called and never reset page state. Particle fields remeasure themselves. Text stays readable throughout, and reduced motion stays settled.

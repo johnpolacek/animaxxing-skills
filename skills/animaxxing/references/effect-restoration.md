@@ -30,6 +30,8 @@ Apply when adapting any recipe. Each recipe rolls back its own setup when constr
 | Media effects | Reveal timelines and their inline clip and transform, preview layers and `aria-hidden`, `quickTo` values, the video's `muted` and `playsInline` and its deferred tween and trigger, the sequence's observer, in-flight image requests, and canvas width and height attributes. |
 | Component motion | The timeline in flight; the menu panel's `visibility` and `clip-path` and its links' opacity and transforms; the dialog's `cancel` and `close` listeners, opacity, transform, and `--dialog-backdrop`; the disclosure's inline `height` and `overflow`; the indicator's transform, origin, and observer. Never the dialog's `open`, `hidden`, or ARIA. |
 | Hover effects | Listeners, tweens started from them, the roll's mask and copy with the label's original nodes moved back, the underline span and the link's position, the image's transform and the frame's overflow. |
+| Section pager | The move in flight, the Observer, key and focus listeners, section transforms and `z-index`, the container's `data-pager`, and the document's `overflow` and `overscroll-behavior`. |
+| Sound cues | Gesture and visibility listeners, in-flight file loads, every sounding source, and the audio context. Never the toggle or stored preference. |
 | Layout Flip | A running Flip: `revert()` jumps it to the end and clears its inline styles; `kill()` alone leaves them. |
 | Particle field/effects | Ticker callbacks, emitters, particles/tweens, delayed calls, observers, event listeners, effect-owned canvas/wrapper styles, and the target's inline opacity, visibility, transform, and clip. |
 
