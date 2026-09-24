@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build GSAP text, scroll, pointer, SVG, layout, media, component, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, smooth scrolling with Lenis or ScrollSmoother, curtain and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scroll-scrubbed video and frame sequences, menu, dialog, accordion, and tab motion, label rolls and underline sweeps, magnetic buttons, tilt cards, cursor followers, drag-and-throw tracks, full-screen section paging with Observer, sound cues synced to motion, SVG line drawing and icon morphs, count-up figures, marquees, particle controls, and blast-off exits. Use for Animaxxing motion, or to fix hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle timing. Not for branding, layout redesign, routing, or isolated GSAP API questions."
+description: "Build GSAP text, scroll, pointer, SVG, layout, media, component, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, smooth scrolling with Lenis or ScrollSmoother, curtain and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scrubbed video and frame sequences, menu, dialog, accordion, and tab motion, label rolls and underline sweeps, magnetic buttons, tilt cards, cursor followers, drag-and-throw tracks, endless drag loops and wrapping grids, CustomEase curves, section paging, sound cues synced to motion, SVG drawing and morphs, count-up figures, marquees, particle controls, and blast-off exits. Use for Animaxxing motion, or to fix hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle timing. Not for branding, layout redesign, routing, or isolated GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text, scroll, pointer, layout, SVG, and particle motion for any brand
@@ -27,6 +27,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Task | Reference |
 |---|---|
 | Choose in/out effects, configure defaults, coordinate with the controller | [Motion vocabulary](references/motion-vocabulary.md) |
+| A brand's signature curve for every `ease` option | [Signature curves](references/motion-vocabulary.md#signature-curves) |
 | Loading flashes, auth-dependent content, or layout shifts | Matching installed framework skill's `references/initialization.md`, **Data readiness and layout stability** |
 | Character animation: font readiness, kerning, masks, stable split/revert | [Text stability](references/text-stability.md) |
 | Character, word, line, or scramble entrances/exits | [Split entrances](references/recipes/split-entrances.md) |
@@ -35,6 +36,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Ambient headline ripple | [Wave](references/recipes/wave.md) |
 | Scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, progress, velocity skew | [Scroll effects](references/recipes/scroll-effects.md) |
 | Magnetic buttons, tilt cards, cursor follower, drag-and-throw tracks | [Pointer effects](references/recipes/pointer-effects.md) |
+| Endless drag galleries: a wrapping loop with snap, wheel, and drift; a 2D grid that wraps on both axes | [Endless drag](references/recipes/endless-drag.md) |
 | Full-screen sections changing on a wheel flick, swipe, or key | [Section pager](references/recipes/section-pager.md) |
 | Opt-in sound on interactions and timelines, ambient beds | [Sound cues](references/recipes/sound-cues.md) |
 | Line drawing, icon morphs, a mark following a path | [SVG effects](references/recipes/svg-effects.md) |

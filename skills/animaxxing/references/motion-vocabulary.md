@@ -6,6 +6,25 @@ Select and adapt effects. Recipes hold the code; existing design or a selected s
 
 Editable starting points; reuse the app's motion values where they exist. Durations and distances: micro 0.14s / 4px, component 0.2s / 8px, page 0.28s / 16px. Eases: entrance `power2.out`, exit `power2.in`, shift `power2.inOut`. Display sequences may run longer. Timeline defaults: `{ overwrite: "auto" }`.
 
+### Signature curves
+
+A brand curve belongs to the app, not to a recipe. Register it once with [CustomEase](https://gsap.com/docs/v3/Eases/CustomEase/) (free since GSAP 3.13), in the client module that registers plugins, before any builder runs:
+
+```ts
+// Example: one named curve for the whole site, registered at startup.
+import gsap from "gsap";
+import { CustomEase } from "gsap/CustomEase";
+
+gsap.registerPlugin(CustomEase);
+CustomEase.create("signature", "M0,0 C0.2,0 0.1,1 1,1");
+```
+
+- Every recipe `ease` option takes the registered name as a string: `disclosure(panel, { ease: "signature" })`, `playShared(state, target, { ease: "signature" })`, `dragLoop(viewport, track, { ease: "signature" })`.
+- Recipe constants such as `EASE`, `ROLL`, and `FOLLOW_EASE` accept it too, in the copied module.
+- Recipe defaults stay the plain GSAP eases above; the app opts in per surface.
+- Name curves by role (`signature`, `signature-exit`), keep one or two, and register before the first build: an unregistered name falls back to GSAP's default ease.
+- Reduced motion is unaffected: a curve shapes motion that runs, and reduced paths set end states.
+
 Animate only transforms, `autoAlpha`, `clip-path`, blur, and `fontWeight`; never `width`, `height`, `top`, `left`, `color`, or `display`. The sole exception is [`disclosure`](recipes/component-motion.md#disclosure), which tweens one panel's `height`.
 
 Reduced motion `set()`s the documented entrance or exit state, so timelines complete and callbacks fire.
@@ -148,8 +167,10 @@ Scrubs smooth with `scrub: 0.6`; parallax locks to the scrollbar. Build phases: 
 | `followPath` | MotionPath along a path, 6s a lap, linear | A mark tracing a route. Ambient. |
 | `countUp` | 0 to the element's own value, 1.6s, `power3.out` | Statistics landing on their figure. Width reserved. |
 | `marquee` | Row loops by its own width at 60px/s | Logos, tags, or a running headline. Needs a pause control. |
+| `dragLoop` | Row wraps endlessly under drag, throw, and sideways wheel; lands on an item in 0.6s, `power3.out`; optional drift | A throwable gallery with no ends. Drift needs a pause control. |
+| `dragGrid` | Tiles wrap on both axes under drag, throw, and wheel; focus centers a tile | A pannable canvas of work, often full screen. |
 
-Code: [svg-effects.md](recipes/svg-effects.md), [counters-and-marquees.md](recipes/counters-and-marquees.md).
+Code: [svg-effects.md](recipes/svg-effects.md), [counters-and-marquees.md](recipes/counters-and-marquees.md), [endless-drag.md](recipes/endless-drag.md).
 
 ## Covers, layout, and scroll feel
 
@@ -199,7 +220,7 @@ Width changes can invalidate split positions and the wave's pinned widths; heigh
 Particle and pointer effects respond to input; text and scroll effects do not.
 
 - [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
-- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, and `cursorFollower` answer the mouse only and never gate a control. `dragTrack` works with mouse, touch, and keyboard.
+- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, and `cursorFollower` answer the mouse only and never gate a control. `dragTrack`, `dragLoop`, and `dragGrid` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
 - Hover effects share one hot state for mouse hover and `:focus-visible`; touch, pen, and click-derived focus never enter it.
 - One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state.
 - The framework skill's `references/devices.md` owns viewport tiers, orientation, and CPU budgets.
@@ -210,7 +231,7 @@ Loops that run while a surface idles, such as the wave, button embers, or an out
 
 - One ambient effect per target; none is required.
 - Pause off screen. Particle fields use an `IntersectionObserver`; the wave and follower expose `pause()` for the controller.
-- The wave, particle controls, follower, and marquee expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
+- The wave, particle controls, follower, marquee, and drifting `dragLoop` expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
 - On small screens, lower particle density and limit wave character counts.
 - Every cycle ends where it started; embers die.
 - None under reduced motion: nothing is split or spawned.

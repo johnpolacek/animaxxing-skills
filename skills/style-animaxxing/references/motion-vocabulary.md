@@ -31,6 +31,16 @@ Use the ordinary motion values in [tokens](tokens.md#motion-tokens). The motion 
 
 Rethink Sans display type rests at 800, so the wave's example dips through 400–500 and returns to 800. Speak-in's `broken` finish uses 400–800. These are settings for this style; the reusable recipes can use other supported font ranges. Particle canvases use `color: var(--foreground)` from the theme, with sufficient contrast against the surface.
 
+### Signature curve
+
+This look names one curve, `animaxxing`: a fast start that settles long, like type set down on a page. Register it once per the motion skill's **Signature curves** in `references/motion-vocabulary.md`:
+
+```ts
+CustomEase.create("animaxxing", "M0,0 C0.16,1 0.3,1 1,1");
+```
+
+Pass `ease: "animaxxing"` only to large, deliberate moves that take an `ease` option: `playShared` morphs, `captureLayout` reflows, `disclosure`, and `dragLoop` or `dragGrid` landings. Leave micro and component motion on the tokens' eases, and leave the recipes' own defaults alone. Minimal motion omits the curve with everything else.
+
 Use the route recipe's `letters` treatment for the main display headline and standard rise for supporting page items. The framework controller applies the recipe's target markers, initial visibility, and cleanup; this style does not add a second readiness or navigation mechanism.
 
 ## Surface effects
