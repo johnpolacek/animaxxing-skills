@@ -76,13 +76,14 @@ const MOTION_PROPS = ["transform", "translate", "rotate", "scale", "opacity", "v
  * and restore after the context reverts. `clearProps` also resets GSAP's cache.
  */
 function snapshotStyles(elements: HTMLElement[], props = MOTION_PROPS): () => void {
-  const saved = elements.map((element) => props.map((prop) => element.style.getPropertyValue(prop)));
+  const saved = elements.map((element) => props.map((prop) =>
+    [element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)] as const));
   return () =>
     elements.forEach((element, i) => {
       gsap.set(element, { clearProps: props.filter((prop) => !prop.startsWith("--")).join(",") });
       props.forEach((prop, j) => {
-        const value = saved[i]?.[j];
-        if (value) element.style.setProperty(prop, value);
+        const [value, priority] = saved[i]?.[j] ?? ["", ""];
+        if (value) element.style.setProperty(prop, value, priority);
         else element.style.removeProperty(prop);
       });
     });

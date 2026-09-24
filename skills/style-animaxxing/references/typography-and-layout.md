@@ -2,7 +2,7 @@
 
 Read this to compose pages. The system runs on International Typographic Style contrast: oversized Rethink Sans statements against compact supporting copy, everything flush left and ragged right on a twelve-column grid ruled with hairlines.
 
-Class strings below are Tailwind v4 against the tokens reference. Each carries a plain-CSS equivalent in prose where the mapping is not obvious.
+Class strings below are Tailwind v4 against the tokens reference. For a static restyle without Tailwind, use the matching selectors and responsive rules in [plain CSS](plain-css.md).
 
 ## Type roles
 
@@ -30,7 +30,7 @@ DISPLAY = "font-sans font-extrabold leading-[0.84] tracking-[-0.045em]"
 
 Plain CSS: `font-weight: 800; line-height: 0.84; letter-spacing: -0.045em`. For character-animated targets, follow the character animation guidance below.
 
-Card headings: `font-sans text-4xl font-extrabold uppercase tracking-[-0.03em] sm:text-5xl`.
+Card headings: `DISPLAY` plus `text-4xl uppercase tracking-[-0.03em] sm:text-5xl`.
 
 ## Character animation
 
@@ -77,7 +77,7 @@ Site chrome: a header with the wordmark, then the page, then a hairline-ruled fo
 
 ```
 header: "px-gutter pt-gutter-lg sm:px-gutter-lg" > "mx-auto flex min-h-9 w-full max-w-7xl items-center justify-between gap-4"
-wordmark: "relative inline-block font-mono text-base uppercase tracking-[0.08em] text-muted sm:text-lg"
+wordmark: "relative inline-block font-mono text-base lowercase tracking-[0.08em] text-muted sm:text-lg"
 footer: "mt-auto border-t border-border px-gutter py-10 sm:px-gutter-lg"
 ```
 

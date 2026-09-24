@@ -110,6 +110,7 @@ export class ParticleField {
 
   /** Re-measure the target and resize the canvas around it. */
   sync(): void {
+    if (this.destroyed) return;
     const { offsetWidth: w, offsetHeight: h } = this.target;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.width = w + this.bleed * 2;
@@ -357,15 +358,50 @@ const TARGET_PROPS = ["opacity", "visibility", "transform", "translate", "rotate
 
 /** Records inline properties and returns a restore that also resets GSAP's cached transform. */
 function snapshotStyles(element: HTMLElement, props: string[]): () => void {
-  const saved = props.map((prop) => element.style.getPropertyValue(prop));
+  const hadStyle = element.hasAttribute("style");
+  const saved = props.map((prop) => [element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)] as const);
   return () => {
     gsap.set(element, { clearProps: props.join(",") });
     props.forEach((prop, i) => {
-      const value = saved[i];
-      if (value) element.style.setProperty(prop, value);
+      const [value, priority] = saved[i] ?? ["", ""];
+      if (value) element.style.setProperty(prop, value, priority);
       else element.style.removeProperty(prop);
     });
+    if (!hadStyle && !element.style.length) element.removeAttribute("style");
   };
+}
+
+type Register = (fn: () => void) => void;
+
+/** Roll back partial construction and attempt every cleanup, even if one throws. */
+function own(setup: (dispose: Register, after: Register) => void): () => void {
+  const ctx = gsap.context(() => {});
+  const disposers: Array<() => void> = [];
+  const restores: Array<() => void> = [];
+  let done = false;
+  const teardown = () => {
+    if (done) return;
+    done = true;
+    let failure: unknown;
+    const attempt = (fn: () => void) => {
+      try { fn(); } catch (error) { failure ??= error; }
+    };
+    disposers.splice(0).reverse().forEach(attempt);
+    attempt(() => ctx.revert());
+    restores.splice(0).reverse().forEach(attempt);
+    if (failure) throw failure;
+  };
+  let failure: { error: unknown } | undefined;
+  // Catch inside add so GSAP always restores its previous global context.
+  ctx.add(() => {
+    try { setup((fn) => disposers.push(fn), (fn) => restores.push(fn)); }
+    catch (error) { failure = { error }; }
+  });
+  if (failure) {
+    try { teardown(); } catch { /* Preserve the construction error after attempting every restore. */ }
+    throw failure.error;
+  }
+  return teardown;
 }
 
 /** Focus visibility alone does not identify keyboard input. */
@@ -414,141 +450,152 @@ export function attachParticleEffect(
   target: HTMLElement,
   effect: ParticleEffectDefinition,
 ): ParticleEffectControls {
-  const restoreTarget = snapshotStyles(target, TARGET_PROPS);
-  const field = new ParticleField(canvas, target, effect.bleed);
-  let instance: ParticleEffectInstance;
-  try {
-    instance = effect.create(field, target);
-  } catch (error) {
-    // Nothing else is attached yet; stop the field and clear anything it drew.
-    field.destroy();
-    throw error;
-  }
-  let entrance: gsap.core.Timeline | null = null;
-  /** An entrance a blast cut short; the next idle lands the target where it ends. */
-  let unfinished: gsap.core.Timeline | null = null;
-  let fade: gsap.core.Tween | null = null;
-  let ready = false;
+  let destroyed = false;
+  let controls!: ParticleEffectControls;
+  const revert = own((dispose, after) => {
+    const restoreTarget = snapshotStyles(target, TARGET_PROPS);
+    after(restoreTarget);
+    const canvasState = ["width", "height", "style"].map((name) => [name, canvas.getAttribute(name)] as const);
+    after(() => canvasState.forEach(([name, value]) => {
+      if (value === null) canvas.removeAttribute(name);
+      else canvas.setAttribute(name, value);
+    }));
+    const field = new ParticleField(canvas, target, effect.bleed);
+    dispose(() => field.destroy());
+    const instance = effect.create(field, target);
+    dispose(() => instance.destroy());
+    let entrance: gsap.core.Timeline | null = null;
+    /** An entrance a blast cut short; the next idle lands the target where it ends. */
+    let unfinished: gsap.core.Timeline | null = null;
+    let fade: gsap.core.Tween | null = null;
+    let ready = false;
 
-  /** Stops the entrance. Particles its tweens still own fade out instead of hanging in place forever. */
-  const cutEntrance = () => {
-    const cut = entrance && entrance.progress() < 1 ? entrance : null;
-    entrance?.kill();
-    entrance = null;
-    field.releaseOwned();
-    return cut;
-  };
-
-  const resize = new ResizeObserver(() => field.sync());
-  resize.observe(target);
-  // Theme changes land on <html> or follow the system scheme; re-read the colour without clearing the canvas.
-  const recolor = () => field.recolor();
-  const theme = new MutationObserver(recolor);
-  theme.observe(document.documentElement, { attributes: true });
-  const scheme = window.matchMedia("(prefers-color-scheme: dark)");
-  scheme.addEventListener("change", recolor);
-  const visibility = new IntersectionObserver(([entry]) => field.setOnScreen(entry?.isIntersecting ?? true));
-  visibility.observe(root);
-  // Re-evaluate when the primary pointer changes.
-  const coarse = window.matchMedia("(pointer: coarse)");
-  const applyDensity = () => { field.density = coarse.matches ? COARSE_POINTER_DENSITY : 1; };
-  applyDensity();
-  coarse.addEventListener("change", applyDensity);
-
-  const listeners = new AbortController();
-  const { signal } = listeners;
-  let keyboardInput = false;
-  let hovering = false;
-  let pressing = false;
-  let hot = false;
-  const syncHot = () => {
-    if (!ready) return;
-    const focused = keyboardInput && document.activeElement === target && isFocusVisible(target);
-    const on = !prefersReducedMotion() && (hovering || pressing || focused);
-    if (on === hot) return;
-    hot = on;
-    instance.hover(on);
-  };
-  // Capture modality before focus fires, including focus after touch release.
-  document.addEventListener("pointerdown", () => { keyboardInput = false; syncHot(); }, { capture: true, signal });
-  document.addEventListener("keydown", (e) => {
-    if (e.altKey || e.ctrlKey || e.metaKey || ["Shift", "Control", "Alt", "Meta"].includes(e.key)) return;
-    keyboardInput = true;
-    syncHot();
-  }, { capture: true, signal });
-  target.addEventListener("pointerenter", (e) => {
-    if (e.pointerType !== "touch") { hovering = true; syncHot(); }
-  }, { signal });
-  target.addEventListener("pointerdown", (e) => {
-    if (e.pointerType === "touch") { pressing = true; syncHot(); }
-  }, { signal });
-  target.addEventListener("pointerup", (e) => {
-    if (e.pointerType === "touch") { pressing = false; syncHot(); }
-  }, { signal });
-  const release = (e: PointerEvent) => {
-    if (e.pointerType === "touch") pressing = false; else hovering = false;
-    syncHot();
-  };
-  target.addEventListener("pointercancel", release, { signal });
-  target.addEventListener("pointerleave", release, { signal });
-  target.addEventListener("focus", syncHot, { signal });
-  target.addEventListener("blur", syncHot, { signal });
-
-  return {
-    enter(delay = 0) {
+    /** Stops the entrance. Particles its tweens still own fade out instead of hanging in place forever. */
+    const cutEntrance = () => {
+      const cut = entrance && entrance.progress() < 1 ? entrance : null;
       entrance?.kill();
-      unfinished = null;
-      if (prefersReducedMotion()) {
-        gsap.set(target, { autoAlpha: 1, clearProps: "transform" });
-        ready = true;
-        return;
-      }
-      entrance = instance.enter(delay);
-      entrance.eventCallback("onComplete", () => { ready = true; syncHot(); });
-    },
-    exit() {
-      ready = false;
-      cutEntrance();
-      unfinished = null;
-      instance.exit();
-      fade = gsap.to(target, { autoAlpha: 0, duration: prefersReducedMotion() ? 0 : 0.2, overwrite: "auto" });
-    },
-    blast() {
-      ready = false;
-      unfinished = cutEntrance() ?? unfinished;
-      if (!prefersReducedMotion()) instance.blast();
-    },
-    idle() {
-      // Land a cut-short entrance's end state (target shown, unclipped) without replaying its bursts.
-      unfinished?.progress(1, true);
-      unfinished = null;
-      if (!prefersReducedMotion()) instance.idle();
-      ready = true;
+      entrance = null;
+      field.releaseOwned();
+      return cut;
+    };
+
+    const resize = new ResizeObserver(() => field.sync());
+    dispose(() => resize.disconnect());
+    resize.observe(target);
+    // Theme changes land on <html> or follow the system scheme; re-read the colour without clearing the canvas.
+    const recolor = () => field.recolor();
+    const theme = new MutationObserver(recolor);
+    dispose(() => theme.disconnect());
+    theme.observe(document.documentElement, { attributes: true });
+    const scheme = window.matchMedia("(prefers-color-scheme: dark)");
+    dispose(() => scheme.removeEventListener("change", recolor));
+    scheme.addEventListener("change", recolor);
+    const visibility = new IntersectionObserver(([entry]) => field.setOnScreen(entry?.isIntersecting ?? true));
+    dispose(() => visibility.disconnect());
+    visibility.observe(root);
+    // Re-evaluate when the primary pointer changes.
+    const coarse = window.matchMedia("(pointer: coarse)");
+    const applyDensity = () => { field.density = coarse.matches ? COARSE_POINTER_DENSITY : 1; };
+    applyDensity();
+    dispose(() => coarse.removeEventListener("change", applyDensity));
+    coarse.addEventListener("change", applyDensity);
+
+    const listeners = new AbortController();
+    dispose(() => listeners.abort());
+    const { signal } = listeners;
+    let keyboardInput = false;
+    let hovering = false;
+    let pressing = false;
+    let hot = false;
+    const syncHot = () => {
+      if (!ready) return;
+      const focused = keyboardInput && document.activeElement === target && isFocusVisible(target);
+      const on = !prefersReducedMotion() && (hovering || pressing || focused);
+      if (on === hot) return;
+      hot = on;
+      instance.hover(on);
+    };
+    // Capture modality before focus fires, including focus after touch release.
+    document.addEventListener("pointerdown", () => { keyboardInput = false; syncHot(); }, { capture: true, signal });
+    document.addEventListener("keydown", (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || ["Shift", "Control", "Alt", "Meta"].includes(e.key)) return;
+      keyboardInput = true;
       syncHot();
-    },
-    pause() {
-      field.setPaused(true);
-    },
-    play() {
-      field.setPaused(false);
-    },
-    destroy() {
-      listeners.abort();
-      coarse.removeEventListener("change", applyDensity);
-      scheme.removeEventListener("change", recolor);
-      resize.disconnect();
-      theme.disconnect();
-      visibility.disconnect();
+    }, { capture: true, signal });
+    target.addEventListener("pointerenter", (e) => {
+      if (e.pointerType !== "touch") { hovering = true; syncHot(); }
+    }, { signal });
+    target.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "touch") { pressing = true; syncHot(); }
+    }, { signal });
+    target.addEventListener("pointerup", (e) => {
+      if (e.pointerType === "touch") { pressing = false; syncHot(); }
+    }, { signal });
+    const release = (e: PointerEvent) => {
+      if (e.pointerType === "touch") pressing = false; else hovering = false;
+      syncHot();
+    };
+    target.addEventListener("pointercancel", release, { signal });
+    target.addEventListener("pointerleave", release, { signal });
+    target.addEventListener("focus", syncHot, { signal });
+    target.addEventListener("blur", syncHot, { signal });
+
+    dispose(() => {
+      destroyed = true;
+      ready = false;
       entrance?.kill();
       entrance = null;
       unfinished = null;
       fade?.kill();
-      instance.destroy();
-      field.destroy();
-      restoreTarget();
-      ready = false;
-    },
-  };
+    });
+    controls = {
+      enter(delay = 0) {
+        if (destroyed) return;
+        entrance?.kill();
+        unfinished = null;
+        if (prefersReducedMotion()) {
+          gsap.set(target, { autoAlpha: 1, clearProps: "transform" });
+          ready = true;
+          return;
+        }
+        entrance = instance.enter(delay);
+        entrance.eventCallback("onComplete", () => { ready = true; syncHot(); });
+      },
+      exit() {
+        if (destroyed) return;
+        ready = false;
+        cutEntrance();
+        unfinished = null;
+        instance.exit();
+        fade = gsap.to(target, { autoAlpha: 0, duration: prefersReducedMotion() ? 0 : 0.2, overwrite: "auto" });
+      },
+      blast() {
+        if (destroyed) return;
+        ready = false;
+        unfinished = cutEntrance() ?? unfinished;
+        if (!prefersReducedMotion()) instance.blast();
+      },
+      idle() {
+        if (destroyed) return;
+        // Land a cut-short entrance's end state (target shown, unclipped) without replaying its bursts.
+        unfinished?.progress(1, true);
+        unfinished = null;
+        if (!prefersReducedMotion()) instance.idle();
+        ready = true;
+        syncHot();
+      },
+      pause() {
+        if (destroyed) return;
+        field.setPaused(true);
+      },
+      play() {
+        if (destroyed) return;
+        field.setPaused(false);
+      },
+      destroy: () => revert(),
+    };
+  });
+  return controls;
 }
 ```
 
@@ -559,7 +606,7 @@ export function attachParticleEffect(
 - `enter` prepares the target. Reveal a hidden wrapper separately so its canvas shows while the target assembles.
 - `exit` or `blast` mid-entrance stops it and fades the particles it steered. A later `idle` lands the entrance's end state without replaying its bursts.
 - Idle loops need a user pause (WCAG 2.2.2): wire the page's pause control or motion setting to `pause` and `play`, which freeze particles without hiding the target.
-- `destroy` releases observers, listeners, timelines, and the ticker, and restores the target's inline opacity, visibility, transform, and clip. It is final, even for callbacks already scheduled.
+- `destroy` releases observers, listeners, timelines, and the ticker, and restores the target's inline properties and priorities and the canvas's width, height, and style attributes. Construction failures roll back the same resources. Cleanup attempts every step even if a treatment's `destroy` throws; repeated teardown and later controls do nothing.
 
 ## Input and density
 

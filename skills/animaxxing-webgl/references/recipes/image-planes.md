@@ -1,6 +1,6 @@
 # Recipe: image planes
 
-A WebGL plane that draws an `<img>` in its exact box, following it through scroll, resize, transforms, and smooth scrollers. The real `<img>` stays in the page as the accessible content and the fallback: it only turns transparent while its plane is drawing, and it returns the moment WebGL is missing, the image cannot be read, the context is lost, or the plane reverts. The default shaders carry the [uniform effects](uniform-effects.md); with no effect attached, the plane draws the plain image.
+A WebGL plane that draws an `<img>` in its exact box, following it through scroll, resize, transforms, and smooth scrollers. The real `<img>` stays in the page as the accessible content and fallback: it turns transparent after the stage prepares its plane, and it returns the moment WebGL is missing, the image cannot be read, the context is lost, or the plane reverts. Both representations respect CSS visibility. The default shaders carry the [uniform effects](uniform-effects.md); with no effect attached, the plane draws the plain image.
 
 Lifecycle: the framework controller builds a plane once its image is mounted, awaits `ready` (within its initialization deadline) before an intro that depends on it, and calls `revert` on unmount after reverting the plane's effects. Planes hold the [WebGL stage](webgl-stage.md) while they exist.
 
@@ -56,9 +56,9 @@ export type ImagePlane = {
   readonly uniforms: PlaneUniforms & Record<string, Uniform<unknown>>;
   /** False when the page keeps the plain image: no WebGL, reduced motion, an unreadable image, or after revert. */
   readonly webgl: boolean;
-  /** Resolves true once the plane draws in the image's place, false when the image stays. */
+  /** True after a prepared frame (which may be hidden by CSS visibility); false for the DOM fallback. */
   readonly ready: Promise<boolean>;
-  /** True while the canvas, not the `<img>`, shows the image. */
+  /** True while the canvas owns the rendering, including an intentionally hidden plane. */
   live(): boolean;
   revert(): void;
 };
@@ -103,7 +103,7 @@ float noise(vec2 p) {
 void main() {
   // Hover: a lens that magnifies toward the pointer.
   vec2 toMouse = vUv - uMouse;
-  float lens = smoothstep(0.45, 0.0, length(toMouse)) * uHover;
+  float lens = (1.0 - smoothstep(0.0, 0.45, length(toMouse))) * uHover;
   vec2 uv = (vUv - toMouse * lens * 0.25 - 0.5) * uUvScale + 0.5;
   float inside = mix(1.0, step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0), uContain);
   vec4 color = texture2D(uTexture, clamp(uv, 0.0, 1.0));
@@ -181,6 +181,7 @@ export function imagePlane(
   let live = false;
   let done = false;
   let active = false;
+  let prepared = false;
   let source: HTMLImageElement | undefined;
   let fit = "fill";
   let gl: OGLRenderingContext | undefined;
@@ -219,8 +220,10 @@ export function imagePlane(
     update(stage: Stage) {
       if (!mesh || !source) return;
       const box = image.getBoundingClientRect();
-      mesh.visible = active && box.width > 0 && box.height > 0;
-      if (!mesh.visible) return;
+      prepared = active && box.width > 0 && box.height > 0;
+      // The canvas is outside the image's ancestors, so follow their visibility explicitly.
+      mesh.visible = prepared && getComputedStyle(image).visibility === "visible";
+      if (!prepared) return;
       const rect = uniforms.uRect.value;
       rect[0] = box.left;
       rect[1] = box.top;
@@ -238,8 +241,10 @@ export function imagePlane(
       uniforms.uTime.value = gsap.ticker.time;
     },
     rendered() {
-      if (live || !mesh?.visible) return;
-      // The plane now shows these pixels; hide the image without leaving the accessibility tree.
+      if (live || !mesh || !prepared) return;
+      // A successful frame can be intentionally hidden by an ancestor. Resolve readiness
+      // then too, so the controller can await it before revealing that ancestor.
+      // Hide the DOM before the first visible frame, including wipe intros.
       live = true;
       image.style.setProperty("opacity", "0");
       settle(true);
@@ -259,6 +264,7 @@ export function imagePlane(
         if (texture) gl.deleteTexture(texture.texture);
       }
       mesh = program = geometry = texture = gl = undefined;
+      prepared = false;
       uniforms.uTexture.value = null;
       if (live) {
         live = false;
@@ -323,7 +329,9 @@ export function imagePlane(
 }
 ```
 
-The plane copies the image's box, not its paint: ancestor clipping, `border-radius`, filters, and CSS opacity are not reproduced, and `object-position` is always centered. Add them to a replacement shader when the design needs them, or keep those images out of WebGL. A responsive image that switches `currentSrc` keeps its first texture; rebuild the plane if the switch matters. One owner per target: the plane owns the image's inline `opacity` and restores the value it found, so never hide the image through its own inline `opacity` (hide a wrapper, or use a class the framework removes). Effects that change the image's transform conflict with its plane too.
+The plane follows computed `visibility`, including inheritance from a hidden wrapper. A measurable hidden image can resolve `ready` after a successful stage frame without drawing; the controller can then reveal its wrapper without a readiness deadlock. Use wrapper `visibility` for framework gates.
+
+Other CSS paint is not reproduced: ancestor clipping, `border-radius`, filters, and CSS opacity need a replacement shader, and `object-position` is always centered. Keep images out of WebGL when these features are essential. A responsive image that switches `currentSrc` keeps its first texture; rebuild the plane if the switch matters. One owner per target: the plane owns the image's inline `opacity` and restores the value it found, so never hide the image through its own inline `opacity` (use `visibility` on a wrapper or in a class the framework removes). Effects that change the image's transform conflict with its plane too.
 
 ## Wiring
 

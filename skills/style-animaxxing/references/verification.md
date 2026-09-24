@@ -1,6 +1,6 @@
 # Verification
 
-Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). Until an style suite exists in animaxxing-skills-test, verify the changed design there or in the consuming app. For selected animation, also run `animaxxing`'s `references/verification.md` and the framework skill's relevant checks; those own effect behavior, SplitText cleanup stability, and lifecycle verification.
+Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing). Until a style suite exists in animaxxing-skills-test, verify the changed design there or in the consuming app. For selected animation, also run `animaxxing`'s `references/verification.md` and the framework skill's relevant checks; those own effect behavior, SplitText cleanup stability, and lifecycle verification.
 
 ## Tokens and type
 
@@ -19,6 +19,7 @@ In a real browser, at settled:
 - Nothing is centered or justified. Alignment edges line up down the page.
 - Poster type is cropped, not shrunk, where it overflows its column; reading type is never clipped.
 - The twelve-column grid, the rail, and the ledgers hold at the narrow breakpoint: the rail becomes chips, rows fold their figures under the title.
+- Without Tailwind, load [plain CSS](plain-css.md) and the token declarations alone. Check chips, actions, cards, ledgers, the rail, and form focus below `sm`, between `sm` and `lg`, and above `lg`. Their typography, spacing, colors, and responsive layout match the Tailwind treatment without GSAP.
 - Layout boxes do not move during any phase. Only transforms move pixels.
 
 ## Readability

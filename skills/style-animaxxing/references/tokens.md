@@ -159,6 +159,25 @@ The two poster sizes are fluid and measured in `cqi`, so they respond to whateve
 
 Radii are deliberately tight to keep the system editorial. Hairline is the default separator; strong is for chips, buttons, and cards.
 
+Without Tailwind, declare the same font, spacing, radius, and border variables alongside the colors above. Replace the font-family values with the project's font-loader variables when needed:
+
+```css
+:root {
+  --font-sans: "Rethink Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --spacing-gutter: 1.5rem;
+  --spacing-gutter-lg: 2.5rem;
+  --spacing-section: 4rem;
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --border-width-hairline: 1px;
+  --border-width-strong: 2px;
+}
+```
+
 ## Focus and selection
 
 ```css

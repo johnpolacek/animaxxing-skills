@@ -267,6 +267,8 @@ animaxxing-skills/
 
 The test repository also checks disabled-JavaScript routes and bundle failure after the early marker across all seven HTML-rendering references. An isolated GSAP/SplitText fixture tests partial setup, stalled preparation, late work, and owner isolation. It does not certify recovery inside every framework controller.
 
+Both repositories run the seven framework suites and the motion suite in the `Browser verification` CI matrix. Manual runs accept a `companion_ref` branch or commit for coordinated changes across repositories; failed jobs retain browser traces.
+
 The [Animaxxing](https://github.com/johnpolacek/animaxxing) demo is the reference for `style-animaxxing` and `animaxxing`. Each has its own `references/verification.md`: the style checks design and effect selection; the motion skill checks effect behavior, text stability, and reuse with the consuming app's fonts and colors. The test repository's `motion/` suite type-checks and runs every motion recipe in Chromium, including the `animaxxing-webgl` recipes through SwiftShader; a style suite is planned.
 
 ## Demo

@@ -72,7 +72,7 @@ function own(setup: (dispose: Register, after: Register) => void): Teardown {
 function snapshot(elements: Element[], attributes: string[], props: string[]): () => void {
   const saved = elements.map((element) => ({
     attributes: attributes.map((name) => element.getAttribute(name)),
-    props: props.map((prop) => (element as SVGElement).style.getPropertyValue(prop)),
+    props: props.map((prop) => [(element as SVGElement).style.getPropertyValue(prop), (element as SVGElement).style.getPropertyPriority(prop)] as const),
   }));
   return () =>
     elements.forEach((element, i) => {
@@ -85,8 +85,8 @@ function snapshot(elements: Element[], attributes: string[], props: string[]): (
         else element.setAttribute(name, value);
       });
       props.forEach((prop, j) => {
-        const value = record.props[j];
-        if (value) (element as SVGElement).style.setProperty(prop, value);
+        const [value, priority] = record.props[j] ?? ["", ""];
+        if (value) (element as SVGElement).style.setProperty(prop, value, priority);
         else (element as SVGElement).style.removeProperty(prop);
       });
     });

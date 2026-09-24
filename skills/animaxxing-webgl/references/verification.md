@@ -1,6 +1,6 @@
 # Verification
 
-Automated suite: `motion/` in [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test) type-checks every recipe straight from this skill and runs `motion/tests/webgl.spec.ts` against `motion/fixtures/webgl.html` in headless Chromium, drawing through SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`). Run `npx playwright test -c motion/playwright.config.ts webgl` from that repository after changing any recipe. The checks read lifecycle state, DOM fallbacks, counted GL resources, and uniform values; they never compare pixels. Keep usage snippets under a `## Wiring` heading or starting with `// Example` so the suite skips them.
+Automated suite: `motion/` in [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test) type-checks every recipe straight from this skill and runs `motion/tests/webgl.spec.ts` against `motion/fixtures/webgl.html` in headless Chromium, drawing through SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`). Run `npx playwright test -c motion/playwright.config.ts webgl` from that repository after changing any recipe. Checks cover lifecycle state, DOM fallbacks, counted GL resources, uniforms, and sampled pixels for wrapper visibility and lens distortion. Keep usage snippets under a `## Wiring` heading or starting with `// Example` so the suite skips them.
 
 Reference demo: none yet. Check visual quality, shader tuning, and frame pacing in the consuming app, alongside the framework skill's checks.
 
@@ -22,7 +22,8 @@ Reference demo: none yet. Check visual quality, shader tuning, and frame pacing 
 ## Planes and fallbacks
 
 - A plane's `uRect` matches its image's box after scroll and resize, and `uViewport` matches the canvas.
-- The `<img>` turns transparent only after its plane draws; it stays in the accessibility tree and keeps its accessible name.
+- The `<img>` turns transparent after a prepared stage frame; it stays in the accessibility tree and keeps its accessible name while its ancestors are visible.
+- A wrapper's `visibility: hidden` leaves no plane pixels on the canvas. Hidden-at-build images still resolve readiness; revealing the wrapper draws correctly without a DOM-image flash. Repeat hide and show after initialization.
 - Without WebGL: no canvas, `ready` resolves `false`, and the image's inline style is untouched.
 - Reduced motion: no canvas, and wipe timelines complete at once with their callbacks.
 - An image served without CORS keeps its DOM rendering, never becomes a texture, and its plane reports `webgl` false; one served with `Access-Control-Allow-Origin` but without `crossorigin` loads a readable copy and draws.
@@ -32,6 +33,7 @@ Reference demo: none yet. Check visual quality, shader tuning, and frame pacing 
 ## Effects
 
 - Hover: the lens rises to its strength under the mouse and tracks the pointer in plane coordinates; it falls to 0 on leave; touch never raises it; keyboard focus raises it centered and blur lowers it. After revert, input changes nothing.
+- The lens changes sampled image pixels and returns to the original rendering at zero strength. Constant `smoothstep` edges in submitted shaders are increasing, as required by GLSL; a permissive software driver alone cannot validate this constraint.
 - Wave: scrolling bends the plane within `max` and it straightens to 0 at rest. After revert no ScrollTrigger remains and scrolling changes nothing.
 - Wipe: builds hidden at 0, `enter()` ends at 1, an `exit()` mid-way turns back from where it is, and revert restores the starting value.
 
@@ -44,4 +46,4 @@ Reference demo: none yet. Check visual quality, shader tuning, and frame pacing 
 
 ## Report
 
-Say which checks ran in a browser and which were static review. Never claim animation or rendering was verified from code alone; SwiftShader proves lifecycle and state, not visual quality or GPU performance.
+Say which checks ran in a browser and which were static review. SwiftShader can check lifecycle, state, and specific pixels; it does not establish visual quality or hardware GPU performance.

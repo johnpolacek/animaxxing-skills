@@ -158,11 +158,11 @@ export function smootherScroll(
   if (prefersReducedMotion()) return nativeScroll();
   // create() writes scroll-behavior on <html> and <body> and kill() leaves it; put it back on destroy.
   const roots = [document.documentElement, document.body];
-  const behaviors = roots.map((root) => root.style.getPropertyValue("scroll-behavior"));
+  const behaviors = roots.map((root) => [root.style.getPropertyValue("scroll-behavior"), root.style.getPropertyPriority("scroll-behavior")] as const);
   const restoreBehavior = () =>
     roots.forEach((root, i) => {
-      const value = behaviors[i];
-      if (value) root.style.setProperty("scroll-behavior", value);
+      const [value, priority] = behaviors[i] ?? ["", ""];
+      if (value) root.style.setProperty("scroll-behavior", value, priority);
       else root.style.removeProperty("scroll-behavior");
     });
   let smoother: ScrollSmoother;

@@ -90,13 +90,14 @@ const SCENE_PROPS = ["transform", "translate", "rotate", "scale", "opacity", "vi
  * timeline can leave start values inline; `clearProps` also resets GSAP's cached transform.
  */
 function snapshotStyles(elements: HTMLElement[], props = SCENE_PROPS): () => void {
-  const saved = elements.map((element) => props.map((prop) => element.style.getPropertyValue(prop)));
+  const saved = elements.map((element) => props.map((prop) =>
+    [element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)] as const));
   return () =>
     elements.forEach((element, i) => {
       gsap.set(element, { clearProps: props.join(",") });
       props.forEach((prop, j) => {
-        const value = saved[i]?.[j];
-        if (value) element.style.setProperty(prop, value);
+        const [value, priority] = saved[i]?.[j] ?? ["", ""];
+        if (value) element.style.setProperty(prop, value, priority);
         else element.style.removeProperty(prop);
       });
     });
@@ -614,7 +615,7 @@ One trigger over the whole page writes `data-scroll-direction` (`up` or `down`) 
 
 ```css
 .site-header { transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
-[data-scroll-direction="down"][data-scroll-started="true"] .site-header { transform: translateY(-100%); }
+[data-scroll-direction="down"][data-scroll-started="true"] .site-header:not(:focus-within) { transform: translateY(-100%); }
 /* Keep the header reachable while anything inside it has focus. */
 .site-header:focus-within { transform: none; }
 @media (prefers-reduced-motion: reduce) { .site-header { transition: none; } }

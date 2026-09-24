@@ -70,12 +70,39 @@ function centre(el: Element): { x: number; y: number } {
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 }
 
+/** repeatRefresh can change a tween's recorded start; preserve the authored values separately. */
+function snapshotStyles(elements: HTMLElement[]): () => void {
+  const props = ["transform", "translate", "rotate", "scale", "opacity", "visibility", "filter"];
+  const saved = elements.map((element) => props.map((prop) =>
+    [element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)] as const));
+  return () => elements.forEach((element, i) => {
+    gsap.set(element, { clearProps: props.join(",") });
+    props.forEach((prop, j) => {
+      const [value, priority] = saved[i]?.[j] ?? ["", ""];
+      if (value) element.style.setProperty(prop, value, priority);
+      else element.style.removeProperty(prop);
+    });
+  });
+}
+
 export function blastOff({ root, heading, words, pressed, others }: BlastOffOptions): BlastOff {
-  if (prefersReducedMotion()) {
-    const timeline = gsap.timeline().set([heading, ...words, pressed, ...others], { autoAlpha: 0 });
-    return { timeline, revert: () => { timeline.revert(); } };
+  const restore = snapshotStyles([root, heading, ...words, pressed, ...others]);
+  let effect: BlastOff;
+  try {
+    if (prefersReducedMotion()) {
+      const timeline = gsap.timeline().set([heading, ...words, pressed, ...others], { autoAlpha: 0 });
+      effect = { timeline, revert: () => { timeline.revert(); } };
+    } else effect = guarded(() => throwApart({ root, heading, words, pressed, others }));
+  } catch (error) {
+    restore();
+    throw error;
   }
-  return guarded(() => throwApart({ root, heading, words, pressed, others }));
+  let done = false;
+  return { timeline: effect.timeline, revert() {
+    if (done) return;
+    done = true;
+    try { effect.revert(); } finally { restore(); }
+  } };
 }
 
 function throwApart({ root, heading, words, pressed, others }: BlastOffOptions): BlastOff {
@@ -131,8 +158,6 @@ function throwApart({ root, heading, words, pressed, others }: BlastOffOptions):
       // revert() puts every target back exactly as it was, including the words' resting tilts.
       timeline.revert();
       split.revert();
-      gsap.set([pressed, ...others], { clearProps: "filter" });
-      gsap.set(root, { clearProps: "transform" });
     },
   };
 }

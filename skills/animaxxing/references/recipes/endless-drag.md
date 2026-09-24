@@ -68,13 +68,14 @@ function own(setup: (dispose: Register, after: Register) => void): Teardown {
 
 /** Records inline properties and returns a restore that also resets GSAP's cached transform. */
 function snapshotStyles(elements: HTMLElement[], props: string[]): () => void {
-  const saved = elements.map((element) => props.map((prop) => element.style.getPropertyValue(prop)));
+  const saved = elements.map((element) => props.map((prop) =>
+    [element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)] as const));
   return () =>
     elements.forEach((element, i) => {
       gsap.set(element, { clearProps: props.join(",") });
       props.forEach((prop, j) => {
-        const value = saved[i]?.[j];
-        if (value) element.style.setProperty(prop, value);
+        const [value, priority] = saved[i]?.[j] ?? ["", ""];
+        if (value) element.style.setProperty(prop, value, priority);
         else element.style.removeProperty(prop);
       });
     });
@@ -326,8 +327,13 @@ export function dragLoop(
       holds.add("focus");
       // Pressing an item focuses it too; only keyboard focus moves the loop.
       if (!(event.target as Element).matches(":focus-visible")) return;
+      // A pending wheel snap or inertia throw must not replace the keyboard landing.
+      rest.pause();
+      holds.delete("wheel");
+      gsap.killTweensOf(proxy);
       const i = real.findIndex((item) => item.contains(event.target as Node));
-      if (i >= 0) toIndex(i);
+      // A clone can be nearer, but only the real item holds keyboard focus.
+      if (i >= 0) glide(stop(i, position()));
     });
     listen(dispose, track, "focusout", (event) => {
       if (!track.contains(event.relatedTarget as Node | null)) holds.delete("focus");

@@ -32,6 +32,8 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - A treated element scrolled off screen stops its field ticking.
 - `blast()` or `exit()` during a particle entrance leaves no particle alive after a second and stops the ticker; a following `idle()` shows the target whole, unscaled, and unclipped.
 - After `destroy()`, the field stays stopped even for delayed callbacks, and the target's inline styles match their pre-attach state.
+- A throwing particle factory or observer attachment rolls back target styles, canvas attributes, tweens, and listeners. A throwing treatment cleanup cannot skip the remaining restores; later controls and queued resizes stay inert.
+- `blastOff.revert()` preserves authored transforms, filters, and CSS priorities after interruption, full completion, and reduced motion, including repeated teardown.
 - The wave, particle controls, and follower hold on `pause()` and continue on `play()` or `resume()`, wired to a page control or motion setting.
 
 ## Scroll
@@ -73,7 +75,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 
 - Clones are `aria-hidden` and `inert` with no ids; each real item is announced once and Tab visits only real items.
 - `dragLoop`: a drag past either end wraps with no gap across the viewport and lands on an item; a sideways wheel moves the same position and lands; a vertical wheel scrolls the page.
-- Tab brings each real item into view in the loop, and centers each tile in the grid; the viewport's own scroll stays 0.
+- Tab brings each real item into view in the loop, including after a clone set wraps and while a wheel snap or throw is pending, and centers each tile in the grid; the viewport's own scroll stays 0.
 - A drag or throw over a link never follows it; a plain click does.
 - Drift holds on hover, focus inside, drag, off screen, and `pause()`, and resumes after each; a visible control drives `pause` and `play`.
 - `dragGrid` with fewer tiles than the viewport holds covers it with no gap before and after a drag, and after resizing the viewport larger.
@@ -149,6 +151,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Throw before writes, after initial styles, and after a split or particle resource exists. Partial setup rolls back even without a returned handle.
 - Owned timelines, delayed calls, tickers, observers, and listeners stop before restoration. Teardown twice stays safe and recreates no motion.
 - After rollback, original nodes, text, links, ARIA, and app-owned inline styles match. Check hidden ancestors and masks, not just opacity.
+- Inline-style comparisons include both values and `getPropertyPriority()`; authored `!important` declarations survive restoration across all snapshot helpers.
 - Deferred font or media work resolving after recovery starts no new split, hidden frame, or decorative completion.
 - Use the framework skill's `references/initialization.md` failure matrix for disabled JavaScript, blocked bundles, deadlines, navigation, and completion ownership. Repeat these checks with another brand's fonts and CSS.
 
