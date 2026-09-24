@@ -4,6 +4,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-23
+
 ### Added
 
 - `animaxxing-webgl`, a new motion skill for GSAP-driven WebGL image effects on one shared OGL renderer and canvas per document. Image planes track each `<img>` through scroll and resize; a hover lens, a scroll-velocity wave, and a reveal or exit wipe are GSAP tweens on shader uniforms. The `<img>` stays the accessible content and the fallback without WebGL, on context loss, without CORS, and under reduced motion. The stage caps pixel ratio, sleeps off screen and in hidden tabs, rebuilds after a context restore, and every revert frees its GL resources. OGL was chosen over three.js at 14.5 KB against 133 KB gzipped for the classes used.
