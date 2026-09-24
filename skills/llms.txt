@@ -2,13 +2,17 @@
 
 Compose one framework skill for lifecycle timing, a motion skill for effects, and a style when requested. Static restyles need only the style. Install alongside https://github.com/greensock/gsap-skills for API/plugin guidance. Each skill installs independently.
 
-Framework skills include local references/initialization.md for readiness, recovery, and first-load performance, references/devices.md for touch, viewport changes, and device budgets, references/smooth-scroll.md for a scroller that survives navigation, and references/transition-archetypes.md for curtains, first-visit preloaders, and shared-element morphs.
+Framework skills include local references/initialization.md for readiness, recovery, and first-load performance, references/devices.md for touch, viewport changes, and device budgets, references/smooth-scroll.md for a scroller that survives navigation, and references/transition-archetypes.md for curtains, first-visit preloaders, shared-element morphs, and a WebGL canvas that persists across routes.
 
 ## Motion skills
 
 [animaxxing](animaxxing/SKILL.md)
   Reusable vanilla TypeScript and GSAP text, scroll, pointer, layout, media, component, hover, SVG, section paging, sound, and particle effects with text stability and technical checks. Preserve existing fonts, colors, and layout; no style skill required. The framework skill owns lifecycle timing.
   Triggers: animate without restyling, preserve branding, Animaxxing motion, split-text entrance, scattering headline, speak-in, letter wave, scroll reveal, scrub text, parallax, pinned section, horizontal scroll, scroll progress, magnetic button, tilt card, custom cursor, drag carousel, SVG line draw, icon morph, motion path, count-up number, marquee ticker, particle buttons, blast-off, smooth scroll, Lenis, ScrollSmoother, curtain transition, page wipe, preloader, loading counter, Flip, filter grid animation, reorder list, shared element, menu overlay, full-screen nav, dialog animation, modal enter exit, drawer, accordion, height auto, details summary, tab indicator, sliding underline, image reveal, clip-path wipe, hover image preview, scroll-scrubbed video, image sequence, frame sequence canvas, text roll, rolling label, underline sweep, link underline animation, image zoom on hover, hover stuck on touch, particle density on phones, full-screen sections, fullpage scroll, Observer, wheel paging, swipe between sections, scroll hijack, sound effects, UI sounds, audio toggle, ambient audio, mute.
+
+[animaxxing-webgl](animaxxing-webgl/SKILL.md)
+  GSAP-driven WebGL image effects on one shared OGL renderer and canvas: planes that track each img through scroll and resize, a hover lens, a scroll-velocity wave, and a reveal or exit wipe tweened on shader uniforms. The img stays the accessible content and the fallback for no WebGL, context loss, missing CORS, and reduced motion. Framework-free; the framework skill owns lifecycle timing.
+  Triggers: WebGL image effect, shader hover, image distortion, displacement hover, scroll velocity wave, WebGL reveal, image wipe shader, uniforms, GSAP uniform tween, three.js images, OGL, DOM-synced plane, webgl canvas across routes, context lost, CORS texture.
 
 ## Framework skills
 

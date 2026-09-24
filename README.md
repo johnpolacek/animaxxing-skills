@@ -54,10 +54,11 @@ Copy the folders under `skills/` into your agent's skill directory:
 | Skill | Description |
 |-------|-------------|
 | **animaxxing** | Reusable vanilla TypeScript and GSAP recipes: split-text entrances, scattering headlines, speak-in copy, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, smooth scrolling with Lenis or ScrollSmoother, curtain and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scroll-scrubbed video and frame sequences, menu, dialog, accordion, and tab motion, label rolls and underline sweeps, magnetic buttons, tilt cards, cursor followers, drag tracks, full-screen section paging, sound cues, SVG drawing and morphs, count-up figures, marquees, particle buttons/cards/links/fields, and blast-off exits. Includes text stability and effect verification. Preserves existing fonts, colors, and layout; the framework skill owns lifecycle timing |
+| **animaxxing-webgl** | GSAP-driven WebGL image effects on one shared [OGL](https://github.com/oframe/ogl) renderer and canvas per document: planes that track each `<img>` through scroll and resize, a hover distortion lens, a scroll-velocity wave, and a reveal or exit wipe, all tweened on shader uniforms. The real `<img>` stays the accessible content and the fallback without WebGL, on context loss, without CORS, and under reduced motion. Caps pixel ratio, pauses off screen and in hidden tabs, and disposes every GL resource on revert. Kept separate so `animaxxing` never depends on a renderer |
 
 ### Framework skills
 
-Every framework packages four shared references: initialization and recovery for reliable reveals; device guidance for touch, viewport changes, and performance budgets; smooth scrolling across navigation; and transition archetypes for curtains, first-visit preloaders, and shared-element morphs.
+Every framework packages four shared references: initialization and recovery for reliable reveals; device guidance for touch, viewport changes, and performance budgets; smooth scrolling across navigation; and transition archetypes for curtains, first-visit preloaders, shared-element morphs, and a WebGL canvas that persists across routes.
 
 | Skill | Description |
 |-------|-------------|
@@ -80,6 +81,7 @@ Every framework packages four shared references: initialization and recovery for
 | Request | Skills to use |
 |---|---|
 | Animate an existing brand with these effects | Matching `gsap-<framework>` + `animaxxing` |
+| Add WebGL image effects | Matching `gsap-<framework>` + `animaxxing-webgl` |
 | Apply the Animaxxing design without animation | `style-animaxxing` |
 | Apply the design with minimal motion | `style-animaxxing` + matching framework skill; add `animaxxing` when using its effects |
 | Give it the full Animaxxing treatment | All three: framework + motion + style |
@@ -121,7 +123,7 @@ animaxxing-skills/
     initialization.md    # Canonical recovery and first-load guidance
     devices.md           # Canonical device tiers, touch, viewport, and budgets
     smooth-scroll.md     # Canonical scroller lifecycle through navigation
-    transition-archetypes.md # Canonical curtain, preloader, and shared-element rules
+    transition-archetypes.md # Canonical curtain, preloader, shared-element, and persistent canvas rules
   scripts/
     sync_initialization.py # Packages every shared reference; validation checks drift
   skills/
@@ -154,6 +156,15 @@ animaxxing-skills/
           sound-cues.md
           particle-field.md
           particle-effects.md
+    animaxxing-webgl/
+      SKILL.md             # Renderer choice (OGL) and the fallback contract
+      agents/openai.yaml
+      references/
+        verification.md    # Fallback, context loss, pausing, and disposal checks
+        recipes/
+          webgl-stage.md     # One shared renderer and canvas per document
+          image-planes.md    # Planes that track each <img>
+          uniform-effects.md # Hover lens, scroll wave, wipe
     gsap-vanilla/
       SKILL.md
       agents/openai.yaml
@@ -254,7 +265,7 @@ animaxxing-skills/
 
 The test repository also checks disabled-JavaScript routes and bundle failure after the early marker across all seven HTML-rendering references. An isolated GSAP/SplitText fixture tests partial setup, stalled preparation, late work, and owner isolation. It does not certify recovery inside every framework controller.
 
-The [Animaxxing](https://github.com/johnpolacek/animaxxing) demo is the reference for `style-animaxxing` and `animaxxing`. Each has its own `references/verification.md`: the style checks design and effect selection; the motion skill checks effect behavior, text stability, and reuse with the consuming app's fonts and colors. The test repository's `motion/` suite type-checks and runs every motion recipe in Chromium; a style suite is planned.
+The [Animaxxing](https://github.com/johnpolacek/animaxxing) demo is the reference for `style-animaxxing` and `animaxxing`. Each has its own `references/verification.md`: the style checks design and effect selection; the motion skill checks effect behavior, text stability, and reuse with the consuming app's fonts and colors. The test repository's `motion/` suite type-checks and runs every motion recipe in Chromium, including the `animaxxing-webgl` recipes through SwiftShader; a style suite is planned.
 
 ## Demo
 
