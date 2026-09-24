@@ -4,6 +4,13 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-23
+
+### Added
+
+- Section pager recipe in `animaxxing`: full-screen sections that change one at a time on a wheel flick, swipe, or key, built on GSAP Observer. Trackpad inertia never skips a section, fields and composite widgets keep their keys, and focus shows a parked section at once.
+- Sound cues recipe in `animaxxing`: opt-in Web Audio sounds for interactions and timelines, plus ambient beds. Silent until the visitor turns sound on, suspended while the tab is hidden, with a per-cue gap and voice cap.
+
 ## [0.6.1] - 2026-09-23
 
 ### Changed
