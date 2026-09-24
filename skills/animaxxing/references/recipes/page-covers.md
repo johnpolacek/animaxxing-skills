@@ -106,18 +106,35 @@ const COVER_PROPS = ["transform", "translate", "visibility", "opacity", "pointer
 
 Staggered panels sweep in from one edge to cover the viewport, then out the far edge. Covered panels take pointer events, so a second click cannot reach the swapping page. A cover requested mid-reveal turns back from where the panels are.
 
+Two options change its character. `tilt` swings the panels in at an angle, straightening as they cover and tipping the other way as they leave. `title` names an element inside the curtain that shows the incoming page's name while the page is covered; `cover("About")` fills it.
+
+```html
+<!-- Optional title slot, after the panels. -->
+<p class="curtain-title" data-curtain-title></p>
+```
+
+```css
+.curtain-title { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: Canvas; visibility: hidden; }
+/* Tilt suits one oversized panel, so its corners never show the page. */
+.curtain--tilt .curtain-panel { flex: none; width: 150vw; height: 150vh; margin: -25vh -25vw; }
+```
+
 ```ts
 export type CurtainOptions = {
   /** The edge the panels come from. They leave by the opposite edge. */
   from?: "bottom" | "top" | "left" | "right";
   duration?: number;
   stagger?: number;
+  /** Degrees the panels lean while moving; 0 keeps them square. */
+  tilt?: number;
+  /** An element inside the curtain that shows the incoming page's title while covered. */
+  title?: HTMLElement;
 };
 
 export type Curtain = {
-  /** Sweeps the panels in. Swap the route when it completes. */
-  cover(): gsap.core.Timeline;
-  /** Sweeps the panels out, uncovering the incoming page. */
+  /** Sweeps the panels in, showing `title` once covered. Swap the route when it completes. */
+  cover(title?: string): gsap.core.Timeline;
+  /** Hides the title, then sweeps the panels out, uncovering the incoming page. */
   reveal(): gsap.core.Timeline;
   /** Stops either sweep and restores the panels. */
   revert: Teardown;
@@ -125,7 +142,7 @@ export type Curtain = {
 
 export function curtain(
   panels: gsap.DOMTarget,
-  { from = "bottom", duration = 0.6, stagger = 0.06 }: CurtainOptions = {},
+  { from = "bottom", duration = 0.6, stagger = 0.06, tilt = 0, title }: CurtainOptions = {},
 ): Curtain {
   const items = gsap.utils.toArray<HTMLElement>(panels);
   const axis = from === "bottom" || from === "top" ? "yPercent" : "xPercent";
@@ -137,28 +154,48 @@ export function curtain(
     current = gsap.timeline({ defaults: { overwrite: "auto" } });
     return current;
   };
+  /** A panel entering from the bottom or right leans one way; its exit leans the other. */
+  const lean = tilt * Math.sign(entry);
   const revert = own((dispose, after) => {
     after(snapshotStyles(items, COVER_PROPS));
+    if (title) {
+      const text = title.textContent;
+      after(snapshotStyles([title], COVER_PROPS));
+      after(() => (title.textContent = text));
+    }
     dispose(() => current?.kill());
     gsap.set(items, { visibility: "hidden" });
+    if (title) gsap.set(title, { autoAlpha: 0 });
   });
   return {
-    cover() {
+    cover(text?: string) {
       const tl = sweep();
       // Reduced motion never flashes a full-screen panel; the framework's swap cover handles the gap.
       if (prefersReducedMotion()) return tl.set(items, { visibility: "hidden", pointerEvents: "none" });
       const resting = items.filter((item) => getComputedStyle(item).visibility === "hidden");
-      if (resting.length > 0) tl.set(resting, { [axis]: entry });
-      return tl
-        .set(items, { visibility: "visible", pointerEvents: "auto" })
-        .to(items, { [axis]: 0, duration, ease: "power3.inOut", stagger });
+      if (resting.length > 0) tl.set(resting, { [axis]: entry, rotation: lean });
+      tl.set(items, { visibility: "visible", pointerEvents: "auto" }).to(items, {
+        [axis]: 0,
+        rotation: 0,
+        duration,
+        ease: "power3.inOut",
+        stagger,
+      });
+      if (title && text) {
+        title.textContent = text;
+        tl.fromTo(title, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: "power2.out" }, "-=0.15");
+      }
+      return tl;
     },
     reveal() {
       const tl = sweep();
       if (prefersReducedMotion()) return tl.set(items, { visibility: "hidden", pointerEvents: "none" });
+      if (title && gsap.getProperty(title, "autoAlpha")) {
+        tl.to(title, { autoAlpha: 0, y: -8, duration: 0.2, ease: "power2.in" });
+      }
       return tl
-        .to(items, { [axis]: -entry, duration, ease: "power3.inOut", stagger })
-        .set(items, { visibility: "hidden", pointerEvents: "none", [axis]: entry });
+        .to(items, { [axis]: -entry, rotation: -lean, duration, ease: "power3.inOut", stagger })
+        .set(items, { visibility: "hidden", pointerEvents: "none", [axis]: entry, rotation: lean });
     },
     revert,
   };
@@ -259,11 +296,11 @@ cover.reveal().eventCallback("onComplete", () => markSettled());
 
 | Builder | Create | Returns | Reduced motion |
 |---|---|---|---|
-| `curtain` | Once, from the persistent shell | `{ cover, reveal, revert }` | Panels never show; timelines complete next frame. The controller uses its ordinary swap cover |
+| `curtain` | Once, from the persistent shell; `cover(title)` per navigation | `{ cover, reveal, revert }` | Panels never show; timelines complete next frame. The controller uses its ordinary swap cover |
 | `preloader` | First paint of a visit that shows it | `{ progress, finish, revert }` | Count jumps to reported values; `finish` hides at once |
 
 - Run `cover()` on the shell's own timeline, never inside a page's GSAP context, and swap when it completes. Where each page builds its own outro, run the cover as a sibling offset into it and swap once both complete. A cover nested in a page timeline must leave that parent before the page's context reverts, or the revert reopens the curtain.
 - Call `reveal()` only after every incoming target has its size and start styles.
 - Back and forward take the intro-only path: no cover, and `reveal()` only if the curtain is still closed.
 - A preloader is a deliberate hold under the framework's initialization contract; it counts as the prepared intro, so the framework owns its deadline and recovery.
-- Keep the curtain's panels out of the accessibility tree. The preloader's `role="progressbar"` reports its value while visible; the controller sets `aria-busy` on the content it covers.
+- Keep the curtain's panels and title out of the accessibility tree; the framework's route announcer still names the new page. The preloader's `role="progressbar"` reports its value while visible; the controller sets `aria-busy` on the content it covers.

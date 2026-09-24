@@ -42,7 +42,11 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Tab through a horizontal run: each focused item scrolls into view without the section scrolling itself. A mouse click on an item does not scroll the page.
 - Tearing down a pinned scene restores only what its tweens animated; other effects' inline values survive.
 - Tear down mid-pin: the spacer is removed, inline styles and `overflow` restore, and page scroll works.
-- Reduced motion: no pins, splits, or scrubbing; static fallbacks read; the progress rule still tracks.
+- A pop-in reveal starts at its given scale and rotation and clears every inline transform once revealed.
+- A footer parallax with `end: "bottom bottom"` completes its travel at the bottom of the page.
+- `navTheme`: the header's `data-nav-theme` matches the section under its middle, scrolling both ways and on a mid-page load; teardown restores the header's own attribute.
+- `scrollDirection`: small reversals under the threshold keep the direction; `data-scroll-started` turns false back at the top; a focused header stays visible in CSS.
+- Reduced motion: no pins, splits, or scrubbing; static fallbacks read; the progress rule, nav theme, and scroll direction still track.
 - With a custom scroller, every trigger receives it and cleanup leaves the app's proxy intact.
 
 ## Pointer
@@ -54,6 +58,8 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - On touch, horizontal drags move the track and vertical swipes scroll the page.
 - Keyboard focus slides the focused item into view; a mouse press does not.
 - Revert during a throw: the track stops and its inline styles and the viewport's `overflow` restore.
+- Image trail: images spawn only after `spacing` px of mouse travel, never more than `max` at once; each is `aria-hidden` with empty `alt` and no id, and all are gone after their life and on teardown. Touch and pen spawn nothing.
+- Cursor label: over `[data-cursor-text]` the dot hides and the label scrolls two copies of the text seamlessly; leaving hides it and pauses the loop; teardown restores the label's track and styles.
 - Momentum hover: a fast sweep throws and spins the struck targets, which settle to rest; hit areas never move. A still pointer entering an item does nothing.
 - Reduced motion: no magnetic, tilt, follower, or momentum hover; the track drags and lands on the nearest item without a throw.
 
@@ -93,11 +99,13 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Marquee clones are `aria-hidden` and `inert` with no duplicate ids; each item is announced and focused once.
 - The marquee loops seamlessly, slows on hover, and pauses on focus, off screen, and on `pause()`.
 - Resizing rebuilds the clones to fill; revert restores the original markup exactly.
+- Logo cycle: one cell swaps at a time, never the same cell twice running; every logo exists once, in a cell or the pool. It holds on `pause()`, hover, focus inside, and off screen, and revert returns every logo to its original place with its `style` attribute exact.
 - Reduced motion: strokes whole, figures final, no follower, marquee static; completion callbacks fire.
 
 ## Smooth scroll, covers, and layout
 
 - Smooth scroll: wheel and trackpad ease; keyboard, scrollbar, find-in-page, and touch stay native. `stop()` holds the page; `scrollTo(..., { immediate: true })` still lands while stopped. ScrollTrigger effects fire at the eased position. `destroy()` removes the engine's classes, styles, and ticker callback. Reduced motion creates nothing.
+- Curtain with `tilt`: panels lean in, sit square while covered, and tip the other way out. With `title`: the text shows only while covered and restores on revert.
 - Curtain: at rest the panels are hidden and the page takes clicks; covered, the panels take them. A cover requested mid-reveal turns back from where the panels are. Reduced motion never shows a panel, and both timelines complete.
 - Preloader: the count follows reported progress forward only, `aria-valuenow` matches it, and `finish()` leaves it hidden and out of the accessibility tree.
 - Layout Flip: survivors slide, entering items grow in, leaving items shrink out while still displayed, and no target keeps an inline transform. The app's inline styles survive. A shared element morphs from the old box onto the new element, never onto a hidden original.

@@ -1,6 +1,6 @@
 # Recipe: pointer effects
 
-Five pointer effects: magnetic pull, 3D tilt, a cursor follower, momentum hover, and a drag-and-throw track. The first four are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The drag track works with mouse, touch, and keyboard.
+Six pointer effects: magnetic pull, 3D tilt, a cursor follower with an optional scrolling label, momentum hover, an image trail, and a drag-and-throw track. All but the drag track are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The drag track works with mouse, touch, and keyboard.
 
 Lifecycle: the framework controller builds these once the target is mounted and visible and calls the idempotent teardown on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -213,8 +213,12 @@ Keep `max` small on cards with reading text.
 
 An accent that trails the mouse beside the native cursor, never replacing it. It grows over `[data-cursor="grow"]`, disappears over `[data-cursor="hide"]` (such as text fields), and squashes on press. `data-cursor-state` on the follower mirrors the state for CSS.
 
+With a `label` element, the follower also carries a small marquee: over `[data-cursor-text]`, the dot gives way to a pill scrolling that attribute's text, such as "View project". The label repeats the text twice and loops by one copy's width, the same technique as `marquee`. It only restates what the link already says, so it stays `aria-hidden`.
+
 ```html
 <div class="cursor" aria-hidden="true"></div>
+<div class="cursor-label" aria-hidden="true"><span data-cursor-label-track></span></div>
+<a href="/work/atlas" data-cursor-text="View project">Atlas</a>
 ```
 
 ```css
@@ -224,16 +228,67 @@ An accent that trails the mouse beside the native cursor, never replacing it. It
   background: currentColor; pointer-events: none;
   visibility: hidden;
 }
+.cursor-label {
+  position: fixed; left: 0; top: 0; z-index: 50;
+  width: 9em; overflow: hidden; white-space: nowrap;
+  padding: 0.4em 0; border-radius: 999px;
+  background: currentColor; pointer-events: none;
+  visibility: hidden;
+}
+.cursor-label [data-cursor-label-track] { display: inline-flex; color: Canvas; }
 ```
 
 ```ts
-const CURSOR_SCALE: Record<string, number> = { grow: 3, hide: 0 };
+const CURSOR_SCALE: Record<string, number> = { grow: 3, hide: 0, label: 0 };
 
-export function cursorFollower(cursor: HTMLElement): Teardown {
+export type CursorFollowerOptions = {
+  /** A pill that scrolls the hovered `[data-cursor-text]`; needs a `[data-cursor-label-track]` child. */
+  label?: HTMLElement;
+  /** Label scroll speed in px per second. */
+  labelSpeed?: number;
+};
+
+export function cursorFollower(cursor: HTMLElement, { label, labelSpeed = 60 }: CursorFollowerOptions = {}): Teardown {
   if (prefersReducedMotion() || !finePointer()) return () => {};
   return own((dispose, after) => {
     after(snapshotStyles([cursor]));
     after(() => delete cursor.dataset.cursorState);
+    const track = label?.querySelector<HTMLElement>("[data-cursor-label-track]");
+    let labelX: gsap.QuickToFunc | undefined;
+    let labelY: gsap.QuickToFunc | undefined;
+    let scroll: gsap.core.Tween | undefined;
+    let text = "";
+    if (label && track) {
+      after(snapshotStyles([label, track]));
+      const original = Array.from(track.childNodes);
+      after(() => track.replaceChildren(...original));
+      dispose(() => scroll?.kill());
+      gsap.set(label, { xPercent: -50, yPercent: -50, autoAlpha: 0 });
+      labelX = gsap.quickTo(label, "x", { duration: FOLLOW * 0.5, ease: FOLLOW_EASE });
+      labelY = gsap.quickTo(label, "y", { duration: FOLLOW * 0.5, ease: FOLLOW_EASE });
+    }
+    /** Shows the label scrolling `next`, or hides and pauses it for an empty string. */
+    const showLabel = (next: string) => {
+      if (!label || !track || next === text) return;
+      text = next;
+      if (!next) {
+        // Pause this loop once hidden; a label shown meanwhile starts its own.
+        const hiding = scroll;
+        gsap.to(label, { autoAlpha: 0, scale: 0.6, duration: 0.2, ease: "power2.in", overwrite: "auto", onComplete: () => void hiding?.pause() });
+        return;
+      }
+      // Two copies side by side; moving left by one copy's width loops seamlessly.
+      const copy = () => {
+        const span = document.createElement("span");
+        span.textContent = `${next}\u00a0·\u00a0`;
+        return span;
+      };
+      track.replaceChildren(copy(), copy());
+      const width = (track.firstElementChild as HTMLElement).offsetWidth;
+      scroll?.kill();
+      scroll = gsap.fromTo(track, { x: 0 }, { x: -width, duration: width / labelSpeed, ease: "none", repeat: -1 });
+      gsap.to(label, { autoAlpha: 1, scale: 1, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+    };
     gsap.set(cursor, { xPercent: -50, yPercent: -50, autoAlpha: 0 });
     const xTo = gsap.quickTo(cursor, "x", { duration: FOLLOW * 0.5, ease: FOLLOW_EASE });
     const yTo = gsap.quickTo(cursor, "y", { duration: FOLLOW * 0.5, ease: FOLLOW_EASE });
@@ -251,14 +306,20 @@ export function cursorFollower(cursor: HTMLElement): Teardown {
 
     listen(dispose, document, "pointermove", (event) => {
       if (event.pointerType !== "mouse") return;
-      const next = (event.target as Element | null)?.closest<HTMLElement>("[data-cursor]")?.dataset.cursor ?? "";
+      const target = event.target as Element | null;
+      const labelled = label ? target?.closest<HTMLElement>("[data-cursor-text]")?.dataset.cursorText ?? "" : "";
+      const next = labelled ? "label" : target?.closest<HTMLElement>("[data-cursor]")?.dataset.cursor ?? "";
       if (!visible) {
         // Appear at the pointer, not sliding in from the corner.
         gsap.set(cursor, { x: event.clientX, y: event.clientY, autoAlpha: 1 });
+        if (label) gsap.set(label, { x: event.clientX, y: event.clientY });
         visible = true;
       }
       xTo(event.clientX);
       yTo(event.clientY);
+      labelX?.(event.clientX);
+      labelY?.(event.clientY);
+      showLabel(labelled);
       if (next !== state) {
         state = next;
         cursor.dataset.cursorState = state;
@@ -278,6 +339,7 @@ export function cursorFollower(cursor: HTMLElement): Teardown {
     listen(dispose, document.documentElement, "pointerleave", () => {
       visible = false;
       gsap.set(cursor, { autoAlpha: 0 });
+      showLabel("");
     });
   });
 }
@@ -367,6 +429,103 @@ export function momentumHover(
 ```
 
 Leave room around the items: a hard throw travels well past their boxes, so an `overflow: hidden` ancestor clips it.
+
+## imageTrail
+
+Images spill out along the mouse's path over an area: one appears each time the pointer travels `spacing` px, pops up, drifts a little with the pointer's motion, then shrinks away. Suits a hero or a work index. The images are decoration drawn from a hidden set in the markup, so they load with the page; each copy is `aria-hidden` with empty `alt`.
+
+```html
+<section class="hero" data-trail-area>
+  <div class="trail-layer" aria-hidden="true"></div>
+  <div hidden data-trail-images>
+    <img src="/trail-1.jpg" alt="" /><img src="/trail-2.jpg" alt="" /><img src="/trail-3.jpg" alt="" />
+  </div>
+  …
+</section>
+```
+
+```css
+.hero { position: relative; }
+.trail-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.trail-layer img { position: absolute; left: 0; top: 0; width: 180px; }
+```
+
+```ts
+export type ImageTrailOptions = {
+  /** Pointer travel in px between images. */
+  spacing?: number;
+  /** Seconds an image lives. */
+  life?: number;
+  /** Images alive at once; the oldest goes when a new one needs room. */
+  max?: number;
+  /** Share of the pointer's last movement each image drifts along. */
+  drift?: number;
+};
+
+export function imageTrail(
+  area: HTMLElement,
+  layer: HTMLElement,
+  images: HTMLImageElement[],
+  { spacing = 80, life = 0.9, max = 10, drift = 0.6 }: ImageTrailOptions = {},
+): Teardown {
+  if (prefersReducedMotion() || !finePointer() || !images.length) return () => {};
+  return own((dispose) => {
+    const live: Array<{ image: HTMLImageElement; tl: gsap.core.Timeline }> = [];
+    const drop = (entry: { image: HTMLImageElement; tl: gsap.core.Timeline }) => {
+      entry.tl.kill();
+      entry.image.remove();
+      const i = live.indexOf(entry);
+      if (i >= 0) live.splice(i, 1);
+    };
+    dispose(() => live.slice().forEach(drop));
+    let next = 0;
+    let last: { x: number; y: number } | undefined;
+    let travelled = 0;
+
+    const spawn = (x: number, y: number, dx: number, dy: number) => {
+      if (live.length >= max) drop(live[0]!);
+      const image = images[next]!.cloneNode(true) as HTMLImageElement;
+      next = (next + 1) % images.length;
+      image.removeAttribute("id");
+      image.alt = "";
+      image.setAttribute("aria-hidden", "true");
+      layer.append(image);
+      const entry = { image, tl: gsap.timeline() };
+      entry.tl
+        .set(image, { x, y, xPercent: -50, yPercent: -50, scale: 0.6, rotation: gsap.utils.random(-8, 8), autoAlpha: 1 })
+        .to(image, { scale: 1, duration: 0.35, ease: "back.out(2)" }, 0)
+        .to(image, { x: x + dx * drift, y: y + dy * drift, duration: life, ease: "power2.out" }, 0)
+        .to(image, { scale: 0, autoAlpha: 0, duration: 0.35, ease: "power2.in" }, life - 0.35)
+        .call(() => drop(entry));
+      live.push(entry);
+    };
+
+    listen(dispose, area, "pointermove", (event) => {
+      if (event.pointerType !== "mouse") return;
+      const box = layer.getBoundingClientRect();
+      const x = event.clientX - box.left;
+      const y = event.clientY - box.top;
+      if (!last) {
+        last = { x, y };
+        return;
+      }
+      const dx = x - last.x;
+      const dy = y - last.y;
+      travelled += Math.hypot(dx, dy);
+      last = { x, y };
+      if (travelled < spacing) return;
+      travelled = 0;
+      spawn(x, y, dx * 4, dy * 4);
+    });
+    listen(dispose, area, "pointerleave", () => {
+      last = undefined;
+      travelled = 0;
+    });
+  });
+}
+```
+
+One trail per page, and never over reading text: the images cover whatever is under them. Let the trail finish on leave; teardown removes every image at once.
 
 ## dragTrack
 
@@ -461,6 +620,7 @@ export function dragTrack(viewport: HTMLElement, track: HTMLElement, { snap = tr
 | `magnetic`, `tilt` | Settled, once the target's layout is final | teardown | No-op |
 | `cursorFollower` | Once per document, from the persistent shell | teardown | No-op; follower stays hidden |
 | `momentumHover` | Settled, once the items are laid out | teardown | No-op; items stay at rest |
+| `imageTrail` | Settled, once the trail images have loaded | teardown | No-op; nothing spawns |
 | `dragTrack` | Settled, once item widths are final | `{ revert, draggable }` | Drag and snap still work; reduced motion drops the throw |
 
 - Stop magnetic, tilt, and momentum hover before an outro moves the same target.

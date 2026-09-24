@@ -1,6 +1,6 @@
 # Recipe: counters and marquees
 
-A number that counts up to its value and a seamless looping marquee. Both start from markup that reads correctly without JavaScript.
+A number that counts up to its value, a seamless looping marquee, and a logo grid that swaps one cell at a time. Both start from markup that reads correctly without JavaScript.
 
 Lifecycle: see the [controller contract](#controller-contract); the controller calls each `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -320,12 +320,133 @@ export function marquee(
 
 The endless loop needs a user pause (WCAG 2.2.2): wire `pause` and `play` to a visible control.
 
+## logoCycle
+
+A grid of logos where one cell at a time swaps to the next logo in a reserve pool, the old one sliding out as the new one slides in. The markup lists every logo; cells show the first few, and the rest wait in a hidden pool. Swapped logos rejoin the back of the pool, so every logo gets its turn. Real elements move between the cells and the pool; nothing is cloned.
+
+```html
+<ul class="logo-grid" aria-label="Clients">
+  <li data-logo-cell><img src="/a.svg" alt="Acme" /></li>
+  <li data-logo-cell><img src="/b.svg" alt="Bolt" /></li>
+  <li data-logo-cell><img src="/c.svg" alt="Crane" /></li>
+</ul>
+<div hidden data-logo-pool>
+  <img src="/d.svg" alt="Dune" />
+  <img src="/e.svg" alt="Echo" />
+</div>
+```
+
+```css
+/* Each cell stacks its outgoing and incoming logo in one grid area and clips the slide. */
+[data-logo-cell] { display: grid; overflow: hidden; }
+[data-logo-cell] > * { grid-area: 1 / 1; }
+```
+
+Each cell holds one logo element, and the pool holds the same kind of element, since they trade places. Size cells in CSS, so a wider logo never shifts the grid.
+
+```ts
+export type LogoCycleOptions = {
+  /** Seconds between swaps. */
+  interval?: number;
+  /** Seconds each swap takes. */
+  duration?: number;
+  /** Accepts a registered CustomEase name. */
+  ease?: string;
+};
+export type LogoCycle = { pause: () => void; play: () => void; revert: Teardown };
+
+export function logoCycle(
+  grid: HTMLElement,
+  pool: HTMLElement,
+  { interval = 2, duration = 0.6, ease = "power3.inOut" }: LogoCycleOptions = {},
+): LogoCycle {
+  const idle = { pause: () => {}, play: () => {}, revert: () => {} };
+  const cells = Array.from(grid.querySelectorAll<HTMLElement>("[data-logo-cell]"));
+  if (prefersReducedMotion() || !cells.length || !pool.children.length) return idle;
+  /** Reasons the cycle holds: a pause control, off screen, hover, or focus inside. */
+  const holds = new Set<string>();
+  let swap: gsap.core.Timeline | undefined;
+  let next: gsap.core.Tween | undefined;
+  let last = -1;
+
+  const revert = own((dispose, after) => {
+    // Every logo returns to its original parent, in its original order.
+    const homes = [...cells, pool].map((parent) => [parent, Array.from(parent.children) as HTMLElement[]] as const);
+    after(() => homes.forEach(([parent, logos]) => parent.append(...logos)));
+    // Restore each logo's `style` attribute exactly, including none; clearProps also resets GSAP's cache.
+    const styles = homes.flatMap(([, logos]) => logos).map((logo) => [logo, logo.getAttribute("style")] as const);
+    after(() =>
+      styles.forEach(([logo, value]) => {
+        gsap.set(logo, { clearProps: "transform,opacity,visibility" });
+        if (value === null) logo.removeAttribute("style");
+        else logo.setAttribute("style", value);
+      }),
+    );
+    dispose(() => {
+      swap?.kill();
+      next?.kill();
+    });
+
+    const step = () => {
+      if (holds.size) {
+        next = gsap.delayedCall(interval, step);
+        return;
+      }
+      // A different cell each time, never the one just swapped.
+      let i = gsap.utils.random(0, cells.length - 1, 1);
+      if (cells.length > 1 && i === last) i = (i + 1) % cells.length;
+      last = i;
+      const cell = cells[i]!;
+      const outgoing = cell.lastElementChild as HTMLElement | null;
+      const incoming = pool.firstElementChild as HTMLElement | null;
+      if (!outgoing || !incoming) return;
+      cell.append(incoming);
+      swap = gsap
+        .timeline({
+          onComplete: () => {
+            pool.append(outgoing);
+            gsap.set([outgoing, incoming], { clearProps: "transform,opacity,visibility" });
+            next = gsap.delayedCall(interval, step);
+          },
+        })
+        .fromTo(incoming, { yPercent: 100, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration, ease }, 0)
+        .to(outgoing, { yPercent: -100, autoAlpha: 0, duration, ease }, 0);
+    };
+    next = gsap.delayedCall(interval, step);
+
+    const seen = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) holds.delete("hidden");
+      else holds.add("hidden");
+    });
+    seen.observe(grid);
+    dispose(() => seen.disconnect());
+    const on = <K extends keyof HTMLElementEventMap>(type: K, handler: (event: HTMLElementEventMap[K]) => void) => {
+      grid.addEventListener(type, handler);
+      dispose(() => grid.removeEventListener(type, handler));
+    };
+    on("pointerenter", (event) => {
+      if (event.pointerType === "mouse") holds.add("hover");
+    });
+    on("pointerleave", () => holds.delete("hover"));
+    on("focusin", () => holds.add("focus"));
+    on("focusout", (event) => {
+      if (!grid.contains(event.relatedTarget as Node | null)) holds.delete("focus");
+    });
+  });
+
+  return { pause: () => void holds.add("paused"), play: () => void holds.delete("paused"), revert };
+}
+```
+
+A hold never interrupts a swap in progress; the next swap waits until every hold clears. Swapped logos are real content, so assistive technology reads whichever logos are in the cells; keep the grid out of live regions. The cycle runs past five seconds, so wire `pause` and `play` to a visible control.
+
 ## Controller contract
 
 | Builder | Phase | Returns | Reduced motion |
 |---|---|---|---|
 | `countUp` | Intro, or when the figure scrolls into view | `{ timeline, revert }` | Final value shown; completion fires |
 | `marquee` | Settled, once fonts and images in the row have loaded | `{ pause, play, revert }` | No-op; row static, wrapping or scrolling natively in CSS |
+| `logoCycle` | Settled, once the cells' logos have loaded | `{ pause, play, revert }` | No-op; the first logos stay, the pool stays hidden |
 
 - A counted figure needs no pre-paint hiding when built at initial state: it writes the start value before paint.
-- Rebuild the marquee after its items change.
+- Rebuild the marquee or logo cycle after its items change.

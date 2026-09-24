@@ -1,6 +1,6 @@
 # Recipe: scroll effects
 
-Seven scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, a horizontal run, a progress rule, and a velocity skew.
+Nine scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, a horizontal run, a progress rule, a velocity skew, a header theme that follows the section beneath it, and a scroll direction state.
 
 Lifecycle: the framework controller builds these once the owner is measurable, refreshes ScrollTrigger when fonts, media, data, or scroll restoration change layout, and calls each idempotent teardown on unmount. Builders never kill triggers they did not create. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -111,14 +111,20 @@ export type RevealOptions = {
   start?: string;
   /** Rise distance in px. */
   y?: number;
+  /** Starting scale, such as 0 for a pop; omitted leaves scale alone. */
+  scale?: number;
+  /** Starting rotation in degrees; omitted leaves rotation alone. */
+  rotation?: number;
   duration?: number;
   stagger?: number;
+  /** Accepts a registered CustomEase name. */
+  ease?: string;
   scroller?: Scroller;
 };
 
 export function revealOnScroll(
   targets: gsap.DOMTarget,
-  { start = REVEAL_START, y = 16, duration = 0.42, stagger = 0.09, scroller }: RevealOptions = {},
+  { start = REVEAL_START, y = 16, scale, rotation, duration = 0.42, stagger = 0.09, ease = "power3.out", scroller }: RevealOptions = {},
 ): Teardown {
   const items = gsap.utils.toArray<HTMLElement>(targets);
   if (!items.length || prefersReducedMotion()) return () => {};
@@ -127,18 +133,27 @@ export function revealOnScroll(
     const live = new Set<gsap.core.Tween>();
     dispose(() => live.forEach((tween) => tween.kill()));
     // Opacity only: visibility would drop waiting items from the accessibility tree and the tab order.
-    gsap.set(items, { opacity: 0, y });
+    const from: gsap.TweenVars = { opacity: 0, y };
+    const to: gsap.TweenVars = { opacity: 1, y: 0 };
+    if (scale !== undefined) {
+      from.scale = scale;
+      to.scale = 1;
+    }
+    if (rotation !== undefined) {
+      from.rotation = rotation;
+      to.rotation = 0;
+    }
+    gsap.set(items, from);
     ScrollTrigger.batch(items, {
       start,
       once: true,
       scroller,
       onEnter: (batch) => {
         const tween = gsap.to(batch, {
-          opacity: 1,
-          y: 0,
+          ...to,
           duration,
           stagger,
-          ease: "power3.out",
+          ease,
           overwrite: "auto",
           onComplete: () => {
             live.delete(tween);
@@ -152,13 +167,20 @@ export function revealOnScroll(
     const onFocus = (event: FocusEvent) => {
       const item = event.currentTarget as HTMLElement;
       // Only the reveal's own properties; other effects on the item keep running.
-      gsap.killTweensOf(item, "opacity,y");
+      gsap.killTweensOf(item, "opacity,y,scale,rotation");
       gsap.set(item, { clearProps: "transform,opacity" });
     };
     items.forEach((item) => item.addEventListener("focusin", onFocus));
     dispose(() => items.forEach((item) => item.removeEventListener("focusin", onFocus)));
   });
 }
+```
+
+Stickers and badges can plop in instead of rising. Leave room around them: the overshoot grows past their boxes.
+
+```ts
+// Example: a sticker pops in from above with an elastic overshoot.
+revealOnScroll(".sticker", { y: -32, scale: 0, rotation: -20, duration: 0.7, stagger: 0.12, ease: "elastic.out(1, 0.72)" });
 ```
 
 ## scrubStatement
@@ -202,9 +224,18 @@ Layers drift at different rates while their section crosses the viewport. `data-
 ```
 
 ```ts
-export type ParallaxOptions = { scrub?: number | boolean; scroller?: Scroller };
+export type ParallaxOptions = {
+  scrub?: number | boolean;
+  /** Trigger bounds; the default spans the section's whole pass through the viewport. */
+  start?: string;
+  end?: string;
+  scroller?: Scroller;
+};
 
-export function parallax(section: HTMLElement, { scrub = true, scroller }: ParallaxOptions = {}): Teardown {
+export function parallax(
+  section: HTMLElement,
+  { scrub = true, start = "top bottom", end = "bottom top", scroller }: ParallaxOptions = {},
+): Teardown {
   const layers = gsap.utils.toArray<HTMLElement>("[data-parallax]", section);
   if (!layers.length || prefersReducedMotion()) return () => {};
   return own(() => {
@@ -216,7 +247,7 @@ export function parallax(section: HTMLElement, { scrub = true, scroller }: Paral
         {
           y: travel,
           ease: "none",
-          scrollTrigger: { trigger: section, start: "top bottom", end: "bottom top", scrub, scroller },
+          scrollTrigger: { trigger: section, start, end, scrub, scroller },
         },
       );
     });
@@ -225,6 +256,21 @@ export function parallax(section: HTMLElement, { scrub = true, scroller }: Paral
 ```
 
 Clip the section's overflow when travel would show past its edge. Keep reading text inside its box.
+
+A section at the end of the page never reaches `bottom top`; pass `end: "bottom bottom"` so its travel completes. For a footer the page lifts away to uncover, pin it under the content in CSS and let a layer inside it settle as it appears:
+
+```css
+/* The content scrolls up off a footer held at the bottom of the viewport. */
+main { position: relative; z-index: 1; background: Canvas; }
+.site-footer { position: sticky; bottom: 0; }
+```
+
+```ts
+// Example: the footer's inner layer rises into place as the page uncovers it.
+parallax(footer, { end: "bottom bottom" }); // footer markup: <div data-parallax="-80">…</div>
+```
+
+A footer taller than the viewport cannot be held; skip the sticky footer there.
 
 ## pinnedScene
 
@@ -407,6 +453,118 @@ export function velocitySkew(targets: gsap.DOMTarget, { max = MAX_SKEW, scroller
 }
 ```
 
+## navTheme
+
+The header takes the theme of the section beneath its middle, such as light text over a dark hero. Each `[data-nav-theme]` section gets one trigger; the header's `data-nav-theme` mirrors the section it sits over, and CSS does the rest.
+
+```html
+<header class="site-header">…</header>
+<section data-nav-theme="dark">…</section>
+<section data-nav-theme="light">…</section>
+```
+
+```css
+.site-header { transition: color 0.3s, background-color 0.3s; }
+.site-header[data-nav-theme="dark"] { color: white; }
+@media (prefers-reduced-motion: reduce) { .site-header { transition: none; } }
+```
+
+```ts
+export type NavThemeOptions = { sections?: string; scroller?: Scroller };
+
+export function navTheme(header: HTMLElement, { sections = "[data-nav-theme]", scroller }: NavThemeOptions = {}): Teardown {
+  return own((_dispose, after) => {
+    const original = header.getAttribute("data-nav-theme");
+    after(() => {
+      if (original === null) header.removeAttribute("data-nav-theme");
+      else header.setAttribute("data-nav-theme", original);
+    });
+    // The header's own `data-nav-theme` is output, never a section.
+    const owners = gsap.utils.toArray<HTMLElement>(sections).filter((section) => section !== header && !header.contains(section));
+    // Function values re-measure the header on every refresh.
+    const line = () => header.offsetHeight / 2;
+    owners.forEach((section) => {
+      ScrollTrigger.create({
+        trigger: section,
+        start: () => `top ${line()}`,
+        end: () => `bottom ${line()}`,
+        scroller,
+        onToggle: (self) => {
+          if (self.isActive) header.setAttribute("data-nav-theme", section.dataset.navTheme ?? "");
+        },
+      });
+    });
+  });
+}
+```
+
+This changes color state, not motion, so it runs under reduced motion; the CSS drops the transition. Sections must tile the page for the header to always have a theme; where they gap, it keeps the last one.
+
+## scrollDirection
+
+One trigger over the whole page writes `data-scroll-direction` (`up` or `down`) and `data-scroll-started` (`true` past `top` px) on a target, the root by default. CSS hides the header going down and returns it going up.
+
+```css
+.site-header { transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+[data-scroll-direction="down"][data-scroll-started="true"] .site-header { transform: translateY(-100%); }
+/* Keep the header reachable while anything inside it has focus. */
+.site-header:focus-within { transform: none; }
+@media (prefers-reduced-motion: reduce) { .site-header { transition: none; } }
+```
+
+```ts
+export type ScrollDirectionOptions = {
+  /** Scroll distance in px before the page counts as started. */
+  top?: number;
+  /** Px of travel in the new direction before it flips, so a jittery trackpad does not flicker the header. */
+  threshold?: number;
+  scroller?: Scroller;
+};
+
+export function scrollDirection(
+  target: HTMLElement = document.documentElement,
+  { top = 50, threshold = 8, scroller }: ScrollDirectionOptions = {},
+): Teardown {
+  return own((_dispose, after) => {
+    const attributes = ["data-scroll-direction", "data-scroll-started"];
+    const original = attributes.map((name) => target.getAttribute(name));
+    after(() =>
+      attributes.forEach((name, i) => {
+        const value = original[i];
+        if (value === null || value === undefined) target.removeAttribute(name);
+        else target.setAttribute(name, value);
+      }),
+    );
+    let direction = "up";
+    let turn = 0;
+    const write = (y: number) => {
+      target.setAttribute("data-scroll-direction", direction);
+      target.setAttribute("data-scroll-started", String(y > top));
+    };
+    const trigger = ScrollTrigger.create({
+      start: 0,
+      end: "max",
+      scroller,
+      onUpdate: (self) => {
+        const y = self.scroll();
+        const next = self.direction === 1 ? "down" : "up";
+        // `turn` is the furthest point reached in the current direction.
+        if (next === direction) turn = y;
+        else if (Math.abs(y - turn) >= threshold) {
+          direction = next;
+          turn = y;
+        }
+        write(y);
+      },
+    });
+    turn = trigger.scroll();
+    write(turn);
+  });
+}
+```
+
+Runs under reduced motion: the header still hides and returns, without a transition. Pair it with smooth scroll freely; the trigger reads the eased position.
+
 ## Controller contract
 
 | Builder | Create | Returns | Reduced motion |
@@ -416,6 +574,8 @@ export function velocitySkew(targets: gsap.DOMTarget, { max = MAX_SKEW, scroller
 | `pinnedScene` | Settled, after fonts and media above it have sized | teardown | No-op; stacked fallback |
 | `horizontalRun` | Settled, same as a scene | `{ revert, animation }` | No-op; native scroller |
 | `scrollProgress` | Settled | teardown | Runs, unsmoothed |
+| `navTheme` | Settled, once section heights are final; the header persists, so rebuild per page | teardown | Runs; CSS drops the transition |
+| `scrollDirection` | Once per document, from the persistent shell | teardown | Runs; CSS drops the transition |
 
 - Create triggers in document order, pins included, so later starts account for earlier pin spacing. Build on a fresh visit; refresh a re-shown preserved page instead.
 - Keep scenes and runs alive through outro and end state; reverting a pin mid-outro jumps the page. Revert on unmount, inner `containerAnimation` effects first.
