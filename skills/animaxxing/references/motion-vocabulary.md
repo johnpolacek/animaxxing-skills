@@ -156,6 +156,7 @@ Scroll effects follow reading position, not page phase. Use at most one scrubbed
 | `pinnedScene` | caller's timeline, pinned for `length` section heights | Steps, a product reveal, a diagram assembling. The loudest; one per page. |
 | `horizontalRun` | track `x → -overflow`, pinned | A gallery or timeline run sideways. Native scroller when skipped. |
 | `runDrift` | `[data-run-drift]` items `x ∓ travel` px as each crosses the run's viewport | Depth inside a horizontal run: images slide within their frames. |
+| `scrollWaypoints` | one element `Flip.fit`s onto each later `[data-waypoint]` marker, scrubbed so it lands as the marker reaches the viewport's middle | A product shot docking beside each feature. One traveller per page. |
 | `scrollProgress` | `scaleX 0 → 1` from the left edge | A hairline reporting position. Runs under reduced motion. |
 | `velocitySkew` | `skewY` up to ±8°, springs back in 0.8s | Ambient energy on media columns. Never on reading text. |
 | `navTheme` | Header `data-nav-theme` follows the `[data-nav-theme]` section under its middle; CSS transitions the colors | Light type over a dark hero, dark over a light page. Runs under reduced motion. |

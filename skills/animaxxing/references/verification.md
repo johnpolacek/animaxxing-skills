@@ -40,6 +40,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Reveal targets waiting below the fold stay in the accessibility tree and tab order; tabbing into one shows it at once.
 - Scroll down and back through every scrubbed effect; each returns exactly to its start values.
 - Pinned scenes and runs: no jump entering or leaving the pin; content below lands in place.
+- `scrollWaypoints`: the traveller rests in place at the top, covers each marker's box exactly when that marker is centered, and lands again after a resize or a moved marker plus refresh; revert leaves no trigger or inline transform.
 - `runDrift` items travel from `-travel` toward `+travel` across the run and never show past their frames; `morphScrub` returns to the authored shape scrolling back up, and to the authored `d` after revert.
 - A `drift` curtain leaves no transform on the content wrapper after `reveal()` or `revert`; fixed UI stays in the shell.
 - Resize across a breakpoint and refresh: pin lengths and run distance recompute; nothing overlaps.

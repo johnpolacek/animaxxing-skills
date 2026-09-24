@@ -1,10 +1,10 @@
 # Recipe: scroll effects
 
-Nine scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, a horizontal run with optional item drift, a progress rule, a velocity skew, a header theme that follows the section beneath it, and a scroll direction state.
+Ten scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, a horizontal run with optional item drift, an element that travels between waypoints, a progress rule, a velocity skew, a header theme that follows the section beneath it, and a scroll direction state.
 
 Lifecycle: the framework controller builds these once the owner is measurable, refreshes ScrollTrigger when fonts, media, data, or scroll restoration change layout, and calls each idempotent teardown on unmount. Builders never kill triggers they did not create. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-Dependencies: `gsap`, `gsap/ScrollTrigger`. `scrubStatement` also needs `gsap/SplitText`.
+Dependencies: `gsap`, `gsap/ScrollTrigger`. `scrubStatement` also needs `gsap/SplitText`; `scrollWaypoints` needs `gsap/Flip`.
 
 Setup: `scrubStatement` with `by: "chars"` needs [stable typography](../text-stability.md#stable-typography-for-character-animation); words keep natural kerning. Verify the revert with the [cleanup checks](../verification.md#splittext-cleanup-stability).
 
@@ -12,8 +12,9 @@ Setup: `scrubStatement` with `by: "chars"` needs [stable typography](../text-sta
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
+import { Flip } from "gsap/Flip";
 
-gsap.registerPlugin(ScrollTrigger, SplitText);
+gsap.registerPlugin(ScrollTrigger, SplitText, Flip);
 
 /* Swap for the project's helper if it has one. */
 function prefersReducedMotion(): boolean {
@@ -421,6 +422,80 @@ export function runDrift(track: HTMLElement, run: Run, { scrub = true }: { scrub
 
 Clip each item's frame so the drift never shows past its edge. Revert `runDrift` before the run's own `revert`.
 
+## scrollWaypoints
+
+One element travels the page: it leaves its own place and moves and scales onto a marker in each later section as that marker reaches the middle of the viewport. A traveller above the viewport's middle at load, such as one in a hero, starts moving from the top of the page. A product shot docking beside each feature, a badge settling into each chapter. Markers are empty boxes the app lays out with CSS where the traveller should land; their size sets its scale.
+
+Each leg is a `Flip.fit` onto the next marker, lasting the scroll distance between stops so the traveller keeps pace with the page. Every ScrollTrigger refresh returns the traveller to its place and rebuilds the legs, so resizes, fonts, and late media re-measure.
+
+```html
+<section><img data-traveller src="/phone.png" alt="The app" /></section>
+<section><div data-waypoint class="dock-left"></div><h2>Plan</h2></section>
+<section><div data-waypoint class="dock-right"></div><h2>Share</h2></section>
+```
+
+```ts
+export type WaypointOptions = {
+  scrub?: number | boolean;
+  /** Ease of each leg between stops. */
+  ease?: string;
+  scroller?: Scroller;
+};
+
+export function scrollWaypoints(
+  traveller: HTMLElement,
+  stops: HTMLElement[],
+  { scrub = SCRUB, ease = "power1.inOut", scroller }: WaypointOptions = {},
+): Teardown {
+  if (prefersReducedMotion() || !stops.length) return () => {};
+  return own((dispose, after) => {
+    after(snapshotStyles([traveller]));
+    const view = () => {
+      const box = typeof scroller === "string" ? document.querySelector(scroller) : scroller;
+      if (!box) {
+        const height = window.innerHeight;
+        return { top: 0, scroll: window.scrollY, height, max: document.documentElement.scrollHeight - height };
+      }
+      return { top: box.getBoundingClientRect().top, scroll: box.scrollTop, height: box.clientHeight, max: box.scrollHeight - box.clientHeight };
+    };
+    let legs: gsap.Context | undefined;
+    const build = () => {
+      // Back to its place first: every fit and distance is measured from rest.
+      legs?.revert();
+      legs = gsap.context(() => {
+        const v = view();
+        /** Scroll position where an element's middle meets the viewport's, clamped to the scrollable range. */
+        const arrival = (element: Element) => {
+          const rect = element.getBoundingClientRect();
+          return gsap.utils.clamp(0, v.max, rect.top - v.top + v.scroll + rect.height / 2 - v.height / 2);
+        };
+        const at = [traveller, ...stops].map(arrival);
+        const timeline = gsap.timeline({ scrollTrigger: { start: at[0], end: at[at.length - 1], scrub, scroller } });
+        stops.forEach((stop, i) => {
+          // getVars measures from rest, so each leg ends exactly on its marker whatever came before.
+          const fit = Flip.fit(traveller, stop, { getVars: true, scale: true }) as gsap.TweenVars;
+          // A leg lasts the scroll between its stops, so the traveller lands as its marker reaches the middle.
+          timeline.to(traveller, { ...fit, ease, duration: Math.max(at[i + 1]! - at[i]!, 0.001) });
+        });
+      });
+    };
+    build();
+    ScrollTrigger.addEventListener("refreshInit", build);
+    dispose(() => ScrollTrigger.removeEventListener("refreshInit", build));
+    dispose(() => legs?.revert());
+  });
+}
+```
+
+```ts
+// Example: the hero image docks into each feature section.
+scrollWaypoints(document.querySelector<HTMLElement>("[data-traveller]")!, gsap.utils.toArray<HTMLElement>("[data-waypoint]"));
+```
+
+- Keep the traveller out of `overflow: hidden` ancestors and give it a `z-index` above the sections it crosses.
+- Markers carry no content; the traveller covers them. Match their aspect ratio to the traveller's, or it distorts.
+- The traveller's place in the flow stays reserved, so the first section keeps its layout. Keep text beside the markers readable when the traveller lands.
+
 ## scrollProgress
 
 A rule that grows with reading progress through the page or one `section`. It reports state, so it runs under reduced motion too.
@@ -607,6 +682,7 @@ Runs under reduced motion: the header still hides and returns, without a transit
 | `pinnedScene` | Settled, after fonts and media above it have sized | teardown | No-op; stacked fallback |
 | `horizontalRun` | Settled, same as a scene | `{ revert, animation }` | No-op; native scroller |
 | `runDrift` | Settled, right after its run | teardown | No-op; static |
+| `scrollWaypoints` | Settled, once the traveller and markers are laid out | teardown | No-op; the traveller stays in its place |
 | `scrollProgress` | Settled | teardown | Runs, unsmoothed |
 | `navTheme` | Settled, once section heights are final; the header persists, so rebuild per page | teardown | Runs; CSS drops the transition |
 | `scrollDirection` | Once per document, from the persistent shell | teardown | Runs; CSS drops the transition |
@@ -615,3 +691,4 @@ Runs under reduced motion: the header still hides and returns, without a transit
 - Keep scenes and runs alive through outro and end state; reverting a pin mid-outro jumps the page. Revert on unmount, inner `containerAnimation` effects first.
 - Reveal targets may use the pre-paint mechanism under a `data-scroll-reveal` marker. Keep them out of route intro targets.
 - A custom scroller passes `scroller`; the app owns its `scrollerProxy`.
+- `scrollWaypoints` rebuilds its trigger at each refresh from measured positions, so it needs no place in the creation order; pins above it are already in the layout it measures.
