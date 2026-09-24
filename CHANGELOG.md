@@ -7,6 +7,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 ### Added
 
 - `animaxxing-webgl`, a new motion skill for GSAP-driven WebGL image effects on one shared OGL renderer and canvas per document. Image planes track each `<img>` through scroll and resize; a hover lens, a scroll-velocity wave, and a reveal or exit wipe are GSAP tweens on shader uniforms. The `<img>` stays the accessible content and the fallback without WebGL, on context loss, without CORS, and under reduced motion. The stage caps pixel ratio, sleeps off screen and in hidden tabs, rebuilds after a context restore, and every revert frees its GL resources. OGL was chosen over three.js at 14.5 KB against 133 KB gzipped for the classes used.
+- Endless drag recipe in `animaxxing`: `dragLoop`, a horizontal row that wraps seamlessly under drag, throw, and sideways wheel, lands on items, and can drift with a pause control; and `dragGrid`, a canvas of tiles that wraps on both axes. Clones are `aria-hidden` and `inert` without ids, keyboard focus brings items into view, vertical swipes keep scrolling the page, and revert mid-throw restores the markup exactly.
+- Signature curves in `animaxxing`'s motion vocabulary: register a CustomEase once and pass its name to any recipe `ease` option. `style-animaxxing` names its own curve. Recipe defaults are unchanged.
 - Framework skills' `transition-archetypes.md` gains **Persistent WebGL canvas**: the shell holds the stage so one canvas and context survive client-side routes.
 
 ## [0.7.0] - 2026-09-23

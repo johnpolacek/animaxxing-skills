@@ -56,6 +56,20 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Revert during a throw: the track stops and its inline styles and the viewport's `overflow` restore.
 - Reduced motion: no magnetic, tilt, or follower; the track drags and lands on the nearest item without a throw.
 
+## Endless drag
+
+- Clones are `aria-hidden` and `inert` with no ids; each real item is announced once and Tab visits only real items.
+- `dragLoop`: a drag past either end wraps with no gap across the viewport and lands on an item; a sideways wheel moves the same position and lands; a vertical wheel scrolls the page.
+- Tab brings each real item into view in the loop, and centers each tile in the grid; the viewport's own scroll stays 0.
+- A drag or throw over a link never follows it; a plain click does.
+- Drift holds on hover, focus inside, drag, off screen, and `pause()`, and resumes after each; a visible control drives `pause` and `play`.
+- `dragGrid` with fewer tiles than the viewport holds covers it with no gap before and after a drag, and after resizing the viewport larger.
+- The grid's wheel pans sideways only, unless it captures both axes; then vertical wheels pan it and the page stays still.
+- On touch, vertical swipes over the loop and an x-capturing grid scroll the page.
+- Revert mid-throw: the throw stops, and the markup, including `style` attributes, matches its pre-build state exactly.
+- Reduced motion: both still drag, with no throw and no drift; the loop still lands on an item.
+- A registered CustomEase name passed as `ease` shapes the landing, like every recipe's `ease` option.
+
 ## SVG, counters, and marquees
 
 - Drawn strokes start hidden without a flash and end at the SVG's own appearance after revert.
