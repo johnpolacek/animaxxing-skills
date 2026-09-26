@@ -4,6 +4,10 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+### Changed
+
+- `animaxxing` has a full treatment. When the user says "we're animaxxing", every element enters from a blank first paint, rests static or ambient, and leaves on every requested navigation, keeping the brand. A named effect still adds only that effect, and an unclear request gets one question.
+
 ## [0.10.0] - 2026-09-24
 
 ### Added

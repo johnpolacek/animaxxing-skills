@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build GSAP text, scroll, pointer, SVG, layout, media, component, and particle effects without restyling: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, scroll waypoints, smooth scrolling, curtain, curve, and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, video and frame scrubbing, menu, dialog, accordion, tab, enter/exit motion, label rolls, underline sweeps, magnetic buttons, tilt cards, cursor followers, image trails, momentum and proximity hover, drag-and-throw tracks, endless drag loops, wrapping grids, flick card stacks, CustomEase curves, section paging, sound cues, SVG draws and morphs, count-up figures, marquees, confetti, emoji rain, particle controls, and blast-off exits. Use for Animaxxing motion, or to fix hover effects that stick on touch. Pair with the matching GSAP framework skill for lifecycle. Not for branding, redesign, routing, or GSAP API questions."
+description: "Build GSAP motion without restyling, as single effects or the full treatment. For \"we're animaxxing\", every element enters from a blank page, rests, and leaves. Effects: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, scroll waypoints, smooth scrolling, curtain, curve, and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, video and frame scrubbing, menu, dialog, accordion, tab, enter/exit motion, label rolls, underline sweeps, magnetic buttons, tilt cards, cursor followers, image trails, momentum and proximity hover, drag-and-throw tracks, endless drag loops, wrapping grids, flick card stacks, CustomEase curves, section paging, sound cues, SVG draws and morphs, count-up figures, marquees, confetti, emoji rain, particle controls, blast-off exits, and hover stuck on touch. Pair with the matching GSAP framework skill. Not for branding, redesign, routing, or GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text, scroll, pointer, layout, SVG, and particle motion for any brand
@@ -12,11 +12,18 @@ Portable vanilla TypeScript and GSAP effect recipes. Keep the project's fonts, c
 
 Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites), installing it if missing. It owns **mount → initial state → intro → settled → outro → end state → unmount**, initialization, navigation, recovery, interruption, and cleanup timing. This skill supplies builders its controller calls; do not invent lifecycle guidance here.
 
+## Choose the scope
+
+- **Full treatment.** "We're animaxxing", "animax this", or "full treatment" means every element on every screen animates, keeping the brand. Each element starts from a blank first paint, enters (intro), rests static or ambient (settled), and leaves (outro) on every requested navigation. Content below the fold enters when it is scrolled or tabbed to. Mark every element as a page item ([route letters](references/recipes/route-letters.md)) or give it a pair from [the shelf](references/motion-vocabulary.md#the-shelf-paired-entrances-and-exits); the framework skill keeps the first paint blank. Record the decision in the project's plan or notes so later sessions keep it.
+- **Single effects.** A named effect gets only that effect. A particle button does not imply a page transition, font change, or hero sequence.
+- **Unclear.** Ask once before building: "Full treatment on every element, or only <effect>?"
+- The full treatment still follows reduced motion, no-script readability, and the framework skill's initialization and lifecycle.
+
 ## Setup and adaptation
 
 - Read the installed GSAP version and types. Every plugin used is free since 3.13; SplitText recipes need 3.13+ (`SplitText.create`, `smartWrap`, `mask`, `aria`); `easeReverse` needs 3.15+. Each recipe lists its dependencies; register only those used. Use the official GSAP skills for API details.
 - Recipes register plugins at module scope, which is server-safe, but import them only from client code. Drop a copy's registration when the project registers plugins centrally.
-- Add only requested effects. A particle button does not imply a page transition, font change, or hero sequence.
+- Add only requested effects unless the full treatment applies; see [Choose the scope](#choose-the-scope).
 - Recipe constants are editable defaults, not brand rules. Tune timing, stagger, spread, and intensity to the surface; expose more constants only if the app needs runtime configuration.
 - Weight effects need a loaded variable weight axis, not a specific font. Match endpoints and resting weight to the face (examples use 400–800), or use transform-only effects.
 - Particle canvases take their CSS `color`; use an existing brand color with enough contrast. Keep control geometry and focus styling.

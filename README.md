@@ -84,11 +84,12 @@ Every framework packages four shared references: initialization and recovery for
 | Add WebGL image effects | Matching `gsap-<framework>` + `animaxxing-webgl` |
 | Apply the Animaxxing design without animation | `style-animaxxing` |
 | Apply the design with minimal motion | `style-animaxxing` + matching framework skill; add `animaxxing` when using its effects |
+| Animate every element, keeping your design | Framework + `animaxxing` |
 | Give it the full Animaxxing treatment | All three: framework + motion + style |
 
 Each skill is independently installable; install and load the skills needed for the requested combination. The framework skill owns the lifecycle below, navigation timing, interruption, and cleanup. Motion recipes return timelines or `enter`/`exit`/`blast`/`idle` instances for its controller to call. A style selects and configures those effects alongside its visual design. Load only the references needed for the current task.
 
-Ask the agent to "animaxx it" for the full treatment, or specify "keep our branding" to use the effects alone. Asking for a static restyle does not require GSAP or a motion skill.
+Ask the agent to "animaxx it" for the full Animaxxing look and motion. Say "we're animaxxing" to animate every element of your own design: each enters from a blank page, rests, and leaves. Name a single effect to add only that effect. Asking for a static restyle does not require GSAP or a motion skill.
 
 ### Updating existing installations
 
