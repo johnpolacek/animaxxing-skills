@@ -4,9 +4,26 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-03
+
+### Added
+
+- Plain-CSS equivalents in `style-animaxxing`: `plain-css.md` replaces the Tailwind class strings in typography and layout, and `tokens.md` declares the font, spacing, radius, and border variables for apps without Tailwind.
+- Browser verification CI runs the seven framework suites and the motion suite in a matrix. Manual runs accept a `companion_ref` branch or commit for coordinated changes across both repositories, and failed jobs keep browser traces.
+
 ### Changed
 
 - `animaxxing` has a full treatment. When the user says "we're animaxxing", every element enters from a blank first paint, rests static or ambient, and leaves on every requested navigation, keeping the brand. A named effect still adds only that effect, and an unclear request gets one question.
+
+### Fixed
+
+- Inline-style snapshots keep each declaration's priority, so authored `!important` values survive teardown in every recipe that records and restores styles.
+- `blastOff.revert()` preserves authored transforms, filters, and CSS priorities after an interruption, a full run, or reduced motion, including repeated teardown.
+- A throwing particle factory or observer attachment rolls back target styles, canvas attributes, tweens, and listeners. A throwing treatment cleanup no longer skips the remaining restores, and later controls and queued resizes stay inert.
+- `dragLoop` brings the real item into view for keyboard focus, even after a clone set wraps or while a wheel snap or throw is pending.
+- The `scrollDirection` example header stays on screen while it holds focus.
+- `animaxxing-webgl` image planes follow computed `visibility`, including a hidden wrapper. A hidden image still resolves readiness, so revealing its wrapper draws the plane without a flash of the DOM image.
+- The `animaxxing-webgl` hover lens uses an increasing `smoothstep` edge, as GLSL requires. The reversed edge it replaced has undefined results in GLSL.
 
 ## [0.10.0] - 2026-09-24
 
