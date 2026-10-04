@@ -6,6 +6,7 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ### Added
 
+- `stackCards` and `zoomThrough` in scroll effects: cards pin into a shrinking deck as they scroll, and a word or frame grows from a focus point (or opens from a clip window) until the reader passes into the next scene.
 - `pathScrub` and `pathLoop` in SVG effects: text on a `textPath` slides along a curve with scroll, or turns around a two-lap closed path with pause controls.
 - Typewriter recipe: `typeIn` and `typeOut` type and delete an element's text behind a caret at a human rhythm without moving the layout, and `retype` cycles one word through a list, stopping on the last.
 - `glitchIn` and `glitchOut` in split entrances, with six types: `slice`, `blocks`, `skew`, `ghost`, `weight`, and `scanline`. Jumps are stepped at twelve a second and never blink; the original text stays readable under `aria-hidden` copies.

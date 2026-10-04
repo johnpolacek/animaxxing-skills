@@ -156,6 +156,8 @@ Scroll effects follow reading position, not page phase. Use at most one scrubbed
 | `scrubStatement` | words `opacity 0.15 → 1`, scrubbed through the reading zone | One display statement filling in as it is read. |
 | `parallax` | `y ∓ data-parallax` px, scrubbed across the section | Depth between media and captions. Small travel. |
 | `pinnedScene` | caller's timeline, pinned for `length` section heights | Steps, a product reveal, a diagram assembling. The loudest; one per page. |
+| `stackCards` | each card pins `16px` below the last; buried cards `scale −0.05` each, scrubbed; the deck leaves together | Features or case studies piling into a deck. Opaque cards. |
+| `zoomThrough` | pinned; `scale 1 → 30` from a focus point then fade, the back `scale 1.15 → 1`; or `clip-path inset(30% 34%) → 0` | A word or frame the reader passes through into the next scene. One per page. |
 | `horizontalRun` | track `x → -overflow`, pinned | A gallery or timeline run sideways. Native scroller when skipped. |
 | `runDrift` | `[data-run-drift]` items `x ∓ travel` px as each crosses the run's viewport | Depth inside a horizontal run: images slide within their frames. |
 | `scrollWaypoints` | one element `Flip.fit`s onto each later `[data-waypoint]` marker, scrubbed so it lands as the marker reaches the viewport's middle | A product shot docking beside each feature. One traveller per page. |
