@@ -751,8 +751,8 @@ A small thing becomes the whole screen as the page scrolls. The section pins whi
 ```ts
 export type ZoomOptions = {
   mode?: "scale" | "clip";
-  /** `scale` mode: the part of `target` to fly into. Defaults to its center. */
-  focus?: HTMLElement;
+  /** `scale` mode: the part of `target` to fly into, HTML or SVG. Defaults to its center. */
+  focus?: Element;
   /** `scale` mode: the final scale. */
   scale?: number;
   /** `clip` mode: the starting window, as `inset()` arguments. */
@@ -774,16 +774,22 @@ export function zoomThrough(
     const behind = Array.from(section.children).filter((child): child is HTMLElement => child !== target && child instanceof HTMLElement);
     const timeline = gsap.timeline({
       defaults: { ease: "none" },
-      scrollTrigger: { trigger: section, start: "top top", end: () => `+=${section.offsetHeight * length}`, pin: true, scrub, scroller, anticipatePin: 1 },
+      scrollTrigger: { trigger: section, start: "top top", end: () => `+=${section.offsetHeight * length}`, pin: true, scrub, scroller, anticipatePin: 1, invalidateOnRefresh: true },
     });
     if (mode === "clip") {
       timeline.fromTo(target, { clipPath: `inset(${inset})` }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "power2.inOut" }, 0);
       return;
     }
-    // The origin is the focus's center within the target, measured untransformed.
-    const box = target.getBoundingClientRect();
-    const spot = (focus ?? target).getBoundingClientRect();
-    const origin = `${spot.left + spot.width / 2 - box.left}px ${spot.top + spot.height / 2 - box.top}px`;
+    // The origin is the focus's center within the target, measured at scale 1. It is measured again at
+    // each refresh, so a font or layout change after the build still flies into the right spot.
+    const origin = () => {
+      const current = gsap.getProperty(target, "scale");
+      gsap.set(target, { scale: 1 });
+      const box = target.getBoundingClientRect();
+      const spot = (focus ?? target).getBoundingClientRect();
+      gsap.set(target, { scale: current });
+      return `${spot.left + spot.width / 2 - box.left}px ${spot.top + spot.height / 2 - box.top}px`;
+    };
     // force3D off keeps scaled text crisp: a cached layer would blur at this size.
     timeline
       .fromTo(target, { scale: 1, transformOrigin: origin }, { scale, ease: "power2.in", force3D: false }, 0)
