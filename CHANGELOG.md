@@ -4,6 +4,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-04
+
 ### Added
 
 - Sortable recipe: a vertical list reordered by dragging a handle or from the keyboard, with neighbors sliding aside, a live region, and `onReorder`.
@@ -22,7 +24,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ### Changed
 
-- The `animaxxing` description groups its effects by input (text, scroll, pointer, drag) and drops from 1,023 to 877 characters, leaving room under the 1,024 limit for new effects. `skills/llms.txt` keeps the full trigger list.
+- Recipes that restore a `style` attribute exactly read it before removing it, since Chrome can write a just-cleared inline style back as `style=""`.
+- The `animaxxing` description groups its effects by input (text, scroll, pointer, drag) and stays under the 1,024 limit with the new effects at 955 characters. `skills/llms.txt` keeps the full trigger list.
 - `scripts/validate_repository.py` checks that each skill's `name` matches its directory and its `description` is 1 to 1,024 characters.
 
 ## [0.11.0] - 2026-10-03
