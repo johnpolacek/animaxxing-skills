@@ -1,6 +1,6 @@
 # Recipe: pointer effects
 
-Eight pointer effects: magnetic pull, 3D tilt, a cursor follower with an optional scrolling label, a spotlight that reveals a layer, momentum hover, a proximity field, an image trail, and a drag-and-throw track. All but the spotlight and the drag track are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The spotlight and drag track also work with touch and keyboard.
+Nine pointer effects: magnetic pull, 3D tilt, a cursor follower with an optional scrolling label, a spotlight that reveals a layer, momentum hover, a proximity field, an image trail, a drag-and-throw track, and swipe to dismiss. Magnetic, tilt, the follower, momentum hover, proximity, and the image trail are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The spotlight, drag track, and swipe to dismiss also work with touch and keyboard.
 
 Lifecycle: the framework controller builds these once the target is mounted and visible and calls the idempotent teardown on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -762,6 +762,134 @@ export function imageTrail(
 
 One trail per page, and never over reading text: the images cover whatever is under them. Let the trail finish on leave; teardown removes every image at once.
 
+## swipeDismiss
+
+An item the visitor throws away sideways: a notification, a row, a card. Past a distance or with a quick flick it leaves fast and straight, the items below slide up to close the gap, and the app hears which item went. Short of that it springs back. It fades a little as it travels, so the distance reads as intent. A dismiss button or the Delete key does the same from the keyboard. Touch drags claim only sideways movement, so vertical swipes still scroll.
+
+```html
+<ul class="notes">
+  <li data-swipe>…<button type="button" data-swipe-dismiss aria-label="Dismiss">×</button></li>
+</ul>
+```
+
+```ts
+export type SwipeDismissOptions = {
+  /** Share of the item's width past which a release dismisses. */
+  threshold?: number;
+  /** Release speed in px/s that dismisses, whatever the distance. */
+  flick?: number;
+  /** Called once the item has gone and the gap has closed. Remove it from the app's state here. */
+  onDismiss?: (item: HTMLElement) => void;
+};
+export type SwipeDismiss = {
+  /** Dismisses toward a side: 1 right, -1 left. */
+  dismiss: (direction?: 1 | -1) => void;
+  revert: Teardown;
+};
+
+export function swipeDismiss(item: HTMLElement, { threshold = 0.4, flick = 800, onDismiss }: SwipeDismissOptions = {}): SwipeDismiss {
+  const reduced = prefersReducedMotion();
+  let gone = false;
+  let dismiss: (direction?: 1 | -1) => void = () => {};
+  const revert = own((dispose, after) => {
+    // The item's style attribute comes back exactly, including the display a dismiss sets.
+    const itemStyle = item.getAttribute("style");
+    after(() => {
+      gsap.set(item, { clearProps: "transform,translate,opacity,visibility" });
+      // Read first: Chrome can write a just-cleared inline style back as style="" after a removal.
+      void item.getAttribute("style");
+      if (itemStyle === null) item.removeAttribute("style");
+      else item.setAttribute("style", itemStyle);
+    });
+    const followers = () => {
+      const list: HTMLElement[] = [];
+      for (let next = item.nextElementSibling; next; next = next.nextElementSibling) if (next instanceof HTMLElement) list.push(next);
+      return list;
+    };
+    /** Each follower the gap slid, with its style attribute from before. */
+    const moved = new Map<HTMLElement, string | null>();
+    after(() =>
+      moved.forEach((value, element) => {
+        gsap.set(element, { clearProps: "transform,translate" });
+        void element.getAttribute("style");
+        if (value === null) element.removeAttribute("style");
+        else element.setAttribute("style", value);
+      }),
+    );
+    dispose(() => gsap.killTweensOf([item, ...moved.keys()]));
+
+    dismiss = (direction = 1) => {
+      if (gone) return;
+      gone = true;
+      const width = item.getBoundingClientRect().width;
+      gsap.to(item, {
+        x: direction * (width + 40),
+        autoAlpha: 0,
+        duration: reduced ? 0 : 0.25,
+        ease: "power2.in",
+        overwrite: "auto",
+        onComplete: () => {
+          // Close the gap: take the item out of the flow, then slide each follower up from where it was.
+          const after = followers();
+          const tops = after.map((element) => element.getBoundingClientRect().top);
+          item.style.display = "none";
+          after.forEach((element, i) => {
+            const shift = tops[i]! - element.getBoundingClientRect().top;
+            if (!moved.has(element)) moved.set(element, element.getAttribute("style"));
+            gsap.fromTo(element, { y: shift }, { y: 0, duration: reduced ? 0 : 0.3, ease: "power3.out", overwrite: "auto" });
+          });
+          onDismiss?.(item);
+        },
+      });
+    };
+
+    const [drag] = Draggable.create(item, {
+      type: "x",
+      inertia: false,
+      zIndexBoost: false,
+      dragClickables: false,
+      onDrag(this: Draggable) {
+        gsap.set(item, { opacity: gsap.utils.clamp(0.35, 1, 1 - Math.abs(this.x) / (item.offsetWidth || 1)) });
+      },
+      onRelease(this: Draggable) {
+        const width = item.offsetWidth || 1;
+        const speed = speedOf();
+        const far = Math.abs(this.x) > width * threshold;
+        const fast = Math.abs(speed) > flick && Math.sign(speed) === Math.sign(this.x);
+        if (this.x && (far || fast)) dismiss(this.x > 0 ? 1 : -1);
+        else gsap.to(item, { x: 0, opacity: 1, duration: reduced ? 0 : 0.5, ease: "elastic.out(1, 0.6)", overwrite: "auto" });
+      },
+    });
+    if (!drag) return;
+    dispose(() => drag.kill());
+    // Release speed in px/s, from pointer samples over the last ~100ms of the drag.
+    let samples: Array<[number, number]> = [];
+    const speedOf = () => {
+      const [a, b] = [samples[0], samples[samples.length - 1]];
+      if (!a || !b || b[1] === a[1]) return 0;
+      return ((b[0] - a[0]) / (b[1] - a[1])) * 1000;
+    };
+    listen(dispose, item, "pointerdown", () => (samples = []));
+    listen(dispose, item, "pointermove", (event) => {
+      samples.push([event.clientX, event.timeStamp]);
+      // Only the last ~100ms count toward a flick.
+      while (samples.length > 2 && event.timeStamp - samples[0]![1] > 100) samples.shift();
+    });
+    const button = item.querySelector<HTMLElement>("[data-swipe-dismiss]");
+    if (button) listen(dispose, button, "click", () => dismiss(1));
+    listen(dispose, item, "keydown", (event) => {
+      if (event.key === "Delete" || (event.key === "Backspace" && event.target === item)) {
+        event.preventDefault();
+        dismiss(1);
+      }
+    });
+  });
+  return { dismiss: (direction) => dismiss(direction), revert };
+}
+```
+
+Move focus before the item goes when it holds focus, such as to the next item or the list, so keyboard users are not dropped to the top of the page. `revert` shows a dismissed item again and puts its style back; the app normally removes it from the DOM in `onDismiss` first.
+
 ## dragTrack
 
 A row to drag sideways and throw, snapping to the nearest item. The static CSS is a native horizontal scroller, the fallback without JavaScript. Dragging a link does not follow it; a click does. Touch drags claim only horizontal movement, so vertical swipes still scroll. Keyboard focus slides an item into view.
@@ -859,6 +987,7 @@ export function dragTrack(viewport: HTMLElement, track: HTMLElement, { snap = tr
 | `proximity` | Settled, once the items are laid out; rebuild when items are added or removed | teardown | No-op; items stay at rest |
 | `imageTrail` | Settled, once the trail images have loaded | teardown | No-op; nothing spawns |
 | `dragTrack` | Settled, once item widths are final | `{ revert, draggable }` | Drag and snap still work; reduced motion drops the throw |
+| `swipeDismiss` | Settled, per item | `{ dismiss, revert }` | Swipes and keys still dismiss; nothing springs, slides, or fades over time |
 
 - Stop magnetic, tilt, momentum hover, and proximity before an outro moves the same target.
 - One pointer response per control: not `magnetic` or `tilt` plus a particle hot state.

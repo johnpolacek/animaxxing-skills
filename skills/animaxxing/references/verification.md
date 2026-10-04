@@ -78,6 +78,8 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 
 ## Endless drag
 
+- Sortable: a drag opens the slot as the held item crosses each neighbor's middle and drops into it with every transform cleared; Space, arrows, and Escape pick up, move, and cancel with focus kept on the handle; the live region announces each step; `onReorder` fires once per move; reduced motion sorts without lift or slide; revert restores the item and handle style attributes exactly and keeps the order.
+- Swipe to dismiss: a short drag springs back, a long drag or a quick flick dismisses, the items below slide into the gap, `onDismiss` fires once, vertical touch swipes still scroll, the dismiss button and Delete work, and revert restores every style attribute exactly.
 - Clones are `aria-hidden` and `inert` with no ids; each real item is announced once and Tab visits only real items.
 - `dragLoop`: a drag past either end wraps with no gap across the viewport and lands on an item; a sideways wheel moves the same position and lands; a vertical wheel scrolls the page.
 - Tab brings each real item into view in the loop, including after a clone set wraps and while a wheel snap or throw is pending, and centers each tile in the grid; the viewport's own scroll stays 0.

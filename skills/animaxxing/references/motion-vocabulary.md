@@ -234,6 +234,8 @@ Scrubs smooth with `scrub: 0.6`; parallax locks to the scrollbar. Build phases: 
 | `dragLoop` | Row wraps endlessly under drag, throw, and sideways wheel; lands on an item in 0.6s, `power3.out`; optional drift | A throwable gallery with no ends. Drift needs a pause control. |
 | `dragGrid` | Tiles wrap on both axes under drag, throw, and wheel; focus centers a tile | A pannable canvas of work, often full screen. |
 | `flickCards` | Front card `0`, neighbors `xPercent ±25/±45`, `rotation ±10/±15`, `scale 0.9/0.8`; a drag or flick deals the next card, 0.8s `elastic.out(1, 0.8)` | A deck of featured work or testimonials. Only the front card is reachable; pair with previous and next buttons. |
+| `sortable` | held item `scale 1.03` follows the handle; neighbors slide `y ±slot` in 0.2s `power2.out`; the drop settles in 0.3s `back.out(1.4)` and the DOM takes the order | A list the visitor reorders. Keyboard: Space picks up, arrows move, Space drops, Escape cancels. Code: [sortable.md](recipes/sortable.md). |
+| `swipeDismiss` | follows a sideways drag, fading to 0.35; past 40% or a 800px/s flick it leaves `x ±(width + 40)` in 0.25s `power2.in` and the items below slide up 0.3s `power3.out`; short of that it springs back `elastic.out(1, 0.6)` | Notifications, rows, and cards the visitor throws away. A dismiss button or Delete does the same. |
 
 Code: [svg-effects.md](recipes/svg-effects.md), [counters-and-marquees.md](recipes/counters-and-marquees.md), [endless-drag.md](recipes/endless-drag.md).
 
@@ -321,7 +323,7 @@ Width changes can invalidate split positions and the wave's pinned widths; heigh
 Particle and pointer effects respond to input; text and scroll effects do not.
 
 - [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
-- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, `cursorFollower`, `momentumHover`, `proximity`, and `imageTrail` answer the mouse only and never gate a control. `spotlight` also opens under a held touch and for keyboard focus, since its layer may hold content. `dragTrack`, `dragLoop`, `dragGrid`, and `flickCards` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
+- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, `cursorFollower`, `momentumHover`, `proximity`, and `imageTrail` answer the mouse only and never gate a control. `spotlight` also opens under a held touch and for keyboard focus, since its layer may hold content. `dragTrack`, `dragLoop`, `dragGrid`, `flickCards`, `sortable`, and `swipeDismiss` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
 - Hover effects share one hot state for mouse hover and `:focus-visible`; touch, pen, and click-derived focus never enter it.
 - `pressFeedback` answers every input, including Enter and Space from the center; a touch that turns into a scroll cancels and springs back.
 - One pointer response per control: magnetic, tilt, a hover effect, press feedback, or a particle hot state. Momentum hover is for decoration beside controls, never on them. Proximity may scale links, as in a dock, but never replaces their focus style.
