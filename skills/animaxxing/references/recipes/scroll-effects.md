@@ -755,7 +755,7 @@ export type ZoomOptions = {
   focus?: Element;
   /** `scale` mode: the final scale. */
   scale?: number;
-  /** `clip` mode: the starting window, as `inset()` arguments. */
+  /** `clip` mode: the starting window, as `inset()` arguments. Give all four sides and a radius, so each value tweens to its pair. */
   inset?: string;
   /** Pinned distance, in section heights. */
   length?: number;
@@ -766,7 +766,7 @@ export type ZoomOptions = {
 export function zoomThrough(
   section: HTMLElement,
   target: HTMLElement,
-  { mode = "scale", focus, scale = 30, inset = "30% 34% round 12px", length = 1.5, scrub = SCRUB, scroller }: ZoomOptions = {},
+  { mode = "scale", focus, scale = 30, inset = "30% 34% 30% 34% round 12px", length = 1.5, scrub = SCRUB, scroller }: ZoomOptions = {},
 ): Teardown {
   if (prefersReducedMotion()) return () => {};
   return own((_dispose, after) => {
