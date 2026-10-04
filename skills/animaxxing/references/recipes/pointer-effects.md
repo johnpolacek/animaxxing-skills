@@ -1,6 +1,6 @@
 # Recipe: pointer effects
 
-Seven pointer effects: magnetic pull, 3D tilt, a cursor follower with an optional scrolling label, momentum hover, a proximity field, an image trail, and a drag-and-throw track. All but the drag track are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The drag track works with mouse, touch, and keyboard.
+Eight pointer effects: magnetic pull, 3D tilt, a cursor follower with an optional scrolling label, a spotlight that reveals a layer, momentum hover, a proximity field, an image trail, and a drag-and-throw track. All but the spotlight and the drag track are mouse-only decoration that ignores touch and pen, so nothing sticks after a tap. The spotlight and drag track also work with touch and keyboard.
 
 Lifecycle: the framework controller builds these once the target is mounted and visible and calls the idempotent teardown on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -345,6 +345,116 @@ export function cursorFollower(cursor: HTMLElement, { label, labelSpeed = 60 }: 
   });
 }
 ```
+
+## spotlight
+
+A circle follows the mouse and reveals a second layer inside a surface, such as a photo under a dark poster or a second line of copy. The circle grows in with a small overshoot when the mouse arrives and shrinks away, quick and straight, when it leaves. Unlike the other pointer effects it has a touch and keyboard path, since the revealed layer may hold content: a press and hold opens the circle under the finger, and keyboard focus inside the surface opens the whole layer. Only the layer's `clip-path` changes, so its content stays in the accessibility tree.
+
+```html
+<div class="spot" tabindex="0">
+  <div class="spot-base">…</div>
+  <div class="spot-reveal">…the layer the circle uncovers…</div>
+</div>
+```
+
+```css
+.spot { position: relative; }
+.spot-reveal { position: absolute; inset: 0; clip-path: circle(0px at 50% 50%); }
+```
+
+```ts
+export type SpotlightOptions = {
+  /** Circle radius in px while the mouse is over the surface. */
+  radius?: number;
+  /** Seconds the circle takes to catch the mouse. */
+  follow?: number;
+};
+
+export function spotlight(surface: HTMLElement, layer: HTMLElement, { radius = 120, follow = 0.35 }: SpotlightOptions = {}): Teardown {
+  const reduced = prefersReducedMotion();
+  return own((dispose, after) => {
+    after(snapshotStyles([layer], ["clip-path"]));
+    const spot = { x: 0, y: 0, r: 0 };
+    const draw = () => {
+      layer.style.clipPath = `circle(${spot.r}px at ${spot.x}px ${spot.y}px)`;
+    };
+    draw();
+    // Reduced motion places the circle on the pointer directly; a zero-length quickTo would not write.
+    const place = (prop: "x" | "y") => (value: number) => {
+      spot[prop] = value;
+      draw();
+    };
+    const toX = reduced ? place("x") : gsap.quickTo(spot, "x", { duration: follow, ease: FOLLOW_EASE, onUpdate: draw });
+    const toY = reduced ? place("y") : gsap.quickTo(spot, "y", { duration: follow, ease: FOLLOW_EASE, onUpdate: draw });
+    dispose(() => gsap.killTweensOf(spot));
+    /** The pointer within the surface; `jump` places the circle there without sliding in. */
+    const aim = (event: PointerEvent, jump = false) => {
+      const box = surface.getBoundingClientRect();
+      const x = event.clientX - box.left;
+      const y = event.clientY - box.top;
+      toX(x, jump ? x : undefined);
+      toY(y, jump ? y : undefined);
+    };
+    const open = (to: number, entering: boolean) =>
+      gsap.to(spot, {
+        r: to,
+        duration: reduced ? 0 : entering ? 0.5 : 0.3,
+        ease: entering ? "back.out(1.6)" : "power2.in",
+        overwrite: "auto",
+        onUpdate: draw,
+      });
+    /** Enough to cover the whole surface from its center. */
+    const whole = () => {
+      const box = surface.getBoundingClientRect();
+      return Math.hypot(box.width, box.height) / 2 + 1;
+    };
+    let focused = false;
+    let held = false;
+
+    listen(dispose, surface, "pointerenter", (event) => {
+      if (event.pointerType !== "mouse" || focused) return;
+      aim(event, true);
+      open(radius, true);
+    });
+    listen(dispose, surface, "pointermove", (event) => {
+      if ((event.pointerType === "mouse" || held) && !focused) aim(event);
+    });
+    listen(dispose, surface, "pointerleave", (event) => {
+      if (event.pointerType === "mouse" && !focused) open(0, false);
+    });
+    // Touch and pen: press and hold. A scroll that starts cancels the pointer, and the circle closes.
+    listen(dispose, surface, "pointerdown", (event) => {
+      if (event.pointerType === "mouse" || focused) return;
+      held = true;
+      aim(event, true);
+      open(radius, true);
+    });
+    const release = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" || !held) return;
+      held = false;
+      if (!focused) open(0, false);
+    };
+    listen(dispose, surface, "pointerup", release);
+    listen(dispose, surface, "pointercancel", release);
+    // Keyboard: the whole layer opens from the center while focus is inside.
+    listen(dispose, surface, "focusin", (event) => {
+      if (!(event.target as Element).matches(":focus-visible")) return;
+      focused = true;
+      const box = surface.getBoundingClientRect();
+      toX(box.width / 2, box.width / 2);
+      toY(box.height / 2, box.height / 2);
+      open(whole(), true);
+    });
+    listen(dispose, surface, "focusout", (event) => {
+      if (surface.contains(event.relatedTarget as Node | null) || !focused) return;
+      focused = false;
+      open(0, false);
+    });
+  });
+}
+```
+
+Make the surface focusable, or put a link inside it, so keyboard users reach the layer. Under reduced motion the circle sits on the pointer with no follow or overshoot. Keep the base readable on its own: the reveal is a bonus, not the only place content lives.
 
 ## momentumHover
 
@@ -744,6 +854,7 @@ export function dragTrack(viewport: HTMLElement, track: HTMLElement, { snap = tr
 |---|---|---|---|
 | `magnetic`, `tilt` | Settled, once the target's layout is final | teardown | No-op |
 | `cursorFollower` | Once per document, from the persistent shell | teardown | No-op; follower stays hidden |
+| `spotlight` | Settled, once the surface's layout is final | teardown | Runs on touch and keyboard; reduced motion follows the pointer with no easing |
 | `momentumHover` | Settled, once the items are laid out | teardown | No-op; items stay at rest |
 | `proximity` | Settled, once the items are laid out; rebuild when items are added or removed | teardown | No-op; items stay at rest |
 | `imageTrail` | Settled, once the trail images have loaded | teardown | No-op; nothing spawns |

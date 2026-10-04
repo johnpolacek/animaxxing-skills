@@ -63,6 +63,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 ## Pointer
 
 - Magnetic, tilt, and follower respond to the mouse, ignore touch and pen, and never stick after a tap.
+- Spotlight: the circle grows under the mouse, follows it, and shrinks on leave; a held touch opens it under the finger and a lift or cancel closes it; focus inside opens the whole layer; reduced motion places it on the pointer without easing; teardown restores the layer's `clip-path`.
 - Leaving the target returns it exactly to rest; teardown leaves no inline transform or `--pointer-*`.
 - The follower appears at the pointer, never sliding in from a corner, and hides when the mouse leaves the window.
 - Drag a track of links: it moves and snaps without following the link; a plain click follows it.
@@ -128,6 +129,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 
 ## Media, components, and hover
 
+- Directional fill: the fill opens from the edge the mouse entered and collapses onto the edge it left; keyboard focus fills from `focusFrom`; a tap fills and clears on lift; teardown restores the fill's `clip-path`.
 - Menu: links are out of the tab order at rest; `close()` mid-open turns the wipe back from where it is; revert leaves no inline style.
 - Enter and exit: the closed state paints at build, before GSAP's first tick; `close()` from the open rest plays the exit, not the entrance reversed; `close()` mid-entrance reverses without reaching the exit, and `open()` mid-exit returns to the pause; each rest fires its callback once; `easeReverse` changes the reversed curve; revert restores inline styles.
 - Dialog: focus lands inside through `showModal()` and returns to the trigger natively; Escape runs the exit while `open` stays true, then closes; `close(value)` sets `returnValue`.

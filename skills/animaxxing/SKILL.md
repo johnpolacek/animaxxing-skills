@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build GSAP motion without restyling, as single effects or the full treatment: for \"we're animaxxing\", every element enters from a blank page, rests, and leaves. Text: split, scramble, glitch, typewriter, and speak-in entrances, scattering headlines, letter waves, text on a path, count-ups, odometers. Scroll: reveals, scrubbing, parallax, pinned scenes, stacking cards, zoom-through, horizontal runs, waypoints, smooth scroll, section paging. Pointer: magnetic, tilt, cursor followers, image trails, hover previews, proximity, label rolls, underline sweeps. Drag: throw tracks, endless loops and grids, card stacks. Also page covers and preloaders, Flip and shared-element morphs, menus, dialogs, accordions, tabs, image and video effects, SVG draws and morphs, marquees, CustomEase, sound, confetti, particles, blast-off, and hover stuck on touch. Pair with the matching GSAP framework skill. Not for branding, redesign, routing, or GSAP API questions."
+description: "Build GSAP motion without restyling, as single effects or the full treatment: for \"we're animaxxing\", every element enters from a blank page, rests, and leaves. Text: split, scramble, glitch, typewriter, and speak-in entrances, scattering headlines, letter waves, text on a path, count-ups, odometers. Scroll: reveals, scrubbing, parallax, pinned scenes, stacking cards, zoom-through, horizontal runs, waypoints, smooth scroll, section paging. Pointer: magnetic, tilt, spotlights, direction-aware fills, cursor followers, image trails, hover previews, proximity, label rolls, underline sweeps. Drag: throw tracks, endless loops and grids, card stacks. Also page covers and preloaders, Flip and shared-element morphs, menus, dialogs, accordions, tabs, image and video effects, SVG draws and morphs, marquees, CustomEase, sound, confetti, particles, blast-off, and hover stuck on touch. Pair with the matching GSAP framework skill. Not for branding, redesign, routing, or GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text, scroll, pointer, layout, SVG, and particle motion for any brand
@@ -43,7 +43,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Text typed behind a caret, deleted, or a word that retypes through a list | [Typewriter](references/recipes/typewriter.md) |
 | Ambient headline ripple | [Wave](references/recipes/wave.md) |
 | Scroll reveals and pop-ins, scrubbed statements, parallax and footer reveals, pinned scenes, stacking cards, zoom-through to the next scene, horizontal runs and drift inside them, an element traveling between section waypoints, progress, velocity skew, header theme per section, hide-on-scroll headers | [Scroll effects](references/recipes/scroll-effects.md) |
-| Magnetic buttons, tilt cards, cursor follower and its scrolling label, momentum hover, proximity scaling and dock effects, image trails, drag-and-throw tracks | [Pointer effects](references/recipes/pointer-effects.md) |
+| Magnetic buttons, tilt cards, spotlight reveals, cursor follower and its scrolling label, momentum hover, proximity scaling and dock effects, image trails, drag-and-throw tracks | [Pointer effects](references/recipes/pointer-effects.md) |
 | Endless drag galleries: a wrapping loop with snap, wheel, and drift; a 2D grid that wraps on both axes; a fanned card stack dealt by drag or flick | [Endless drag](references/recipes/endless-drag.md) |
 | Full-screen sections changing on a wheel flick, swipe, or key | [Section pager](references/recipes/section-pager.md) |
 | Opt-in sound on interactions and timelines, ambient beds | [Sound cues](references/recipes/sound-cues.md) |
@@ -53,7 +53,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Curtain page transitions, tilted, titled, clip-path wipe, or drifting covers, curved SVG swipe covers, first-visit preloaders | [Page covers](references/recipes/page-covers.md) |
 | Filter, reorder, and expand layouts; shared-element morphs across pages | [Layout Flip](references/recipes/layout-flip.md) |
 | Image wipe reveals, hover image previews, scroll-scrubbed video, canvas frame sequences | [Media effects](references/recipes/media-effects.md) |
-| Label rolls, underline sweeps, image zoom on hover and focus | [Hover effects](references/recipes/hover-effects.md) |
+| Label rolls, underline sweeps, direction-aware fills, image zoom on hover and focus | [Hover effects](references/recipes/hover-effects.md) |
 | Menu overlays, interruptible enter/exit with reverse easing, dialog enter and exit, accordion height, sliding tab indicators | [Component motion](references/recipes/component-motion.md) |
 | Dispersal on a call to action | [Blast-off](references/recipes/blast-off.md) |
 | Confetti bursts and emoji rain thrown under gravity | [Physics effects](references/recipes/physics-effects.md) |

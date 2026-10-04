@@ -6,6 +6,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ### Added
 
+- `spotlight` in pointer effects: a circle reveals a second layer under the mouse, a held touch, or keyboard focus.
+- `directionalFill` in hover effects: a fill enters from the edge the mouse crossed and leaves by the exit edge, with focus and tap paths.
 - `stackCards` and `zoomThrough` in scroll effects: cards pin into a shrinking deck as they scroll, and a word or frame grows from a focus point (or opens from a clip window) until the reader passes into the next scene.
 - `pathScrub` and `pathLoop` in SVG effects: text on a `textPath` slides along a curve with scroll, or turns around a two-lap closed path with pause controls.
 - Typewriter recipe: `typeIn` and `typeOut` type and delete an element's text behind a caret at a human rhythm without moving the layout, and `retype` cycles one word through a list, stopping on the last.

@@ -218,11 +218,13 @@ A curtain or curve cover and a shared-element morph never share a navigation: th
 | `hoverPreview` | one image follows the mouse (`quickTo` 0.35s), 0.25s crossfade on item change | Work lists and indexes. Mouse-only decoration; the link stays the way in. |
 | `proximity` | each item's `scale` up to 1.6 and optional `lift` by pointer distance within 160px, shaped by `sine.inOut`, `quickTo` 0.3s | A dock of icons or a thumbnail grid rippling under the cursor. Mouse-only decoration. |
 | `imageTrail` | an image every 80px of mouse travel pops in with `back.out(2)`, drifts with the pointer, and shrinks away over 0.9s; at most 10 alive | A hero or work index with images spilling from the cursor. Never over reading text. |
+| `spotlight` | layer `clip-path: circle(r at x y)`; `r 0 → 120px` in 0.5s `back.out(1.6)`, follows in 0.35s, `r → 0` in 0.3s `power2.in`; focus opens the whole layer | A second layer under a poster or photo, uncovered by the mouse, a held touch, or focus. |
 | `cursorFollower` with `label` | over `[data-cursor-text]`, the dot gives way to a pill scrolling that text at 60px/s | "View project" on work links. Restates the link; `aria-hidden`. |
 | `scrubVideo` | `currentTime 0 → duration`, scrubbed across a section | A product turn or process read at scroll speed. Poster under reduced motion. |
 | `frameSequence` | canvas frame `0 → n-1`, nearest loaded frame, scrubbed | An image sequence with bounded loading; one per page. |
 | `textRoll` | label `yPercent 0 → -travel`, copy `travel → 0`, 0.35s, `power3.out` | A button or link label rolling over to itself on hover and focus. Whole label, no split. |
 | `underlineSweep` | `scaleX 0 → 1` from the inline start, `1 → 0` toward the inline end, 0.3s, `power2.out` | An injected hairline under a link; `--underline-*` custom properties restyle it. Instant under reduced motion. |
+| `directionalFill` | overlay `clip-path` opens from the entry edge, 0.3s `power3.out`; collapses onto the exit edge, 0.24s `power2.in` | Tiles, rows, and buttons that answer where the mouse came from. Focus fills from `focusFrom`; a tap clears on lift. |
 | `imageZoom` | `scale 1 → 1.05`, 0.6s, `power2.out`, inside a clipped frame | A card's image answering the card or its link; never clip the card itself. |
 
 Code: [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), [hover-effects.md](recipes/hover-effects.md).
@@ -270,7 +272,7 @@ Width changes can invalidate split positions and the wave's pinned widths; heigh
 Particle and pointer effects respond to input; text and scroll effects do not.
 
 - [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
-- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, `cursorFollower`, `momentumHover`, `proximity`, and `imageTrail` answer the mouse only and never gate a control. `dragTrack`, `dragLoop`, `dragGrid`, and `flickCards` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
+- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, `cursorFollower`, `momentumHover`, `proximity`, and `imageTrail` answer the mouse only and never gate a control. `spotlight` also opens under a held touch and for keyboard focus, since its layer may hold content. `dragTrack`, `dragLoop`, `dragGrid`, and `flickCards` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
 - Hover effects share one hot state for mouse hover and `:focus-visible`; touch, pen, and click-derived focus never enter it.
 - One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state. Momentum hover is for decoration beside controls, never on them. Proximity may scale links, as in a dock, but never replaces their focus style.
 - The framework skill's `references/devices.md` owns viewport tiers, orientation, and CPU budgets.
