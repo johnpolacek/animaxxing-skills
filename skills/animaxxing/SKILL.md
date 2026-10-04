@@ -56,7 +56,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Label rolls, underline sweeps, direction-aware fills, image zoom on hover and focus |
 | A control that squashes and ripples when pressed, by any input | [Press feedback](references/recipes/press-feedback.md) |
 | A shake for an error or refused action | [Accents](references/motion-vocabulary.md#accents) | [Hover effects](references/recipes/hover-effects.md) |
-| Menu overlays, interruptible enter/exit with reverse easing, dialog enter and exit, accordion height, sliding tab indicators | [Component motion](references/recipes/component-motion.md) |
+| Menu overlays, interruptible enter/exit with reverse easing, dialog enter and exit, accordion height, sliding tab indicators, buttons that show loading, success, and failure | [Component motion](references/recipes/component-motion.md) |
 | Dispersal on a call to action | [Blast-off](references/recipes/blast-off.md) |
 | Confetti bursts and emoji rain thrown under gravity | [Physics effects](references/recipes/physics-effects.md) |
 | Particle buttons, cards, links, or command fields | [Particle effects](references/recipes/particle-effects.md) plus [field/attach helpers](references/recipes/particle-field.md) |

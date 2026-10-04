@@ -6,6 +6,7 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ### Added
 
+- `stateButton` in component motion: a button's label lifts away for a spinner, a success finishes the turn and draws a check, a failure shakes, and a status announces each result, without the button changing size.
 - Press feedback recipe: `pressFeedback` squashes a control under a press and springs it back, with an ink ripple from the press point, for mouse, touch, pen, and Enter and Space.
 - `shake` in the motion vocabulary's new Accents section: a damped side-to-side swing for errors, paired with the error text.
 - `spotlight` in pointer effects: a circle reveals a second layer under the mouse, a held touch, or keyboard focus.

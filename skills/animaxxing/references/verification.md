@@ -130,6 +130,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 ## Media, components, and hover
 
 - Directional fill: the fill opens from the edge the mouse entered and collapses onto the edge it left; keyboard focus fills from `focusFrom`; a tap fills and clears on lift; teardown restores the fill's `clip-path`.
+- State button: the button keeps its size; `loading` sets `aria-busy` and spins; `success` finishes the lap forward, draws the check, announces, and returns to the label; `error` shakes and announces; reduced motion swaps only; revert removes icons and status and restores the label's `style` attribute exactly, none included.
 - Press feedback: a press squashes and a release springs back to scale 1; the ripple centers on the press point, or the center for Enter and Space; a cancelled touch springs back; teardown removes ripples in flight and restores `position`, `overflow`, and transform.
 - Shake: swings narrow each time and end at rest, the element's own transform returns on completion or kill, reduced motion stays still and still completes, and the error text and `aria-invalid` appear with it.
 - Menu: links are out of the tab order at rest; `close()` mid-open turns the wipe back from where it is; revert leaves no inline style.
