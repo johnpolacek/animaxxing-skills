@@ -4,6 +4,11 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+### Changed
+
+- The `animaxxing` description groups its effects by input (text, scroll, pointer, drag) and drops from 1,023 to 877 characters, leaving room under the 1,024 limit for new effects. `skills/llms.txt` keeps the full trigger list.
+- `scripts/validate_repository.py` checks that each skill's `name` matches its directory and its `description` is 1 to 1,024 characters.
+
 ## [0.11.0] - 2026-10-03
 
 ### Added

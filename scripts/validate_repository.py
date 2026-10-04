@@ -19,6 +19,7 @@ MANIFESTS = (
     ROOT / ".cursor-plugin" / "plugin.json",
 )
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)#]+)(?:#[^)]*)?\)")
+FIELD_PATTERN = re.compile(r"^(name|description): (.*)$", re.MULTILINE)
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$")
 
 
@@ -54,6 +55,15 @@ def main() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     index = (SKILLS / "llms.txt").read_text(encoding="utf-8")
     for name in skill_names:
+        frontmatter = (SKILLS / name / "SKILL.md").read_text(encoding="utf-8").split("---")[1]
+        fields = dict(FIELD_PATTERN.findall(frontmatter))
+        if fields.get("name") != name:
+            raise SystemExit(f"skills/{name}/SKILL.md name must match its directory")
+        description = fields.get("description", "")
+        if description.startswith('"'):
+            description = json.loads(description)
+        if not 0 < len(description) <= 1024:
+            raise SystemExit(f"skills/{name}/SKILL.md description is {len(description)} characters; the limit is 1024")
         if name not in readme:
             raise SystemExit(f"README.md does not mention {name}")
         if name not in index:
