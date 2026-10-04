@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-10-04
+
+### Fixed
+
+- `swipeDismiss` measures a flick only from the last ~100ms before release, so a fast drag that stops short springs back instead of dismissing.
+
 ## [0.12.0] - 2026-10-04
 
 ### Added
