@@ -6,6 +6,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ### Added
 
+- Press feedback recipe: `pressFeedback` squashes a control under a press and springs it back, with an ink ripple from the press point, for mouse, touch, pen, and Enter and Space.
+- `shake` in the motion vocabulary's new Accents section: a damped side-to-side swing for errors, paired with the error text.
 - `spotlight` in pointer effects: a circle reveals a second layer under the mouse, a held touch, or keyboard focus.
 - `directionalFill` in hover effects: a fill enters from the edge the mouse crossed and leaves by the exit edge, with focus and tap paths.
 - `stackCards` and `zoomThrough` in scroll effects: cards pin into a shrinking deck as they scroll, and a word or frame grows from a focus point (or opens from a clip window) until the reader passes into the next scene.

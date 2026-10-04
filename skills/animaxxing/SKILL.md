@@ -53,7 +53,9 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Curtain page transitions, tilted, titled, clip-path wipe, or drifting covers, curved SVG swipe covers, first-visit preloaders | [Page covers](references/recipes/page-covers.md) |
 | Filter, reorder, and expand layouts; shared-element morphs across pages | [Layout Flip](references/recipes/layout-flip.md) |
 | Image wipe reveals, hover image previews, scroll-scrubbed video, canvas frame sequences | [Media effects](references/recipes/media-effects.md) |
-| Label rolls, underline sweeps, direction-aware fills, image zoom on hover and focus | [Hover effects](references/recipes/hover-effects.md) |
+| Label rolls, underline sweeps, direction-aware fills, image zoom on hover and focus |
+| A control that squashes and ripples when pressed, by any input | [Press feedback](references/recipes/press-feedback.md) |
+| A shake for an error or refused action | [Accents](references/motion-vocabulary.md#accents) | [Hover effects](references/recipes/hover-effects.md) |
 | Menu overlays, interruptible enter/exit with reverse easing, dialog enter and exit, accordion height, sliding tab indicators | [Component motion](references/recipes/component-motion.md) |
 | Dispersal on a call to action | [Blast-off](references/recipes/blast-off.md) |
 | Confetti bursts and emoji rain thrown under gravity | [Physics effects](references/recipes/physics-effects.md) |

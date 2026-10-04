@@ -92,6 +92,53 @@ const SETTLED = { x: 0, y: 0, scale: 1, rotationX: 0, filter: "blur(0px)" };
 
 Cells abbreviate `duration` and `ease`; they are not copyable literals. Entrances merge `autoAlpha: 1` into the destination and exits merge `autoAlpha: 0`, except wipes, which hold `autoAlpha: 1` and animate only the clip. Pass the matching settled vars to `pair`.
 
+## Accents
+
+Small answers to an action, played once on the element the action touched.
+
+### shake
+
+A quick, damped side-to-side shake: the element says "no". It never carries the message alone: set `aria-invalid` and show the error text, linked with `aria-describedby`, in the same moment, so a screen reader hears what the shake shows.
+
+```ts
+import gsap from "gsap";
+
+export type ShakeOptions = {
+  /** Widest swing in px. */
+  distance?: number;
+  duration?: number;
+  onComplete?: () => void;
+};
+
+/** Swings narrow each time and end where they started. */
+const SWINGS = [1, -0.8, 0.55, -0.3, 0.12, 0];
+
+/** Shakes `target` once. Reduced motion skips the move; completion still fires. */
+export function shake(target: HTMLElement, { distance = 10, duration = 0.4, onComplete }: ShakeOptions = {}): gsap.core.Timeline {
+  const tl = gsap.timeline({ defaults: { overwrite: "auto" } });
+  if (onComplete) tl.eventCallback("onComplete", onComplete);
+  if (prefersReducedMotion()) return tl.to({}, { duration: 0 });
+  // The swings play over the element's own transform, and hand it back exactly when done.
+  const saved = [target.style.getPropertyValue("transform"), target.style.getPropertyPriority("transform")] as const;
+  const restore = () => {
+    gsap.set(target, { clearProps: "transform,translate" });
+    if (saved[0]) target.style.setProperty("transform", saved[0], saved[1]);
+  };
+  const each = duration / SWINGS.length;
+  for (const swing of SWINGS) tl.to(target, { x: swing * distance, duration: each, ease: "sine.inOut" });
+  tl.eventCallback("onComplete", () => {
+    restore();
+    onComplete?.();
+  });
+  tl.eventCallback("onInterrupt", restore);
+  return tl;
+}
+```
+
+| Accent | Move | Role |
+|---|---|---|
+| `shake` | `x` swings ±10px narrowing to 0 over 0.4s, `sine.inOut` | A wrong password, an invalid field, a refused action. Once per error; never on a loop. |
+
 ## Split families
 
 Character effects are for display type. Keep reading text immediately readable; speak-in is for short display copy only.
@@ -225,6 +272,7 @@ A curtain or curve cover and a shared-element morph never share a navigation: th
 | `textRoll` | label `yPercent 0 → -travel`, copy `travel → 0`, 0.35s, `power3.out` | A button or link label rolling over to itself on hover and focus. Whole label, no split. |
 | `underlineSweep` | `scaleX 0 → 1` from the inline start, `1 → 0` toward the inline end, 0.3s, `power2.out` | An injected hairline under a link; `--underline-*` custom properties restyle it. Instant under reduced motion. |
 | `directionalFill` | overlay `clip-path` opens from the entry edge, 0.3s `power3.out`; collapses onto the exit edge, 0.24s `power2.in` | Tiles, rows, and buttons that answer where the mouse came from. Focus fills from `focusFrom`; a tap clears on lift. |
+| `pressFeedback` | `scale → 0.94`, 0.12s `power2.out` on press; `→ 1`, 0.5s `elastic.out(1, 0.45)` on release; ink circle `scale 0 → 1`, `opacity 0.3 → 0`, 0.6s from the press point | Buttons and cards answering a press from mouse, touch, pen, or Enter and Space. Code: [press-feedback.md](recipes/press-feedback.md). |
 | `imageZoom` | `scale 1 → 1.05`, 0.6s, `power2.out`, inside a clipped frame | A card's image answering the card or its link; never clip the card itself. |
 
 Code: [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), [hover-effects.md](recipes/hover-effects.md).
@@ -274,7 +322,8 @@ Particle and pointer effects respond to input; text and scroll effects do not.
 - [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
 - [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, `cursorFollower`, `momentumHover`, `proximity`, and `imageTrail` answer the mouse only and never gate a control. `spotlight` also opens under a held touch and for keyboard focus, since its layer may hold content. `dragTrack`, `dragLoop`, `dragGrid`, and `flickCards` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
 - Hover effects share one hot state for mouse hover and `:focus-visible`; touch, pen, and click-derived focus never enter it.
-- One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state. Momentum hover is for decoration beside controls, never on them. Proximity may scale links, as in a dock, but never replaces their focus style.
+- `pressFeedback` answers every input, including Enter and Space from the center; a touch that turns into a scroll cancels and springs back.
+- One pointer response per control: magnetic, tilt, a hover effect, press feedback, or a particle hot state. Momentum hover is for decoration beside controls, never on them. Proximity may scale links, as in a dock, but never replaces their focus style.
 - The framework skill's `references/devices.md` owns viewport tiers, orientation, and CPU budgets.
 
 ## Ambient motion
