@@ -4,6 +4,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-04
+
 ### Added
 
 - `fontAxisHover` in hover effects: a word in a line of words gains weight or widens on hover or focus while its box holds its exact resting width, so no neighbor moves and no line rewraps.
