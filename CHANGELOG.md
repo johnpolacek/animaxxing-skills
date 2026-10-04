@@ -4,6 +4,11 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+### Added
+
+- `fontAxisHover` in hover effects: a word in a line of words gains weight or widens on hover or focus while its box holds its exact resting width, so no neighbor moves and no line rewraps.
+- Text stability covers weight and width moves in running text: make words `inline-block` at rest, hold exact widths since GSAP rounds pixel widths, and keep separators with the word before them. Verification adds running text checks.
+
 ## [0.12.1] - 2026-10-04
 
 ### Fixed
