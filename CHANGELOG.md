@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-10-04
+
+### Changed
+
+- The recipe contract says to park start positions with `gsap.set` or `fromTo`, never with a CSS transform the tween also moves, and verification traces covers' computed transforms. A CSS `translateY(100%)` start makes GSAP stop every panel a full height short.
+
 ## [0.14.0] - 2026-10-04
 
 ### Added
