@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-04
+
+### Added
+
+- `charsImplodeIn` and `charsExplodeOut` in split entrances: characters rush in from straight out of the line's center and slam together, or blow apart the same way.
+
 ## [0.13.1] - 2026-10-04
 
 ### Changed
