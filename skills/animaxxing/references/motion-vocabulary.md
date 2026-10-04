@@ -176,6 +176,8 @@ Scrubs smooth with `scrub: 0.6`; parallax locks to the scrollbar. Build phases: 
 | `morphToggle` | MorphSVG to the alternate shape, 0.35s, `power2.inOut` | Menu to close, play to pause. Follows the control's state. |
 | `followPath` | MotionPath along a path, 6s a lap, linear | A mark tracing a route. Ambient. |
 | `morphScrub` | MorphSVG toward the alternate shape, scrubbed from `top bottom` to `top top` | A curved section edge flattening as the section arrives. |
+| `pathScrub` | `textPath` `startOffset 100% → 0%`, scrubbed from `top bottom` to `center center` | A line of text riding a curve into place as it is read. |
+| `pathLoop` | `startOffset 0% → 50%` of a two-lap path, 16s a lap, linear | A turning circular badge. Ambient; needs a pause control. |
 | `countUp` | 0 to the element's own value, 1.6s, `power3.out` | Statistics landing on their figure. Width reserved. |
 | `odometer` | Digit columns roll to each new value, 0.9s, `power3.out`, 0.04s from the right | A live count or price that changes in place. Tabular digits. |
 | `marquee` | Row loops by its own width at 60px/s | Logos, tags, or a running headline. Needs a pause control. |
@@ -278,7 +280,7 @@ Loops that run while a surface idles, such as the wave, button embers, or an out
 - One ambient effect per target; none is required.
 - Pause off screen. Particle fields use an `IntersectionObserver`; the wave and follower expose `pause()` for the controller.
 - A looping `retype` cycles words until paused; without `loop` it stops on the last word.
-- The wave, particle controls, follower, marquee, logo cycle, looping `retype`, and drifting `dragLoop` expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
+- The wave, particle controls, follower, text `pathLoop`, marquee, logo cycle, looping `retype`, and drifting `dragLoop` expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
 - On small screens, lower particle density and limit wave character counts.
 - Every cycle ends where it started; embers die.
 - None under reduced motion: nothing is split or spawned.

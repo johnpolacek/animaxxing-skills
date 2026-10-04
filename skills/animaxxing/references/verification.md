@@ -102,6 +102,8 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 
 ## SVG, counters, and marquees
 
+- Text on a path: `pathScrub` moves only `startOffset`, follows scroll both ways, and rests at `to` under reduced motion; `pathLoop` stays within one lap, pauses on command and off screen; both restore the authored `startOffset`.
+
 - Drawn strokes start hidden without a flash and end at the SVG's own appearance after revert.
 - A morphed icon returns to its original `d` on revert; `set()` after revert does nothing.
 - Counted figures keep prefix, suffix, separators, and decimals and end on the exact source text. Test three or more decimals, such as `99.999%`, and the page locale's decimal mark.
