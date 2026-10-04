@@ -17,7 +17,7 @@ Apply when adapting any recipe. Each recipe rolls back its own setup when constr
 
 | Recipe | Teardown must cover |
 |---|---|
-| Split entrances / route letters | Timelines, every split, masks, original item styles, and any suspended CSS transition. |
+| Split entrances / route letters | Timelines, every split, masks, original item styles, and any suspended CSS transition; a glitch's copies, the wrapper around the original nodes, and the element's `position` and `transform`. |
 | Speak-in | Nested word/character splits, persistent tilt/weight finishes, widths, and timeline callbacks. |
 | Wave | Scheduled next cycles, active tweens, splits, pinned glyph widths, and inline weight. |
 | Scroll effects | Triggers, pin spacers, splits, scrubbed and reveal tweens, the settle tween, focus listeners, the run's `overflow`, the header's `data-nav-theme` and the root's scroll direction attributes, and inline motion values a pinned revert leaves behind. Inner `containerAnimation` triggers first. |

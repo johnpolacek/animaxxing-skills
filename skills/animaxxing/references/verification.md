@@ -18,6 +18,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Kill a parent timeline of split runners mid-way: `revertText` restores each target, and a new runner starts from clean markup.
 - A setup that throws leaves GSAP's global context untouched: later tweens are not recorded by the failed context.
 - Scramble runners visibly scramble, end on the real words, and restore them when killed.
+- Glitch runners jump each type visibly, end on the exact markup and `position` and `transform`, keep the original text readable while copies show, strip ids from copies, and restore through `revertText` when killed. Copies show and hide at most once each.
 - Highlight runners leave no bar behind at settled or when killed, and bars span each line's words, not the full line box, in LTR and RTL.
 - Ellipse runners show whole lines at settled, with descenders and accents unclipped at both endpoints.
 - No inline `transform`, `will-change`, or `transition` remains on route items at settled.

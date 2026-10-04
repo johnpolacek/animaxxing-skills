@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build GSAP motion without restyling, as single effects or the full treatment: for \"we're animaxxing\", every element enters from a blank page, rests, and leaves. Text: split, scramble, and speak-in entrances, scattering headlines, letter waves, count-ups, odometers. Scroll: reveals, scrubbing, parallax, pinned scenes, horizontal runs, waypoints, smooth scroll, section paging. Pointer: magnetic, tilt, cursor followers, image trails, hover previews, proximity, label rolls, underline sweeps. Drag: throw tracks, endless loops and grids, card stacks. Also page covers and preloaders, Flip and shared-element morphs, menus, dialogs, accordions, tabs, image and video effects, SVG draws and morphs, marquees, CustomEase, sound, confetti, particles, blast-off, and hover stuck on touch. Pair with the matching GSAP framework skill. Not for branding, redesign, routing, or GSAP API questions."
+description: "Build GSAP motion without restyling, as single effects or the full treatment: for \"we're animaxxing\", every element enters from a blank page, rests, and leaves. Text: split, scramble, glitch, and speak-in entrances, scattering headlines, letter waves, count-ups, odometers. Scroll: reveals, scrubbing, parallax, pinned scenes, horizontal runs, waypoints, smooth scroll, section paging. Pointer: magnetic, tilt, cursor followers, image trails, hover previews, proximity, label rolls, underline sweeps. Drag: throw tracks, endless loops and grids, card stacks. Also page covers and preloaders, Flip and shared-element morphs, menus, dialogs, accordions, tabs, image and video effects, SVG draws and morphs, marquees, CustomEase, sound, confetti, particles, blast-off, and hover stuck on touch. Pair with the matching GSAP framework skill. Not for branding, redesign, routing, or GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text, scroll, pointer, layout, SVG, and particle motion for any brand
@@ -37,7 +37,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | A brand's signature curve for every `ease` option | [Signature curves](references/motion-vocabulary.md#signature-curves) |
 | Loading flashes, auth-dependent content, or layout shifts | Matching installed framework skill's `references/initialization.md`, **Data readiness and layout stability** |
 | Character animation: font readiness, kerning, masks, stable split/revert | [Text stability](references/text-stability.md) |
-| Character, word, line, or scramble entrances/exits, ellipse line reveals, highlighter line sweeps | [Split entrances](references/recipes/split-entrances.md) |
+| Character, word, line, scramble, or glitch entrances/exits, ellipse line reveals, highlighter line sweeps | [Split entrances](references/recipes/split-entrances.md) |
 | Page items, including scattering headlines | [Route letters](references/recipes/route-letters.md) |
 | Short display copy arriving at speaking pace | [Speak-in](references/recipes/speak-in.md) |
 | Ambient headline ripple | [Wave](references/recipes/wave.md) |
