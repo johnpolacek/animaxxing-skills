@@ -570,7 +570,8 @@ function glitchLayers(element: HTMLElement, cells: Cell[]): { layers: HTMLElemen
       padding: "inherit",
       boxSizing: "border-box",
       pointerEvents: "none",
-      clipPath: `inset(${top}% ${right}% ${bottom}% ${left}%)`,
+      // Cells overlap by a pixel, so no hairline seam shows between them at rest.
+      clipPath: `inset(calc(${top}% - 0.5px) calc(${right}% - 0.5px) calc(${bottom}% - 0.5px) calc(${left}% - 0.5px))`,
     });
     for (const node of Array.from(source.childNodes)) {
       const copy = node.cloneNode(true);
