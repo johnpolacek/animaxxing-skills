@@ -109,6 +109,7 @@ Character effects are for display type. Keep reading text immediately readable; 
 | `linesEllipseIn` / `Out` | lines, masked | mask `clip-path: ellipse(20% 0%)` swells to cover the line from its bottom edge while the line rises `yPercent 40 → 0`, 0.8s, `power3.out`, stagger 0.05 | A softer, rounder line reveal for display copy. |
 | `linesHighlightIn` / `Out` | lines, words | a `--line-highlight` bar sweeps `scaleX 0 → 1` over each line's words, the words appear, the bar retracts toward the line end; 0.12s between lines | A marker pass across a statement or pull quote. |
 | `scrambleIn` / `Out` | none | ScrambleText over `01{}/<>()=;` | Text resolving out of noise. Display only; needs ScrambleTextPlugin. |
+| `typeIn` / `typeOut` | an `aria-hidden` overlay; the text stays in place at `opacity 0` | one character at a time at ~22/s, uneven, slower after spaces and punctuation; the caret blinks twice at 1.06s and goes; out deletes at twice the speed | Text typed by a person. Plain text and `<br>` only. Code: [typewriter.md](recipes/typewriter.md). |
 | `glitchIn` / `Out` | clipped copies (`slice`, `blocks`, `scanline`, `ghost`), the element (`skew`), or chars (`weight`) | stepped jumps at 12/s, `±0.12em`, shrinking over 0.6s in, growing over 0.35s out | A signal dropping, then snapping clean. One per screen; no color split. |
 
 Split runners use `aria: "auto"`, revert on completion, and never split under reduced motion. Weight moves pin each character to its width at the heaviest weight it reaches (`inline-block`, centered) so the axis moves without reflow. Code: [split-entrances.md](recipes/split-entrances.md).
@@ -276,7 +277,8 @@ Loops that run while a surface idles, such as the wave, button embers, or an out
 
 - One ambient effect per target; none is required.
 - Pause off screen. Particle fields use an `IntersectionObserver`; the wave and follower expose `pause()` for the controller.
-- The wave, particle controls, follower, marquee, logo cycle, and drifting `dragLoop` expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
+- A looping `retype` cycles words until paused; without `loop` it stops on the last word.
+- The wave, particle controls, follower, marquee, logo cycle, looping `retype`, and drifting `dragLoop` expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
 - On small screens, lower particle density and limit wave character counts.
 - Every cycle ends where it started; embers die.
 - None under reduced motion: nothing is split or spawned.

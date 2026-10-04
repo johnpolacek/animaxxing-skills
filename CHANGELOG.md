@@ -6,6 +6,7 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ### Added
 
+- Typewriter recipe: `typeIn` and `typeOut` type and delete an element's text behind a caret at a human rhythm without moving the layout, and `retype` cycles one word through a list, stopping on the last.
 - `glitchIn` and `glitchOut` in split entrances, with six types: `slice`, `blocks`, `skew`, `ghost`, `weight`, and `scanline`. Jumps are stepped at twelve a second and never blink; the original text stays readable under `aria-hidden` copies.
 - `glitch` in `animaxxing-webgl` uniform effects: bands and blocks of an image jump sideways on a new `uGlitch` uniform, with `enter`, `exit`, and `burst`.
 - `odometer` in counters and marquees: digit columns roll to each new value, forward through 9 to 0 when rising and back when falling, continuing from mid-roll when interrupted, with the latest value read once by assistive technology.
