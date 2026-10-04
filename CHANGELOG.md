@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-10-04
+
+### Changed
+
+- Scramble keeps each character's kind: capitals cycle through capitals, lowercase through lowercase, digits through digits, and punctuation stays blank until it appears. Frames come from the timeline's time, so scrubbing and replays repeat. It no longer needs `ScrambleTextPlugin`.
+
 ## [0.13.0] - 2026-10-04
 
 ### Added
