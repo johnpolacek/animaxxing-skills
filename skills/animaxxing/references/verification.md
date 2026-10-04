@@ -104,6 +104,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - A morphed icon returns to its original `d` on revert; `set()` after revert does nothing.
 - Counted figures keep prefix, suffix, separators, and decimals and end on the exact source text. Test three or more decimals, such as `99.999%`, and the page locale's decimal mark.
 - While counting, neighbors do not shift and assistive technology finds only the final value.
+- Odometer: rising values roll each column forward through 9 to 0 and falling values roll back; a new value mid-roll continues from where the columns are; assistive technology reads the latest value once; `revert` leaves that value as plain text.
 - Marquee clones are `aria-hidden` and `inert` with no duplicate ids; each item is announced and focused once.
 - The marquee loops seamlessly, slows on hover, and pauses on focus, off screen, and on `pause()`.
 - Resizing rebuilds the clones to fill; revert restores the original markup exactly.

@@ -175,6 +175,7 @@ Scrubs smooth with `scrub: 0.6`; parallax locks to the scrollbar. Build phases: 
 | `followPath` | MotionPath along a path, 6s a lap, linear | A mark tracing a route. Ambient. |
 | `morphScrub` | MorphSVG toward the alternate shape, scrubbed from `top bottom` to `top top` | A curved section edge flattening as the section arrives. |
 | `countUp` | 0 to the element's own value, 1.6s, `power3.out` | Statistics landing on their figure. Width reserved. |
+| `odometer` | Digit columns roll to each new value, 0.9s, `power3.out`, 0.04s from the right | A live count or price that changes in place. Tabular digits. |
 | `marquee` | Row loops by its own width at 60px/s | Logos, tags, or a running headline. Needs a pause control. |
 | `logoCycle` | Every 2s one cell's logo slides out `yPercent -100` as the next from the pool slides in, 0.6s `power3.inOut` | A client wall with more logos than cells. Needs a pause control. |
 | `dragLoop` | Row wraps endlessly under drag, throw, and sideways wheel; lands on an item in 0.6s, `power3.out`; optional drift | A throwable gallery with no ends. Drift needs a pause control. |

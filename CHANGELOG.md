@@ -4,6 +4,10 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+### Added
+
+- `odometer` in counters and marquees: digit columns roll to each new value, forward through 9 to 0 when rising and back when falling, continuing from mid-roll when interrupted, with the latest value read once by assistive technology.
+
 ### Changed
 
 - The `animaxxing` description groups its effects by input (text, scroll, pointer, drag) and drops from 1,023 to 877 characters, leaving room under the 1,024 limit for new effects. `skills/llms.txt` keeps the full trigger list.
