@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-10-04
+
+### Changed
+
+- The ripple's ring is wider and stronger, so it reads at a glance on a full image; it still rests flat.
+
 ## [0.15.0] - 2026-10-04
 
 ### Added

@@ -126,7 +126,7 @@ void main() {
   vec2 fromCenter = (at - 0.5) * vec2(aspect, 1.0);
   float reach = length(fromCenter);
   float ring = uRipple * 1.3 - reach;
-  float swell = sin(ring * 42.0) * exp(-abs(ring) * 9.0) * uRipple * (1.0 - uRipple) * 0.3;
+  float swell = sin(ring * 26.0) * exp(-abs(ring) * 6.0) * uRipple * (1.0 - uRipple) * 0.45;
   at += fromCenter / max(reach, 0.0001) * swell / vec2(aspect, 1.0);
   // Pixelate: snap to square cells, coarser as uPixelate rises.
   if (uPixelate > 0.001) {
