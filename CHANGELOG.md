@@ -4,6 +4,13 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-10-05
+
+### Fixed
+
+- Scroll effects explain ScrollTrigger's scroll memory across client route changes: its refresh can put back the previous page's position, clamped to the new page's height. Keep positions yourself, restore once the page is drawn, and reapply after each refresh until the visitor scrolls.
+- The Next.js navigation guide no longer limits the wrong scroll restore to `cacheComponents`: with ScrollTrigger on the page it happens without it too.
+
 ## [0.17.0] - 2026-10-05
 
 ### Added
