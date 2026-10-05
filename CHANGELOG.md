@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-05
+
+### Added
+
+- `dialogMotion` takes `from`: the dialog opens as a circle growing out of that element, usually the button that opened it, and closes back into it. A clip, so the text inside never stretches; it clears at rest.
+
 ## [0.15.3] - 2026-10-04
 
 ### Added
