@@ -4,6 +4,13 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-05
+
+### Added
+
+- `headerShrink`: a tall header condenses into a slim bar over the first stretch of scroll. Its backdrop shortens, the wordmark scales and can condense, the nav rises. Transforms and font axes only, scrubbed, so nothing below reflows.
+- `headerSection`: the header's label rolls to the name of the section beneath it, up going down and down going up.
+
 ## [0.16.0] - 2026-10-05
 
 ### Added
