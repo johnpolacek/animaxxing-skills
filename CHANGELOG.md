@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-04
+
+### Added
+
+- `dissolve`, `pixelate`, and `ripple` in `animaxxing-webgl` uniform effects, on new `uDissolve`, `uPixelate`, and `uRipple` uniforms: an image appears grain by grain, resolves from coarse blocks in clear steps, or rides one ring out from the center. Each is flat at rest.
+
 ## [0.14.1] - 2026-10-04
 
 ### Changed
