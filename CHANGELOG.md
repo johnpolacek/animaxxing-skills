@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-10-04
+
+### Added
+
+- `revealOnScroll` takes `repeat`: scrolling back up past an item sends it out again, quick and straight, and it rises again on the way down. The default still reveals once.
+
 ## [0.15.1] - 2026-10-04
 
 ### Changed
