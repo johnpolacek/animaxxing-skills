@@ -4,6 +4,13 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-10-04
+
+### Added
+
+- Scroll effects explain nested scrollers: a pin inside an element that scrolls on its own hops a frame behind native scrolling. Drive the element with `lenisScroll({ wrapper, content })`.
+- Smooth scroll shows `lenisScroll` on one element instead of the window.
+
 ## [0.15.2] - 2026-10-04
 
 ### Added
