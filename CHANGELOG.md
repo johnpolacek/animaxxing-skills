@@ -4,6 +4,16 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-06
+
+### Added
+
+- Finding the vibe: a short reference for when the feel of the motion isn't settled, a full treatment, a new project, or a user describing a mood. Read the feel from the project and find out what the user wants animation to do, then let that shape the choices. Considerations, not presets. At most one question, folded into the scope question when both are open. Skipped for named effects and for the `style-animaxxing` look.
+
+### Fixed
+
+- The routing table's hover effects row had lost its link, which had landed on the shake row, so label rolls and underline sweeps routed nowhere. The repository check now fails on any table row whose column count differs from its header.
+
 ## [0.18.1] - 2026-10-05
 
 ### Fixed

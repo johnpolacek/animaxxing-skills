@@ -77,6 +77,24 @@ def main() -> None:
             if not resolved.exists():
                 raise SystemExit(f"Broken link in {document.relative_to(ROOT)}: {target}")
 
+    # Every table row has its header's column count: a row that loses a cell shifts its link into the next
+    # row, and the router then sends a task to the wrong reference without any broken link to catch it.
+    for document in SKILLS.rglob("*.md"):
+        in_code = False
+        columns = None
+        for number, line in enumerate(document.read_text(encoding="utf-8").splitlines(), 1):
+            if line.lstrip().startswith("```"):
+                in_code = not in_code
+                continue
+            if in_code or not line.startswith("|"):
+                columns = None
+                continue
+            cells = len(re.sub(r"`[^`]*`|\\\|", "", line).strip().strip("|").split("|"))
+            if columns is None:
+                columns = cells
+            elif cells != columns:
+                raise SystemExit(f"{document.relative_to(ROOT)}:{number} has {cells} columns; its table has {columns}")
+
     print(f"Validated {len(skill_names)} skills and {len(MANIFESTS)} manifests at version {claude_version}.")
 
 
