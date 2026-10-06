@@ -4,6 +4,15 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-10-06
+
+### Fixed
+
+- Finding the vibe was unreachable in a live test. A mood request ("make the landing page feel more premium") loaded only the framework skill, and a loaded `animaxxing` built without reading the guide. Now:
+  - The `animaxxing` description names finding a feel, and narrows its exclusion from "branding, redesign" to "visual redesign", so a request about feel is not read as branding.
+  - "Choose the scope" sends a request for a feel, or one that names no effect, to the guide before any effect is chosen, and folds an open feel into the one scope question.
+  - Each framework skill points to `animaxxing` for what moves and how it feels, when it is installed.
+
 ## [0.19.0] - 2026-10-06
 
 ### Added
