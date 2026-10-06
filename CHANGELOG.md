@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-10-05
+
+### Fixed
+
+- With `touch`, a finger's enter arrives just before its press, so it was ignored. `magnetic` now measures its center at the press, so a finger leans it a little instead of from a stale center. `tilt` measures its card there too, and `hoverPreview` shows the pressed row at once, without waiting for a move.
+
 ## [0.18.0] - 2026-10-05
 
 ### Added

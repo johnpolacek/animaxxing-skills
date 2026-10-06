@@ -111,9 +111,16 @@ function listen<K extends keyof HTMLElementEventMap>(
  * With `touch`, a finger or pen held down in `area` moves like the mouse. The area claims its touch
  * gestures (`touch-action: none`), so a drag moves the effect instead of the page; the press is released
  * from the element it landed on, so enter and leave follow the finger; and lifting the finger is leaving.
+ * A finger's enter arrives just before its press, so `onPress` runs the builder's enter work at the press.
  * Returns the filter each handler uses: the mouse always, and a finger while one is down in the area.
  */
-function fingerAsMouse(dispose: Register, after: Register, area: HTMLElement | null, touch: boolean): (event: PointerEvent) => boolean {
+function fingerAsMouse(
+  dispose: Register,
+  after: Register,
+  area: HTMLElement | null,
+  touch: boolean,
+  onPress?: (event: PointerEvent) => void,
+): (event: PointerEvent) => boolean {
   if (!touch || !area) return (event) => event.pointerType === "mouse";
   after(snapshotStyles([area], ["touch-action"]));
   area.style.touchAction = "none";
@@ -123,6 +130,7 @@ function fingerAsMouse(dispose: Register, after: Register, area: HTMLElement | n
     finger = event.pointerId;
     const pressed = event.target as Element;
     if (pressed.hasPointerCapture?.(event.pointerId)) pressed.releasePointerCapture(event.pointerId);
+    onPress?.(event);
   });
   const lift = (event: PointerEvent) => {
     if (event.pointerId === finger) finger = -1;
@@ -160,7 +168,15 @@ export type MagneticOptions = {
 export function magnetic(target: HTMLElement, { strength = 0.3, inner = 0.5, touch = false }: MagneticOptions = {}): Teardown {
   if (prefersReducedMotion() || (!finePointer() && !touch)) return () => {};
   return own((dispose, after) => {
-    const accepts = fingerAsMouse(dispose, after, target, touch);
+    let center = { x: 0, y: 0 };
+    // Measure once per visit; the target's own movement must not shift its center.
+    const measure = () => {
+      const rect = target.getBoundingClientRect();
+      const x = Number(gsap.getProperty(target, "x"));
+      const y = Number(gsap.getProperty(target, "y"));
+      center = { x: rect.left - x + rect.width / 2, y: rect.top - y + rect.height / 2 };
+    };
+    const accepts = fingerAsMouse(dispose, after, target, touch, measure);
     const label = target.querySelector<HTMLElement>("[data-magnetic-inner]");
     after(snapshotStyles(label ? [target, label] : [target]));
     const to = (el: HTMLElement, prop: "x" | "y") => gsap.quickTo(el, prop, { duration: FOLLOW, ease: FOLLOW_EASE });
@@ -168,15 +184,8 @@ export function magnetic(target: HTMLElement, { strength = 0.3, inner = 0.5, tou
     const yTo = to(target, "y");
     const innerX = label ? to(label, "x") : undefined;
     const innerY = label ? to(label, "y") : undefined;
-    let center = { x: 0, y: 0 };
-
     listen(dispose, target, "pointerenter", (event) => {
-      if (!accepts(event)) return;
-      // Measure once per visit; the target's own movement must not shift its center.
-      const rect = target.getBoundingClientRect();
-      const x = Number(gsap.getProperty(target, "x"));
-      const y = Number(gsap.getProperty(target, "y"));
-      center = { x: rect.left - x + rect.width / 2, y: rect.top - y + rect.height / 2 };
+      if (accepts(event)) measure();
     });
     listen(dispose, target, "pointermove", (event) => {
       if (!accepts(event)) return;
@@ -222,13 +231,12 @@ export type TiltOptions = {
 export function tilt(card: HTMLElement, { max = 8, perspective = 800, touch = false }: TiltOptions = {}): Teardown {
   if (prefersReducedMotion() || (!finePointer() && !touch)) return () => {};
   return own((dispose, after) => {
-    const accepts = fingerAsMouse(dispose, after, card, touch);
+    let rect = card.getBoundingClientRect();
+    const accepts = fingerAsMouse(dispose, after, card, touch, () => (rect = card.getBoundingClientRect()));
     after(snapshotStyles([card], [...MOTION_PROPS, "--pointer-x", "--pointer-y"]));
     gsap.set(card, { transformPerspective: perspective });
     const rx = gsap.quickTo(card, "rotationX", { duration: FOLLOW, ease: FOLLOW_EASE });
     const ry = gsap.quickTo(card, "rotationY", { duration: FOLLOW, ease: FOLLOW_EASE });
-    let rect = card.getBoundingClientRect();
-
     listen(dispose, card, "pointerenter", (event) => {
       if (accepts(event)) rect = card.getBoundingClientRect();
     });

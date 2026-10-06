@@ -261,6 +261,8 @@ export function hoverPreview(list: HTMLElement, preview: HTMLElement, { offset =
         finger = event.pointerId;
         const pressed = event.target as Element;
         if (pressed.hasPointerCapture?.(event.pointerId)) pressed.releasePointerCapture(event.pointerId);
+        // The row's over arrived just before the press; show it now, without waiting for a move.
+        over(event);
       });
       const lift = (event: PointerEvent) => {
         if (event.pointerId === finger) finger = -1;
@@ -320,7 +322,7 @@ export function hoverPreview(list: HTMLElement, preview: HTMLElement, { offset =
       }
     };
 
-    listen(dispose, list, "pointerover", (event) => {
+    function over(event: PointerEvent) {
       if (!accepts(event)) return;
       const item = (event.target as Element | null)?.closest<HTMLElement>("[data-preview]");
       const src = item && list.contains(item) ? item.dataset.preview : undefined;
@@ -334,7 +336,8 @@ export function hoverPreview(list: HTMLElement, preview: HTMLElement, { offset =
         gsap.to(preview, { autoAlpha: 1, duration: SWAP, overwrite: "auto" });
       }
       show(src);
-    });
+    }
+    listen(dispose, list, "pointerover", over);
     listen(dispose, list, "pointermove", (event) => {
       if (!accepts(event) || !shown) return;
       xTo(event.clientX + offset.x);
