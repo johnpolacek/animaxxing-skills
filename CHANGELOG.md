@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-10-06
+
+### Changed
+
+- A broad request whose feel the project's cues already settle gets a plan in a line or two, then the build, without a question. The skill asks once only when the cues don't settle the feel or the scope. Before, the main skill said to ask whenever the scope was unclear, while Finding the vibe said to ask only when the cues were thin; a live test showed agents following the guide.
+
 ## [0.19.1] - 2026-10-06
 
 ### Fixed
