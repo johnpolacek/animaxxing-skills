@@ -4,6 +4,18 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-10-05
+
+### Added
+
+- Touch for hover and cursor effects. A `touch` option on `magnetic`, `tilt`, `spotlight`, `momentumHover`, `proximity`, `imageTrail`, `hoverPreview`, and the WebGL `hoverDistortion`, and a `touch` area on `cursorFollower`: a finger or pen held down moves like the mouse, and lifting it is leaving. The element claims its touch gestures, so use it on contained surfaces, not content people scroll past.
+- `textRoll`, `underlineSweep`, and `imageZoom` take `touch`: a finger held on the control shows the hover until it lifts or a scroll cancels the press. Nothing sticks after a tap.
+- `pile` in physics effects: pieces fall into a box, bounce off its floor, walls, and each other, and come to rest in a heap. Sleeping pieces stop the heap from buzzing.
+
+### Changed
+
+- `pressFeedback` turns off the browser's tap highlight on its control, since its squash and ripple are the touch response.
+
 ## [0.17.1] - 2026-10-05
 
 ### Fixed
