@@ -4,6 +4,16 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-10-07
+
+### Added
+
+- A doorways recipe: three moves built on one arch shape.
+  - `archReveal`: a point at an arch's foot draws the arch open, then the picture grows out of it to fill the frame. With `out`, it closes back down to the point.
+  - `doorwayPassage`: as a track scrolls, a doorway in a picture lights up, and a mask shaped like it grows over the stage, showing the next picture inside. Scroll drives it, so stopping holds the frame and scrolling back retraces it.
+  - `shapeFlight`: a picture flies from one frame to another and turns from a rectangle into an arch, or back. The rectangle is the arch's own polygon with each point pressed onto the nearest edge, so one shape tweens into the other. Only the clip and transforms move: neither frame changes size, and the picture is never stretched.
+  - `archPolygon` shapes an arch frame in CSS that a flight can land in.
+
 ## [0.27.0] - 2026-10-07
 
 ### Added
