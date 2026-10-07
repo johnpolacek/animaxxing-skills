@@ -1,6 +1,6 @@
 # Recipe: scene flight
 
-A camera flies down a spiral of images in real 3D: perspective, depth, and fog. GSAP drives the flight through one uniform, `uTravel`, from 0 at the first image to 1 past the last, so a timeline, a scroll scrub, or a button can fly it. The pointer leans the camera a little. It is a [framed view](framed-views.md): a poster shows the resting frame until the first drawn frame, and whenever WebGL cannot draw.
+A camera flies down a spiral of images in real 3D: perspective, depth, and fog. GSAP drives the flight through one uniform, `uTravel`, from 0 in front of the first image to 1 in front of the last, so a timeline, a scroll scrub, or a button can fly it. The pointer leans the camera a little. It is a [framed view](framed-views.md): a poster shows the resting frame until the first drawn frame, and whenever WebGL cannot draw.
 
 Lifecycle: the framework controller builds the flight once its element is mounted, attaches `scrollFlight` or tweens `uTravel` itself, and reverts effects before the flight on unmount.
 
@@ -45,7 +45,7 @@ export type Flight = {
   readonly view: FramedView;
   /** Tween these with GSAP; they survive a context loss and restore. */
   readonly uniforms: {
-    /** 0 before the first image, 1 past the last. */
+    /** 0 in front of the first image, 1 in front of the last: the view is never empty. */
     uTravel: Uniform<number>;
     /** Camera lean toward the pointer, -1 to 1 on each axis; 0 at rest. */
     uLean: Uniform<number[]>;
@@ -131,7 +131,8 @@ export function flight(
       card.rotation.y = -Math.cos(angle) * 0.35;
       card.setParent(scene);
     });
-    const end = -(sources.length - 1) * spacing - 1;
+    // The flight ends where the last image sits as the first did at the start.
+    const end = start - (sources.length - 1) * spacing;
     return {
       scene,
       camera,

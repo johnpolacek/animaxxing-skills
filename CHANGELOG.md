@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-10-06
+
+### Fixed
+
+- Scene flight ended past its last image, so the end of a scroll range showed an empty view. `uTravel` 1 now stops in front of the last image, where the first sat at 0.
+
 ## [0.20.0] - 2026-10-06
 
 ### Added
