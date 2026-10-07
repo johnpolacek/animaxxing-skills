@@ -54,7 +54,7 @@ Copy the folders under `skills/` into your agent's skill directory:
 | Skill | Description |
 |-------|-------------|
 | **animaxxing** | Reusable vanilla TypeScript and GSAP recipes: split-text entrances, glitch and typewriter text, scattering headlines, speak-in copy, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, stacking cards, zoom-through scenes, horizontal runs, elements traveling between scroll waypoints, smooth scrolling with Lenis or ScrollSmoother, curtain, curved swipe, and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, scroll-scrubbed video and frame sequences, menu, dialog, accordion, and tab motion, loading and success buttons, interruptible enter/exit timelines with `easeReverse`, label rolls and underline sweeps, press squash and ripples, weight and width hovers that never shift a line, error shakes, magnetic buttons, tilt cards, spotlight reveals, direction-aware fills, cursor followers with scrolling labels, image trails, momentum hover, proximity scaling and dock effects, drag tracks, endless drag loops, wrapping 2D grids, flick card stacks, sortable lists, swipe to dismiss, signature CustomEase curves, full-screen section paging, sound cues, SVG drawing and morphs, text on a path, count-up figures, odometers, marquees, cycling logo walls, header themes per section, hide-on-scroll headers, confetti bursts and emoji rain, particle buttons/cards/links/fields, and blast-off exits. Includes text stability and effect verification. Preserves existing fonts, colors, and layout; the framework skill owns lifecycle timing |
-| **animaxxing-webgl** | GSAP-driven WebGL image effects on one shared [OGL](https://github.com/oframe/ogl) renderer and canvas per document: planes that track each `<img>` through scroll and resize, a hover distortion lens, a scroll-velocity wave, and a reveal or exit wipe, all tweened on shader uniforms. The real `<img>` stays the accessible content and the fallback without WebGL, on context loss, without CORS, and under reduced motion. Caps pixel ratio, pauses off screen and in hidden tabs, and disposes every GL resource on revert. Kept separate so `animaxxing` never depends on a renderer |
+| **animaxxing-webgl** | GSAP-driven WebGL image effects on one shared [OGL](https://github.com/oframe/ogl) renderer and canvas per document: planes that track each `<img>` through scroll and resize, a hover distortion lens, a scroll-velocity wave, a reveal or exit wipe, glitch, dissolve, pixelation, and ripple; and framed views for a 3D camera flight through images, GPU particle morphs between shapes, and a liquid image the pointer stirs, all tweened on shader uniforms. The real `<img>`, or a view's poster `<img>`, stays the accessible content and the fallback without WebGL, on context loss, without CORS, and under reduced motion. Caps pixel ratio, pauses off screen and in hidden tabs, and disposes every GL resource on revert. Kept separate so `animaxxing` never depends on a renderer |
 
 ### Framework skills
 
@@ -81,7 +81,7 @@ Every framework packages four shared references: initialization and recovery for
 | Request | Skills to use |
 |---|---|
 | Animate an existing brand with these effects | Matching `gsap-<framework>` + `animaxxing` |
-| Add WebGL image effects | Matching `gsap-<framework>` + `animaxxing-webgl` |
+| Add WebGL image effects, a 3D flight, particle morphs, or a liquid image | Matching `gsap-<framework>` + `animaxxing-webgl` |
 | Apply the Animaxxing design without animation | `style-animaxxing` |
 | Apply the design with minimal motion | `style-animaxxing` + matching framework skill; add `animaxxing` when using its effects |
 | Animate every element, keeping your design | Framework + `animaxxing` |
@@ -170,7 +170,11 @@ animaxxing-skills/
         recipes/
           webgl-stage.md     # One shared renderer and canvas per document
           image-planes.md    # Planes that track each <img>
-          uniform-effects.md # Hover lens, scroll wave, wipe
+          uniform-effects.md # Hover lens, scroll wave, wipe, glitch, dissolve, pixelate, ripple
+          framed-views.md    # A drawing in an element's box, with a poster fallback
+          scene-flight.md    # Camera flight through a 3D spiral of images
+          particle-morph.md  # GPU particles morphing between shapes
+          liquid-image.md    # Pointer trails through an image
     gsap-vanilla/
       SKILL.md
       agents/openai.yaml
