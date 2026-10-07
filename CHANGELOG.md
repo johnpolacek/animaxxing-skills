@@ -4,6 +4,21 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-10-07
+
+### Added
+
+- Print effects, a new recipe borrowed from printmaking:
+  - `paintReveal`: a cover in the paper's color wears away with a dry-brush edge, optionally led by a roller such as a brayer. Each pixel gets a fixed threshold once; GSAP tweens one number, through a setter, so scrubbing and seeking paint too.
+  - `inkText`: live text inks in through a grainy SVG mask. The HTML is untouched, and the masks are removed at rest.
+  - `registrationSlip`: an `aria-hidden` second impression lands out of register behind a heading and snaps true.
+- `charsSlideIn` and `charsSlideOut`: letters zip together from above and below, alternating.
+- `zoomThrough` `push` and `pull` modes: the camera flies into one tile of a grid until it fills the section, or opens on that tile and pulls back to the whole grid.
+
+### Fixed
+
+- `pathLoop` on a `<textPath>` without `startOffset` logged an invalid empty length; it now sets `0%` first and removes it on revert.
+
 ## [0.21.0] - 2026-10-06
 
 ### Added
