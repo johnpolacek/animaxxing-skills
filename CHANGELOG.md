@@ -10,8 +10,8 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 - `animaxxing-webgl` grows past images. Framed views draw a WebGL drawing in an element's box on the shared stage, rendered offscreen with its own camera and depth, with a **poster** `<img>` as the accessible content and fallback, just as an image plane keeps its `<img>`.
   - Scene flight: a camera flies through a 3D spiral of images with perspective and fog, on one `uTravel` uniform that a timeline or `scrollFlight` drives; `pointerLean` tilts it toward the mouse.
-  - Particle morph: thousands of GPU points move between shapes made from text, an image's ink, a sphere, or scatter, each leaving on its own delay. `uScatter`, `uSpin`, and `pointerPush` round it out.
-  - Liquid image: the pointer drags trails through an image that bend it and split its color slightly, and fade back to rest. `pour()` sweeps one stroke for an intro.
+  - Particle morph: thousands of GPU points move between shapes made from text, an image's ink, a sphere, or scatter, each leaving on its own delay. Each shape fits the element by its own width and height, so a wide word and a round sphere both fill it. `uScatter`, `uSpin`, and `pointerPush` round it out.
+  - Liquid image: the pointer drags trails through an image that bend it and split its color slightly, and fade back to rest. `pour()` sweeps one stroke for an intro. Its flow map uses 8-bit targets that every device supports, and rounds down half a step each frame so trails settle fully at any frame rate.
 - Test suite: `webgl-views.spec.ts` covers posters, fallbacks, context loss, sleeping off screen, balanced GL resources including framebuffers and renderbuffers, and sampled pixels for each recipe.
 
 ### Changed
