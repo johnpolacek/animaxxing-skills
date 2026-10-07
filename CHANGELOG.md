@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-10-07
+
+### Added
+
+- A rule: text keeps its line breaks from first paint to rest. Wait for the faces before measuring or splitting, never tween letter-spacing, width, or weight on wrapping text, and animate a paragraph as one block unless its split lines match the resting breaks. Verification already had the check; the rule now applies before anything is built.
+
 ## [0.29.0] - 2026-10-07
 
 ### Added
