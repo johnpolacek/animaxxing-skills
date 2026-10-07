@@ -4,6 +4,18 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-10-07
+
+### Added
+
+- `melt`'s `form` takes `from: "top"`: drops swell on the element's top edge, let go, and fall into the shape, for a name that drips in from the top of its frame.
+- Verification checks that line breaks never move while text animates, with the three usual causes: a face that loads after layout, a line split that wraps differently from the resting text, and letter-spacing, width, or weight tweened on wrapping text.
+- Verification notes that a reveal triggered by its section plays before it is seen when the element sits well below the section's top.
+
+### Changed
+
+- Print effects advise inking a paragraph as one target rather than split into lines.
+
 ## [0.28.0] - 2026-10-07
 
 ### Added
