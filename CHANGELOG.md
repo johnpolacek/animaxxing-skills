@@ -4,6 +4,13 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-10-07
+
+### Added
+
+- Framed views take `clip`, an element the drawing never paints outside. The canvas is fixed to the viewport, so a view inside a box that scrolls on its own drew past the box's edges as it scrolled out. Flight, morph, liquid image, and melt pass it through.
+- `pourStream` takes `scroller`, for a column inside a box that scrolls on its own. The head follows that box's view rather than the window's, and the drawing stays inside the box.
+
 ## [0.26.0] - 2026-10-07
 
 ### Added
