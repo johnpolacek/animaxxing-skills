@@ -175,6 +175,7 @@ animaxxing-skills/
           scene-flight.md    # Camera flight through a 3D spiral of images
           particle-morph.md  # GPU particles morphing between shapes
           liquid-image.md    # Pointer trails through an image
+          metaballs.md       # Liquid-metal drops: a melt into a shape, a stream down a page
     gsap-vanilla/
       SKILL.md
       agents/openai.yaml

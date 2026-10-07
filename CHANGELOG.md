@@ -4,6 +4,23 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-10-07
+
+### Added
+
+- Liquid hovers in hover effects, each moving only by transforms and knowing where the pointer crossed:
+  - `beadUnderline`: a bead of ink lands where the pointer enters, stretches into the underline, and pulls back into a bead at the exit.
+  - `pourFill`: a round control fills like liquid poured from the side the pointer came from, wobbles, and drains out the side it leaves by.
+  - `jelly`: a button squashes and springs like jelly, with a highlight that follows the pointer.
+- `pourReveal` in media effects: content pours into its frame through a wobbling blob that spreads from a point, and drains back with `out`. Only `clip-path` and the inner scale move.
+- Metaballs, a new `animaxxing-webgl` recipe: liquid-metal drops that merge as they touch, shaded as polished metal in the element's own color.
+  - `melt`: one bead swells, drops run out to their places on a shape, and the shape fills in under them; `drip` lets it fall apart. `drawText` makes a word the shape.
+  - `pourStream`: a stream pours down a column beside a list as the page scrolls, its head following the reader, and a drop settles beside each row it reaches; it pools at the bottom.
+
+### Changed
+
+- A framed view's poster may be any element, such as the live text a melt draws.
+
 ## [0.23.0] - 2026-10-07
 
 ### Added
