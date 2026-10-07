@@ -4,6 +4,14 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-10-07
+
+### Added
+
+- Print effects gain two more:
+  - `writeOn`: live text is written on by a brush, one rounded, slightly wavy stroke per line, through an SVG mask that is removed at rest.
+  - `pullCorner` and `dragPull`: a sheet's corner lifts and folds back along a diagonal, showing the paper's back, and peels off under a pointer or finger, or on Enter. The sheet's content never changes; only its clip does.
+
 ## [0.22.0] - 2026-10-07
 
 ### Added
