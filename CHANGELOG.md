@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-10-06
+
+### Added
+
+- `morphSequence` in SVG effects: a path flows through several shapes in order, resting on each, and with `loop` ends back on its own shape so it repeats seamlessly. It returns a paused timeline for the controller to play, repeat, or scrub; reduced motion keeps the authored shape. `morphToggle` still covers two-state icons.
+
 ## [0.20.1] - 2026-10-06
 
 ### Fixed
