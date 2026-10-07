@@ -74,10 +74,17 @@ export function sphereShape(count = 4000, radius = 0.9): PointShape {
   return points;
 }
 
-/** Points scattered through the box, as loose dust. */
-export function scatterShape(count = 4000, spread = 1): PointShape {
+/** Loose dust: a soft cloud, densest in the middle, `stretch` times wider than tall to fill a wide element. */
+export function scatterShape(count = 4000, spread = 1, stretch = 1.6): PointShape {
   const points = new Float32Array(count * 3);
-  for (let i = 0; i < points.length; i++) points[i] = (Math.random() * 2 - 1) * spread;
+  for (let i = 0; i < count; i++) {
+    // A random direction, at a distance that thins toward the edge.
+    const z = Math.random() * 2 - 1;
+    const angle = Math.random() * Math.PI * 2;
+    const ring = Math.sqrt(1 - z * z);
+    const reach = Math.pow(Math.random(), 0.6) * spread;
+    points.set([Math.cos(angle) * ring * reach * stretch, Math.sin(angle) * ring * reach, z * reach], i * 3);
+  }
   return points;
 }
 
@@ -107,7 +114,7 @@ export type ParticleMorphOptions = {
   count?: number;
   /** Point size in CSS pixels. */
   size?: number;
-  /** Share of the element's shorter side the -1 to 1 box fills. */
+  /** Share of the element each shape fills, fitted by its own width and height. */
   fill?: number;
   /** Point color. Defaults to the element's computed `color`. */
   color?: string;
@@ -130,8 +137,6 @@ export type ParticleMorph = {
     uPush: Uniform<number>;
   };
   readonly webgl: boolean;
-  /** Share of the element's shorter side the -1 to 1 box fills. */
-  readonly fill: number;
   /** Morphs to shape `index`. Reduced motion and no WebGL complete at once. */
   to(index: number, vars?: gsap.TweenVars): gsap.core.Timeline;
   revert(): void;
@@ -151,6 +156,7 @@ uniform float uPush;
 uniform float uSize;
 uniform float uDpr;
 uniform vec2 uScale;
+uniform vec4 uFit;
 uniform float uTime;
 varying float vFade;
 
@@ -163,7 +169,8 @@ void main() {
   float a = step01(0.0);
   float b = step01(1.0);
   float c = step01(2.0);
-  vec3 p = mix(mix(mix(position, shape1, a), shape2, b), shape3, c);
+  // Each shape is scaled to fit the element on its own, so a wide word and a round sphere both fill it.
+  vec3 p = mix(mix(mix(position * uFit.x, shape1 * uFit.y, a), shape2 * uFit.z, b), shape3 * uFit.w, c);
   // Mid-flight, each point swirls off the straight line and back.
   float flight = sin(a * 3.14159) + sin(b * 3.14159) + sin(c * 3.14159);
   p += (random - 0.5) * flight * 0.9;
@@ -214,6 +221,16 @@ export function particleMorph(
   const sets = shapes.slice(0, 4).map((shape) => resample(shape, total));
   while (sets.length < 4) sets.push(sets[sets.length - 1] ?? new Float32Array(total * 3));
   const random = new Float32Array(total * 3).map(() => Math.random());
+  /** Each shape's half width and half height, for fitting it to the element. */
+  const bounds = sets.map((set) => {
+    let x = 0.05;
+    let y = 0.05;
+    for (let i = 0; i < set.length; i += 3) {
+      x = Math.max(x, Math.abs(set[i]!));
+      y = Math.max(y, Math.abs(set[i + 1]!));
+    }
+    return [x, y] as const;
+  });
 
   const draw = (gl: OGLRenderingContext) => {
     const scene = new Transform();
@@ -224,7 +241,7 @@ export function particleMorph(
       shape3: { size: 3, data: sets[3]! },
       random: { size: 3, data: random },
     });
-    const own = { uSize: { value: size }, uDpr: { value: 1 }, uScale: { value: [1, 1] }, uTime: { value: 0 }, uColor: { value: rgb(color ?? getComputedStyle(host).color) } };
+    const own = { uSize: { value: size }, uDpr: { value: 1 }, uScale: { value: [1, 1] }, uFit: { value: [1, 1, 1, 1] }, uTime: { value: 0 }, uColor: { value: rgb(color ?? getComputedStyle(host).color) } };
     const program = new Program(gl, { vertex: VERTEX, fragment: FRAGMENT, uniforms: { ...uniforms, ...own }, transparent: true, depthTest: false, depthWrite: false });
     const points = new Mesh(gl, { mode: gl.POINTS, geometry, program });
     points.setParent(scene);
@@ -233,10 +250,11 @@ export function particleMorph(
       update({ width, height, dpr, time }: ViewFrame) {
         own.uDpr.value = dpr;
         own.uTime.value = time;
-        // The box fills `fill` of the shorter side, centered, without stretching.
-        const short = Math.min(width, height) * fill;
+        // Box units map to half the shorter side; each shape then scales to fit the element by its own bounds.
+        const short = Math.min(width, height);
         own.uScale.value[0] = short / width;
         own.uScale.value[1] = short / height;
+        bounds.forEach(([x, y], k) => (own.uFit.value[k] = (fill * Math.min(width / x, height / y)) / short));
       },
     };
   };
@@ -247,7 +265,6 @@ export function particleMorph(
   return {
     view,
     uniforms,
-    fill,
     get webgl() {
       return view.webgl;
     },
@@ -287,10 +304,10 @@ export function pointerPush(morph: ParticleMorph, { strength = 1, follow = 0.3, 
   if (touch) surface.style.touchAction = "none";
   let finger = -1;
 
-  /** Pointer to box units: the same -1 to 1 box the shapes live in. */
+  /** Pointer to box units: one unit is half the element's shorter side, as the shader draws it. */
   const aim = (event: PointerEvent, jump = false) => {
     const box = surface.getBoundingClientRect();
-    const short = Math.min(box.width, box.height) * morph.fill;
+    const short = Math.min(box.width, box.height);
     const x = (event.clientX - box.left - box.width / 2) / (short / 2);
     const y = -(event.clientY - box.top - box.height / 2) / (short / 2);
     toX(x, jump ? x : undefined);

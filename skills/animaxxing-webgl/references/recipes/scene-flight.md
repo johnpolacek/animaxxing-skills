@@ -14,7 +14,7 @@ The flight's images are textures only; the page's own copies, if it shows them, 
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Camera, Mesh, Plane, Program, Texture, Transform, type OGLRenderingContext } from "ogl";
-import { framedView, type FramedView, type Uniform, type ViewFrame } from "./framed-views";
+import { framedView, type FramedView, type Uniform } from "./framed-views";
 import { textureSource } from "./image-planes";
 import type { StageOptions } from "./webgl-stage";
 
@@ -25,9 +25,11 @@ export type Teardown = () => void;
 export type FlightOptions = {
   /** The images along the path, nearest first. */
   images: Array<HTMLImageElement | string>;
-  /** Distance between images along the path, in world units. Each image is 2 units tall. */
+  /** Image height, in world units. At the start the camera sees about 2.8 units top to bottom. */
+  size?: number;
+  /** Distance between images along the path. */
   spacing?: number;
-  /** How far images sit from the path's center line. */
+  /** How far images sit from the path's center line. Larger than the image width keeps a clear corridor down the middle. */
   radius?: number;
   /** Turn between neighbors, in radians. The golden angle spreads them evenly. */
   turn?: number;
@@ -77,9 +79,9 @@ varying float vDepth;
 
 void main() {
   vec4 color = texture2D(uTexture, vUv);
-  // Fade in out of the far dark, and out just before the camera passes through.
+  // Fade in out of the far dark, and out as the camera comes alongside, so a passing image never fills the view.
   float far = 1.0 - smoothstep(uFog * 0.45, uFog, vDepth);
-  float near = smoothstep(0.15, 1.1, vDepth);
+  float near = smoothstep(0.5, 2.2, vDepth);
   float alpha = color.a * far * near;
   gl_FragColor = vec4(color.rgb * alpha, alpha);
 }
@@ -98,11 +100,12 @@ async function cardSource(image: HTMLImageElement | string, signal: AbortSignal)
 
 export function flight(
   host: HTMLElement,
-  { images, spacing = 3.2, radius = 1.4, turn = 2.39996, fov = 50, fog = 14, poster, stage }: FlightOptions,
+  { images, size = 1.5, spacing = 3.4, radius = 2.2, turn = 2.39996, fov = 50, fog = 16, poster, stage }: FlightOptions,
 ): Flight {
   const uniforms = { uTravel: { value: 0 }, uLean: { value: [0, 0] } };
   let sources: HTMLImageElement[] = [];
-  const start = 3;
+  // The camera starts back from the first image, so the spiral opens ahead of it.
+  const start = 4;
 
   const draw = (gl: OGLRenderingContext) => {
     const scene = new Transform();
@@ -122,8 +125,8 @@ export function flight(
       });
       const card = new Mesh(gl, { geometry, program });
       const angle = i * turn;
-      card.scale.set((2 * source.naturalWidth) / source.naturalHeight, 2, 1);
-      card.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius * 0.7, -i * spacing);
+      card.scale.set((size * source.naturalWidth) / source.naturalHeight, size, 1);
+      card.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius * 0.6, -i * spacing);
       // Turn each image a little toward the center line, as if hung along a curved wall.
       card.rotation.y = -Math.cos(angle) * 0.35;
       card.setParent(scene);
@@ -132,7 +135,7 @@ export function flight(
     return {
       scene,
       camera,
-      update(_frame: ViewFrame) {
+      update() {
         const z = start + (end - start) * uniforms.uTravel.value;
         const [x, y] = uniforms.uLean.value;
         camera.position.set(x * 0.6, y * 0.4, z);

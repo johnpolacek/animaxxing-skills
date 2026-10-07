@@ -8,7 +8,7 @@ Dependencies: `gsap`, `ogl`, `framed-views.ts` and `image-planes.ts` from this s
 
 ## Why not OGL's Flowmap
 
-OGL ships a `Flowmap` helper. Its shader calls `smoothstep` with its edges reversed, which GLSL leaves undefined, and it needs half-float render targets, which some phones lack. This recipe's flow pass is the same idea in a few lines: 8-bit targets that every WebGL device supports, and increasing edges. 8-bit storage needs one more step, a small drain each frame, or a fading value rounds back to the same byte and the trail never quite settles.
+OGL ships a `Flowmap` helper. Its shader calls `smoothstep` with its edges reversed, which GLSL leaves undefined, and it needs half-float render targets, which some phones lack. This recipe's flow pass is the same idea in a few lines: 8-bit targets that every WebGL device supports, and increasing edges. 8-bit storage needs one more step: each frame drops half a stored step after fading, so the write rounds down; otherwise a fading value rounds back to the same byte and the trail never quite settles.
 
 ```ts
 import gsap from "gsap";
@@ -62,7 +62,7 @@ const FLOW_FRAGMENT = /* glsl */ `
 precision highp float;
 uniform sampler2D uFlow;
 uniform float uKeep;
-uniform float uDrain;
+uniform vec3 uDrain;
 uniform float uFalloff;
 uniform float uAspect;
 uniform vec2 uPointer;
@@ -73,8 +73,8 @@ varying vec2 vUv;
 void main() {
   vec4 last = texture2D(uFlow, vUv);
   vec3 flow = vec3(last.rg * 2.0 - 1.0, last.b);
-  // Fade, then drain at least one 8-bit step: at high frame rates a small value times uKeep
-  // rounds back to the same byte, and the surface would never come to rest.
+  // Fade, then drop half a stored step so the 8-bit write rounds down: at high frame rates a small
+  // value times uKeep rounds back to the same byte, and the surface would never come to rest.
   flow = sign(flow) * max(abs(flow) * uKeep - uDrain, 0.0);
   vec2 toPointer = (vUv - uPointer) * vec2(uAspect, 1.0);
   float stamp = (1.0 - smoothstep(0.0, uFalloff, length(toPointer))) * uStamp;
@@ -134,7 +134,8 @@ export function liquidImage(
     const flowUniforms = {
       uFlow: { value: read.texture },
       uKeep: { value: 1 },
-      uDrain: { value: 0.01 },
+      // Half a byte in storage: velocity is stored as v / 2 + 0.5, strength as is.
+      uDrain: { value: [1 / 255, 1 / 255, 0.5 / 255] },
       uFalloff: { value: falloff },
       uAspect: { value: 1 },
       uPointer: { value: [0.5, 0.5] },
@@ -168,8 +169,6 @@ export function liquidImage(
         pen.lastX = pen.x;
         pen.lastY = pen.y;
         flowUniforms.uKeep.value = Math.pow(linger, dt);
-        // Velocity is stored in steps of 2/255; drain a little more than one per frame, more on slow frames.
-        flowUniforms.uDrain.value = Math.max(0.009, dt * 0.5);
         flowUniforms.uAspect.value = width / height;
         flowUniforms.uPointer.value[0] = pen.x;
         flowUniforms.uPointer.value[1] = pen.y;
