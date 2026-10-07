@@ -4,6 +4,21 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-10-07
+
+### Added
+
+- Three more line reveals in split entrances: `linesSlideIn` and `Out` (sideways from behind the masks, alternating sides), `linesWipeIn` and `Out` (a straight edge across each line), and `linesIrisIn` and `Out` (a circle opening from each line's middle).
+
+### Changed
+
+- `linesEllipseIn` and `Out` read as their own move now. The arch was so wide and quick on a short line that it looked like `linesMaskIn`. It now opens from a point into a tall arch, slower, with the line lifting only a little, so the curve stays in view.
+
+### Fixed
+
+- Shaped line reveals centered on each line's mask, which spans the block's full width, so a short line opened beside its words. They now center on the line's own text, measured from its text nodes.
+- A clip-path written with `toFixed` can read "533.0px", and GSAP then leaves it uninterpolated: the shape sits still and jumps at the end. Values are rounded instead.
+
 ## [0.24.0] - 2026-10-07
 
 ### Added
