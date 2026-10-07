@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-10-07
+
+### Added
+
+- `sortable` takes `grab: "item"`, so the pointer can drag a row from anywhere on it, for short rows where a handle is a small target. The handle keeps the keyboard either way.
+
 ## [0.25.0] - 2026-10-07
 
 ### Added
