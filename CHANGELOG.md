@@ -4,6 +4,17 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-10-08
+
+### Fixed
+
+- `writeOn` parked each stroke at the end of its line, where the stroke's round cap still uncovered the line's last letters. Paused before writing, as when it waits to be scrolled to, a note showed the ends of its lines. Strokes now park past the cap's reach.
+- `pinnedScene` keeps its lint note on the `let` a closure reads before it is assigned.
+
+### Changed
+
+- Print effects advise building a scroll-triggered effect at setup, paused, and playing it on view, so the finished content never shows first.
+
 ## [0.37.0] - 2026-10-08
 
 ### Fixed
