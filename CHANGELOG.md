@@ -4,6 +4,13 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-10-08
+
+### Added
+
+- `topple`: a row of dominoes. A push runs down the row, each falling onto the next, until the last lies flat and the rest lean along the row. Only the falling one is stepped; every domino behind it is placed to lean exactly against its neighbor, so the row never passes through itself.
+- `pageTurn`: a book you leaf through. Drag a page across the spine, or use the arrow keys, and the leaf turns about the spine in 3D, its shading deepening as it stands on edge. Released short of the spine, it falls back.
+
 ## [0.35.0] - 2026-10-08
 
 ### Added
