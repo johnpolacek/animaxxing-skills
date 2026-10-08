@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-10-08
+
+### Fixed
+
+- `headerSection`'s label CSS anchors both names to the label's fixed edge. While two names cross, they share a cell as wide as the wider one, so on a label at the header's right, the old start alignment made the outgoing name jump sideways whenever the new one was longer or shorter.
+
 ## [0.31.0] - 2026-10-07
 
 ### Added
