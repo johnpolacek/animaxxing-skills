@@ -4,6 +4,14 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-10-08
+
+### Added
+
+- `pile` takes fixed `pegs` that pieces bounce off, and upright `walls` standing on the floor, `wallHeight` tall, for a Plinko board. A piece that crosses a wall in one step is sent back to the side it came from.
+- `swing`: a sign hanging from a hook swings when dragged, flicked, tapped, or pushed from the keyboard, each swing smaller until it hangs still. It sleeps once at rest.
+- `swipeDismiss` takes `look`. `slide` is the old motion. `tilt` leans with the drag, shows a label for the side it's going, and flings off turning. `fold` folds away from its top edge.
+
 ## [0.34.0] - 2026-10-08
 
 ### Added
