@@ -4,6 +4,14 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-10-08
+
+### Added
+
+- `tabIndicator` takes `stretch`: the leading edge reaches the new tab first and the trailing edge catches up.
+- `panelSwap`: tab panels slide with the direction of travel, the old one out and the new one in from the side the indicator moved toward. The new panel waits until the old one has mostly gone, so the two never overlap to read.
+- `stateButton` celebrates and refuses more clearly. On success the button pops as the check draws and sparks burst from its edge (`sparks`, 0 for none). On error the spinner snaps into a cross that draws stroke by stroke, and the shake tilts.
+
 ## [0.32.0] - 2026-10-08
 
 ### Fixed
