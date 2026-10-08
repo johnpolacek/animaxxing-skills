@@ -4,6 +4,13 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-10-08
+
+### Added
+
+- `slingshot`: pull a handle back and let go to fling the pile's next piece the opposite way, harder the farther it was pulled. Dots preview the arc while aiming. Arrow keys aim and Enter fires. The handle springs back and never leaves the box.
+- `pile` takes `ceiling`, so thrown pieces bounce off the box's top, and gains `launch(x, y, vx, vy)` and a readable `gravity`.
+
 ## [0.33.0] - 2026-10-08
 
 ### Added
