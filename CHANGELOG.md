@@ -4,6 +4,15 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-10-07
+
+### Added
+
+- A pulse and ambient recipe.
+  - Pulses beat a few times, then rest: `ping` spreads rings from a dot, `heartbeat` thumps twice, `bump` pops a badge as its count changes.
+  - Ambient loops start paused and end each cycle where they began: `float`, `drift`, `breathe`, and `orbit`.
+  - `watch` plays loops only while their section is on screen and the visitor has not paused them, drives the pause button, and keeps them still under reduced motion.
+
 ## [0.30.0] - 2026-10-07
 
 ### Added
