@@ -4,6 +4,12 @@ All notable changes to Animaxxing Skills are documented here. Releases follow [S
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-10-08
+
+### Fixed
+
+- `scrubStatement` clamps its range to the scroll. A statement near the page's end, whose bottom can never rise to 45% of the viewport, used to stop partway, its last words still faded. It now finishes at the bottom of the scroll.
+
 ## [0.36.0] - 2026-10-08
 
 ### Added
